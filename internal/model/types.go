@@ -90,6 +90,9 @@ const (
 	SkillRDDDefectWorkflow   SkillID = "rdd-defect-workflow"
 	SkillSystemicIssueTriage SkillID = "systemic-issue-triage"
 	SkillGentleAIBench       SkillID = "gentle-ai-bench"
+	SkillQASupervisor        SkillID = "qa-supervisor"
+	SkillGitlabMRFlow        SkillID = "gitlab-mr-flow"
+	SkillGitlabReleaseTag    SkillID = "gitlab-release-tag"
 )
 
 type PersonaID string

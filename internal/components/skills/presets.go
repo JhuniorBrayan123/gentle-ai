@@ -32,6 +32,9 @@ var foundationSkills = []model.SkillID{
 	model.SkillWorkUnitCommits,
 	model.SkillRDDDefectWorkflow,
 	model.SkillSystemicIssueTriage,
+	model.SkillQASupervisor,
+	model.SkillGitlabMRFlow,
+	model.SkillGitlabReleaseTag,
 }
 
 // SkillsForPreset returns which skills should be installed for a given preset.
