@@ -26,3 +26,6 @@ Naming convention: `gentle-ai-*` skills are repo-specific workflow skills. Unpre
 | `issue-root-resolution` | When auditing backlog roots, proposing cluster fixes, or closing resolved/outdated issues. | [`skills/issue-root-resolution/SKILL.md`](skills/issue-root-resolution/SKILL.md) |
 | `systemic-issue-triage` | When triaging issues, bugs, backlogs, root causes, dead ends, or blocked users. | [`skills/systemic-issue-triage/SKILL.md`](skills/systemic-issue-triage/SKILL.md) |
 | `gentle-ai-bench` | When touching `bench/`, journeys, driven mode, the journey corpus, or bench axes. | [`skills/gentle-ai-bench/SKILL.md`](skills/gentle-ai-bench/SKILL.md) |
+| `gitlab-mr-flow` | When creating, approving, or merging a GitLab merge request end-to-end (push, create with assigner/reviewer, approval gate, merge, tag). | [`skills/gitlab-mr-flow/SKILL.md`](skills/gitlab-mr-flow/SKILL.md) |
+| `gitlab-release-tag` | When a merged GitLab MR needs its semantic version tag + changelog (SmartClic standard). | [`skills/gitlab-release-tag/SKILL.md`](skills/gitlab-release-tag/SKILL.md) |
+| `qa-supervisor` | When supervising any QA automation request before writing code: validates rules G1–G6 using BookStack/GitLab MCPs and only then delegates implementation. | [`skills/qa-supervisor/SKILL.md`](skills/qa-supervisor/SKILL.md) |
