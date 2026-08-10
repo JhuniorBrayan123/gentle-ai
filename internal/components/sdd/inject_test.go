@@ -5778,8 +5778,8 @@ func TestInjectOpenCodePostCheckDiskFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if !strings.Contains(string(diskContent), "gentle-orchestrator") {
-		t.Fatal("File on disk lost gentle-orchestrator after inject")
+	if !strings.Contains(string(diskContent), "qa-orchestrator") {
+		t.Fatal("File on disk lost qa-orchestrator after inject")
 	}
 	if strings.Contains(string(diskContent), `"sdd-orchestrator"`) {
 		t.Fatal("File on disk still has legacy sdd-orchestrator after inject")

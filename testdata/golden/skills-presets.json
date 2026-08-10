@@ -13,6 +13,12 @@
       "sdd-archive",
       "sdd-onboard",
       "judgment-day",
+      "qa-explore",
+      "qa-spec",
+      "qa-apply",
+      "qa-verify",
+      "qa-review",
+      "qa-docs",
       "go-testing",
       "gentle-ai-bench",
       "skill-creator",
@@ -47,6 +53,12 @@
       "sdd-archive",
       "sdd-onboard",
       "judgment-day",
+      "qa-explore",
+      "qa-spec",
+      "qa-apply",
+      "qa-verify",
+      "qa-review",
+      "qa-docs",
       "go-testing",
       "gentle-ai-bench",
       "skill-creator",
@@ -80,7 +92,13 @@
       "sdd-verify",
       "sdd-archive",
       "sdd-onboard",
-      "judgment-day"
+      "judgment-day",
+      "qa-explore",
+      "qa-spec",
+      "qa-apply",
+      "qa-verify",
+      "qa-review",
+      "qa-docs"
     ]
   }
 ]

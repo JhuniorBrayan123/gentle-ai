@@ -324,7 +324,13 @@ func TestKilocodeReviewSettingsMatchCurrentMainBaseline(t *testing.T) {
 	// ordinary running session is sufficient."). It now names that ordinary-
 	// session boundary explicitly. Kilocode embeds the same paragraph, so the
 	// hash moved again. Deliberate, not drift.
-	const want = "c639d6a5255c922c04954051552941e4d54ffa6c7a279702b7f819734f3f2deb"
+	//
+	// gentle-ai fork PR1-PR4 (qa-orchestrator change): the canonical OpenCode
+	// conductor renamed gentle-orchestrator -> qa-orchestrator and the 6 qa-*
+	// sub-agents were introduced; the shared orchestrator contract embedded by
+	// Kilocode embeds the renamed conductor identity, so the hash moved again.
+	// Deliberate baseline update, computed from the merged tree.
+	const want = "55c881c6e65f9a1e1d033b04e8c1371f980fefd0f041c325a391760f7cd3306a"
 	if got != want {
 		t.Fatalf("Kilocode settings SHA-256 = %s, want current-main baseline %s", got, want)
 	}

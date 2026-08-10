@@ -15,6 +15,12 @@ var sddSkills = []model.SkillID{
 	model.SkillSDDArchive,
 	model.SkillSDDOnboard,
 	model.SkillJudgmentDay,
+	model.SkillQAExplore,
+	model.SkillQASpec,
+	model.SkillQAApply,
+	model.SkillQAVerify,
+	model.SkillQAReview,
+	model.SkillQADocs,
 }
 
 // foundationSkills are baseline learning skills for the "recommended" tier.

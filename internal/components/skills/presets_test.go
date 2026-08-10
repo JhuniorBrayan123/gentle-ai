@@ -15,6 +15,12 @@ func TestSkillsForPresetMinimalReturnsSDDOnly(t *testing.T) {
 	// Orchestration skills that are always bundled with SDD.
 	orchestrationSkills := map[model.SkillID]bool{
 		model.SkillJudgmentDay: true,
+		model.SkillQAExplore:   true,
+		model.SkillQASpec:      true,
+		model.SkillQAApply:     true,
+		model.SkillQAVerify:    true,
+		model.SkillQAReview:    true,
+		model.SkillQADocs:      true,
 	}
 
 	for _, skill := range skills {
