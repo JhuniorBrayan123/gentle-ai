@@ -741,13 +741,13 @@ func Inject(homeDir string, adapter agents.Adapter, sddMode model.SDDModeID, opt
 			}
 		}
 
-		if !hasOpenCodeAgentKey(settingsText, "gentle-orchestrator") {
+		if !hasOpenCodeAgentKey(settingsText, "qa-orchestrator") {
 			// In-memory check failed — try reading from disk as last resort.
 			if diskBytes, readErr := os.ReadFile(settingsPath); readErr == nil {
 				settingsText = string(diskBytes)
 			}
-			if !hasOpenCodeAgentKey(settingsText, "gentle-orchestrator") {
-				return InjectionResult{}, fmt.Errorf("post-check: %q missing gentle-orchestrator agent definition — OpenCode /sdd-* commands will fail", settingsPath)
+			if !hasOpenCodeAgentKey(settingsText, "qa-orchestrator") {
+				return InjectionResult{}, fmt.Errorf("post-check: %q missing qa-orchestrator agent definition — OpenCode /sdd-* commands will fail", settingsPath)
 			}
 		}
 		if hasOpenCodeAgentKey(settingsText, "sdd-orchestrator") {
@@ -831,7 +831,7 @@ func inlineOpenCodeSDDPrompts(overlayBytes []byte, homeDir, settingsPath string,
 
 	// Inline the orchestrator prompt (always inlined, not a file reference),
 	// unless an external strategy requested preserving the existing prompt.
-	orchestratorRaw, ok := agentsMap["gentle-orchestrator"]
+	orchestratorRaw, ok := agentsMap["qa-orchestrator"]
 	if !ok {
 		return overlayBytes, nil
 	}
@@ -840,7 +840,7 @@ func inlineOpenCodeSDDPrompts(overlayBytes []byte, homeDir, settingsPath string,
 		return overlayBytes, nil
 	}
 	if preserveExistingOrchestratorPrompt {
-		existingPrompt, err := readOpenCodeAgentPrompt(settingsPath, "gentle-orchestrator")
+		existingPrompt, err := readOpenCodeAgentPrompt(settingsPath, "qa-orchestrator")
 		if err != nil {
 			return nil, err
 		}

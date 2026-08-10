@@ -324,7 +324,7 @@ func TestKilocodeReviewSettingsMatchCurrentMainBaseline(t *testing.T) {
 	// ordinary running session is sufficient."). It now names that ordinary-
 	// session boundary explicitly. Kilocode embeds the same paragraph, so the
 	// hash moved again. Deliberate, not drift.
-	const want = "76140e795ccdf306b5a8d80082bbb9f70dac43db1715523dee7f088238dd1b65"
+	const want = "c639d6a5255c922c04954051552941e4d54ffa6c7a279702b7f819734f3f2deb"
 	if got != want {
 		t.Fatalf("Kilocode settings SHA-256 = %s, want current-main baseline %s", got, want)
 	}

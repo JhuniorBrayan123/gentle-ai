@@ -1092,7 +1092,7 @@ func TestOpenCodeSDDCommandsAreOrchestratorGuarded(t *testing.T) {
 
 	applyContent := MustRead("opencode/commands/sdd-apply.md")
 	for _, required := range []string{
-		"You are the `gentle-orchestrator`, not an SDD executor",
+		"You are the `qa-orchestrator`, not an SDD executor",
 		"If spec, design, or tasks are missing, do NOT implement",
 		"do not hardcode Engram",
 	} {
@@ -1800,24 +1800,24 @@ func TestOpenCodeSDDOverlaySubagentsAreExplicitExecutors(t *testing.T) {
 			// single overlay still uses inline prompt strings.
 			isMulti := assetPath == "opencode/sdd-overlay-multi.json"
 
-			orchestrator, ok := agents["gentle-orchestrator"].(map[string]any)
+			orchestrator, ok := agents["qa-orchestrator"].(map[string]any)
 			if !ok {
-				t.Fatalf("%q missing gentle-orchestrator agent", assetPath)
+				t.Fatalf("%q missing qa-orchestrator agent", assetPath)
 			}
 			permissions, ok := orchestrator["permission"].(map[string]any)
 			if !ok || permissions["question"] != "allow" {
-				t.Fatalf("%q gentle-orchestrator must allow question permission", assetPath)
+				t.Fatalf("%q qa-orchestrator must allow question permission", assetPath)
 			}
 			tools, ok := orchestrator["tools"].(map[string]any)
 			if !ok {
-				t.Fatalf("%q gentle-orchestrator missing tools", assetPath)
+				t.Fatalf("%q qa-orchestrator missing tools", assetPath)
 			}
 			replacedTools, ok := tools["__replace__"].(map[string]any)
 			if !ok || replacedTools["question"] != true {
-				t.Fatalf("%q gentle-orchestrator must enable question tool", assetPath)
+				t.Fatalf("%q qa-orchestrator must enable question tool", assetPath)
 			}
 
-			for _, phase := range []string{"sdd-init", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive"} {
+			for _, phase := range []string{"sdd-init", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive", "qa-explore", "qa-spec", "qa-apply", "qa-verify", "qa-review", "qa-docs"} {
 				agentDef, ok := agents[phase].(map[string]any)
 				if !ok {
 					t.Fatalf("%q missing %s agent", assetPath, phase)
@@ -1835,6 +1835,71 @@ func TestOpenCodeSDDOverlaySubagentsAreExplicitExecutors(t *testing.T) {
 						if !strings.Contains(prompt, want) {
 							t.Fatalf("%q phase %s prompt missing %q", assetPath, phase, want)
 						}
+					}
+				}
+			}
+		})
+	}
+}
+
+// TestOpenCodeQAOverlayToolsShape (MITIGATION B, per SDD Spec Corrections
+// CORR-1) pins the GRANULAR per-agent tools shape for the 6 qa-* sub-agents in
+// BOTH overlays. The blanket {read,write,edit,bash} shape from the original
+// spec is superseded: qa-explore is read+bash only, qa-spec and qa-docs have no
+// bash, and qa-review is genuinely READ-ONLY (write:false, edit:false). The
+// test MUST fail if qa-review ever gains write or edit.
+func TestOpenCodeQAOverlayToolsShape(t *testing.T) {
+	expectedTools := map[string]map[string]any{
+		"qa-explore": {"read": true, "write": false, "edit": false, "bash": true},
+		"qa-spec":    {"read": true, "write": true, "edit": true, "bash": false},
+		"qa-apply":   {"read": true, "write": true, "edit": true, "bash": true},
+		"qa-verify":  {"read": true, "write": true, "edit": true, "bash": true},
+		"qa-review":  {"read": true, "write": false, "edit": false, "bash": true},
+		"qa-docs":    {"read": true, "write": true, "edit": true, "bash": false},
+	}
+
+	for _, assetPath := range []string{"opencode/sdd-overlay-single.json", "opencode/sdd-overlay-multi.json"} {
+		t.Run(assetPath, func(t *testing.T) {
+			var root map[string]any
+			if err := json.Unmarshal([]byte(MustRead(assetPath)), &root); err != nil {
+				t.Fatalf("Unmarshal(%q) error = %v", assetPath, err)
+			}
+
+			agents, ok := root["agent"].(map[string]any)
+			if !ok {
+				t.Fatalf("%q missing agent map", assetPath)
+			}
+
+			for name, want := range expectedTools {
+				agentRaw, ok := agents[name]
+				if !ok {
+					t.Fatalf("%q missing qa agent %q", assetPath, name)
+				}
+				agent, ok := agentRaw.(map[string]any)
+				if !ok {
+					t.Fatalf("%q qa agent %q has unexpected type %T", assetPath, name, agentRaw)
+				}
+				if mode, _ := agent["mode"].(string); mode != "subagent" {
+					t.Fatalf("%q qa agent %q mode = %q, want %q", assetPath, name, mode, "subagent")
+				}
+				if hidden, _ := agent["hidden"].(bool); !hidden {
+					t.Fatalf("%q qa agent %q must be hidden", assetPath, name)
+				}
+
+				toolsRaw, ok := agent["tools"].(map[string]any)
+				if !ok {
+					t.Fatalf("%q qa agent %q missing tools map", assetPath, name)
+				}
+				if len(toolsRaw) != len(want) {
+					t.Fatalf("%q qa agent %q tools = %v, want exactly %d tools %v", assetPath, name, toolsRaw, len(want), want)
+				}
+				for tool, wantVal := range want {
+					gotVal, exists := toolsRaw[tool]
+					if !exists {
+						t.Fatalf("%q qa agent %q missing tool %q", assetPath, name, tool)
+					}
+					if gotVal != wantVal {
+						t.Fatalf("%q qa agent %q tools[%q] = %v, want %v", assetPath, name, tool, gotVal, wantVal)
 					}
 				}
 			}
@@ -2158,7 +2223,7 @@ func TestSDDOrchestratorAssetsScopedToDedicatedAgent(t *testing.T) {
 			content := MustRead(assetPath)
 			dedicatedAgent := "sdd-orchestrator"
 			if assetPath == "opencode/sdd-orchestrator.md" {
-				dedicatedAgent = "gentle-orchestrator"
+				dedicatedAgent = "qa-orchestrator"
 			}
 			if assetPath == "claude/sdd-orchestrator.md" {
 				if !strings.Contains(content, "Claude Code orchestrator rule") {

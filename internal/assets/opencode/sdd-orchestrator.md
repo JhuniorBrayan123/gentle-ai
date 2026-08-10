@@ -1,6 +1,6 @@
 # Gentle AI — SDD Orchestrator Instructions
 
-Bind this to the dedicated `gentle-orchestrator` agent only. Do NOT apply it to executor phase agents such as `sdd-apply` or `sdd-verify`.
+Bind this to the dedicated `qa-orchestrator` agent only. Do NOT apply it to executor phase agents such as `sdd-apply` or `sdd-verify`.
 
 ## SDD Orchestrator
 

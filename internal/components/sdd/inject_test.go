@@ -2204,34 +2204,35 @@ func TestInjectOpenCodeMultiMode(t *testing.T) {
 		t.Fatalf("agent key has unexpected type: %T", agentRaw)
 	}
 
-	// Multi overlay must contain gentle-orchestrator + 10 SDD sub-agents +
-	// 3 JD agents + 4 review agents + 1 batched refuter = 19 agents.
-	if len(agentMap) != 19 {
-		t.Fatalf("agent count = %d, want 19", len(agentMap))
+	// Multi overlay must contain qa-orchestrator + 10 SDD sub-agents +
+	// 3 JD agents + 4 review agents + 1 batched refuter + 6 qa sub-agents
+	// = 25 agents.
+	if len(agentMap) != 25 {
+		t.Fatalf("agent count = %d, want 25", len(agentMap))
 	}
 
-	// Verify gentle-orchestrator is present.
-	orchestratorRaw, ok := agentMap["gentle-orchestrator"]
+	// Verify qa-orchestrator is present.
+	orchestratorRaw, ok := agentMap["qa-orchestrator"]
 	if !ok {
-		t.Fatal("missing gentle-orchestrator agent")
+		t.Fatal("missing qa-orchestrator agent")
 	}
 	orchestratorAgent, ok := orchestratorRaw.(map[string]any)
 	if !ok {
-		t.Fatalf("gentle-orchestrator has unexpected type: %T", orchestratorRaw)
+		t.Fatalf("qa-orchestrator has unexpected type: %T", orchestratorRaw)
 	}
 	toolsRaw, ok := orchestratorAgent["tools"].(map[string]any)
 	if !ok {
-		t.Fatalf("gentle-orchestrator tools has unexpected type: %T", orchestratorAgent["tools"])
+		t.Fatalf("qa-orchestrator tools has unexpected type: %T", orchestratorAgent["tools"])
 	}
 	for _, toolName := range []string{"task"} {
 		value, ok := toolsRaw[toolName].(bool)
 		if !ok || !value {
-			t.Fatalf("gentle-orchestrator missing multi-mode tool %q", toolName)
+			t.Fatalf("qa-orchestrator missing multi-mode tool %q", toolName)
 		}
 	}
 
 	// Verify representative sub-agents are present.
-	for _, subAgent := range []string{"sdd-init", "sdd-apply", "sdd-verify", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-archive", "jd-judge-a", "jd-judge-b", "jd-fix-agent", "review-risk", "review-readability", "review-reliability", "review-resilience", "review-refuter"} {
+	for _, subAgent := range []string{"sdd-init", "sdd-apply", "sdd-verify", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-archive", "jd-judge-a", "jd-judge-b", "jd-fix-agent", "review-risk", "review-readability", "review-reliability", "review-resilience", "review-refuter", "qa-explore", "qa-spec", "qa-apply", "qa-verify", "qa-review", "qa-docs"} {
 		if _, ok := agentMap[subAgent]; !ok {
 			t.Fatalf("missing sub-agent %q", subAgent)
 		}
@@ -2597,29 +2598,29 @@ func TestInjectOpenCodeEmptySDDModeDefaultsSingle(t *testing.T) {
 	if _, ok := agentMap["gentle-orchestrator"]; !ok {
 		t.Fatal("missing gentle-orchestrator agent")
 	}
-	if len(agentMap) != 19 {
-		t.Fatalf("agent count = %d, want 19", len(agentMap))
+	if len(agentMap) != 25 {
+		t.Fatalf("agent count = %d, want 25", len(agentMap))
 	}
 
 	// Verify orchestrator mode is "primary".
-	orchestratorRaw, ok := agentMap["gentle-orchestrator"]
+	orchestratorRaw, ok := agentMap["qa-orchestrator"]
 	if !ok {
-		t.Fatal("missing gentle-orchestrator agent")
+		t.Fatal("missing qa-orchestrator agent")
 	}
 	orchestratorAgent, ok := orchestratorRaw.(map[string]any)
 	if !ok {
-		t.Fatalf("gentle-orchestrator has unexpected type: %T", orchestratorRaw)
+		t.Fatalf("qa-orchestrator has unexpected type: %T", orchestratorRaw)
 	}
 	if mode, _ := orchestratorAgent["mode"].(string); mode != "primary" {
-		t.Fatalf("gentle-orchestrator mode = %q, want %q", mode, "primary")
+		t.Fatalf("qa-orchestrator mode = %q, want %q", mode, "primary")
 	}
 	permissionRaw, ok := orchestratorAgent["permission"].(map[string]any)
 	if !ok {
-		t.Fatalf("gentle-orchestrator permission has unexpected type: %T", orchestratorAgent["permission"])
+		t.Fatalf("qa-orchestrator permission has unexpected type: %T", orchestratorAgent["permission"])
 	}
 	taskRaw, ok := permissionRaw["task"].(map[string]any)
 	if !ok {
-		t.Fatalf("gentle-orchestrator permission.task has unexpected type: %T", permissionRaw["task"])
+		t.Fatalf("qa-orchestrator permission.task has unexpected type: %T", permissionRaw["task"])
 	}
 	taskAllowlist := taskRaw
 	if taskReplace, ok := taskRaw["__replace__"].(map[string]any); ok {
@@ -2627,7 +2628,7 @@ func TestInjectOpenCodeEmptySDDModeDefaultsSingle(t *testing.T) {
 	}
 
 	// Verify sub-agents are present with mode "subagent".
-	for _, subAgent := range []string{"sdd-init", "sdd-apply", "sdd-verify", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-archive", "jd-judge-a", "jd-judge-b", "jd-fix-agent", "review-risk", "review-readability", "review-reliability", "review-resilience", "review-refuter"} {
+	for _, subAgent := range []string{"sdd-init", "sdd-apply", "sdd-verify", "sdd-explore", "sdd-propose", "sdd-spec", "sdd-design", "sdd-tasks", "sdd-archive", "jd-judge-a", "jd-judge-b", "jd-fix-agent", "review-risk", "review-readability", "review-reliability", "review-resilience", "review-refuter", "qa-explore", "qa-spec", "qa-apply", "qa-verify", "qa-review", "qa-docs"} {
 		raw, ok := agentMap[subAgent]
 		if !ok {
 			t.Fatalf("missing sub-agent %q", subAgent)
@@ -2640,12 +2641,12 @@ func TestInjectOpenCodeEmptySDDModeDefaultsSingle(t *testing.T) {
 			t.Fatalf("%s mode = %q, want %q", subAgent, m, "subagent")
 		}
 		if got, ok := taskAllowlist[subAgent].(string); !ok || got != "allow" {
-			t.Fatalf("gentle-orchestrator permission.task[%s] = %v, want allow", subAgent, taskAllowlist[subAgent])
+			t.Fatalf("qa-orchestrator permission.task[%s] = %v, want allow", subAgent, taskAllowlist[subAgent])
 		}
 	}
 	for _, builtIn := range []string{"general", "explore"} {
 		if got := taskAllowlist[builtIn]; got != "allow" {
-			t.Fatalf("gentle-orchestrator permission.task[%s] = %v, want allow", builtIn, got)
+			t.Fatalf("qa-orchestrator permission.task[%s] = %v, want allow", builtIn, got)
 		}
 	}
 	refuterTools := agentMap["review-refuter"].(map[string]any)["tools"].(map[string]any)

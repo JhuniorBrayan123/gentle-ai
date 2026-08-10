@@ -686,7 +686,7 @@ func TestDefaultOverlayTaskPermissions_ExplicitAllowlist(t *testing.T) {
 			}
 
 			agentMap := root["agent"].(map[string]any)
-			orch := agentMap["gentle-orchestrator"].(map[string]any)
+			orch := agentMap["qa-orchestrator"].(map[string]any)
 			permission := orch["permission"].(map[string]any)
 			taskWrapper := permission["task"].(map[string]any)
 
@@ -696,6 +696,13 @@ func TestDefaultOverlayTaskPermissions_ExplicitAllowlist(t *testing.T) {
 			}
 
 			expected := expectedTaskPermissions("")
+			// The canonical qa-orchestrator delegates to the 6 global qa-*
+			// executors (REQ-QAORCH-3). Profiles do not gain unsuffixed qa
+			// permissions, so these are added only to the default-overlay
+			// expectation here, not inside expectedTaskPermissions.
+			for _, qa := range qaSubAgentNames {
+				expected[qa] = "allow"
+			}
 			assertExactTaskPermissions(t, taskMap, expected)
 		})
 	}
@@ -713,7 +720,7 @@ func TestDefaultOverlayToolsUseReplaceSentinel(t *testing.T) {
 			}
 
 			agentMap := root["agent"].(map[string]any)
-			orch := agentMap["gentle-orchestrator"].(map[string]any)
+			orch := agentMap["qa-orchestrator"].(map[string]any)
 			toolsWrapper := orch["tools"].(map[string]any)
 			tools, hasSentinel := toolsWrapper["__replace__"].(map[string]any)
 			if !hasSentinel {
@@ -1007,6 +1014,11 @@ func keysOf(m map[string]any) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// qaSubAgentNames is the 6-agent QA executor family (REQ-QAORCH-20). The
+// canonical qa-orchestrator delegates to all six via the task allowlist; the
+// default-overlay permission tests add them to the expected allowlist.
+var qaSubAgentNames = []string{"qa-explore", "qa-spec", "qa-apply", "qa-verify", "qa-review", "qa-docs"}
 
 func expectedTaskPermissions(suffix string) map[string]any {
 	permissions := map[string]any{

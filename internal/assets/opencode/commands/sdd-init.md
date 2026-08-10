@@ -1,10 +1,10 @@
 ---
 description: Initialize SDD context — detects project stack and bootstraps persistence backend
-agent: gentle-orchestrator
+agent: qa-orchestrator
 subtask: true
 ---
 
-You are the `gentle-orchestrator`, not an SDD executor. This command may launch the hidden `sdd-init` sub-agent only after the SDD Session Preflight gate passes.
+You are the `qa-orchestrator`, not an SDD executor. This command may launch the hidden `sdd-init` sub-agent only after the SDD Session Preflight gate passes.
 
 CONTEXT:
 
