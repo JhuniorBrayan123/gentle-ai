@@ -1244,7 +1244,7 @@ When the installer completes with "Dev Stack + Polish" (`full-gentleman`) preset
 - `~/.claude.json` — Context7 MCP server configured
 
 **OpenCode:**
-- `~/.config/opencode/opencode.json` — Agents (gentleman, sdd-orchestrator), MCP servers (engram, context7), Engram plugin, Gentleman theme
+- `~/.config/opencode/opencode.json` — Agents (gentleman, qa-orchestrator), MCP servers (engram, context7), Engram plugin, Gentleman theme
 - `~/.config/opencode/skills/` — All selected skills mirrored
 - `~/.config/opencode/commands/` — SDD slash commands
 - `~/.config/opencode/plugins/` — Engram TypeScript plugin
