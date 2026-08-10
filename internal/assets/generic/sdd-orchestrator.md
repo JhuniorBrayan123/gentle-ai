@@ -272,7 +272,7 @@ Quick delegation rules:
 
 SDD phases (short): proposal -> spec -> design -> tasks -> apply -> verify -> archive
 
-Only for a selected SDD route, delegate to these phase agents: sdd-init, sdd-explore, sdd-propose, sdd-spec, sdd-design, sdd-tasks, sdd-apply, sdd-verify, sdd-archive, sdd-onboard.
+Only for a selected SDD route, delegate to these phase agents: sdd-init, qa-explore, sdd-propose, qa-spec, sdd-design, sdd-tasks, qa-apply, qa-verify, sdd-archive, sdd-onboard.
 
 Result contract (short): each phase returns {status, executive_summary, artifacts, next_recommended}.
 

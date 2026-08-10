@@ -1372,7 +1372,7 @@ Hard gate rules:
 
 - ` + "`openspec/config.yaml`" + `, existing SDD artifacts, previous ` + "`sdd-init`" + ` results, or installed SDD assets do NOT satisfy session preflight.
 - If the session has no preflight block, ask the single grouped ` + "`question`" + ` tool preflight above. Do not run init, delegate phases, edit files, or apply tasks until all four choices are collected.
-- For a new feature request that says to use SDD, start at preflight -> init guard -> explore/proposal. Never launch ` + "`sdd-apply`" + ` just because the user asked to implement a feature.
+- For a new feature request that says to use SDD, start at preflight -> init guard -> explore/proposal. Never launch ` + "`qa-apply`" + ` just because the user asked to implement a feature.
 - In ` + "`interactive`" + ` mode, pause after each delegated phase returns, summarize the phase, then ask before launching the next phase via the ` + "`question`" + ` tool, and STOP. Use the ` + "`question`" + ` tool for this between-phase decision: present the proceed/adjust/stop options through a single ` + "`question`" + ` tool call; do NOT render the options as a plain markdown bullet list or plain chat text. Match the user's language and active persona for the question labels; for Spanish neutral fallback frame it as: "¿Quiere ajustar algo o continuamos?". Do not run /sdd-ff phases back-to-back unless execution mode is ` + "`auto`" + `.
 - Interactive approval is phase-scoped. Words like "continue", "dale", or "go on" approve only the immediate next phase, not the rest of the SDD pipeline. Do not treat a generated artifact as approved until the user has had a chance to review or explicitly delegate that review.
 - Before the ` + "`sdd-propose`" + ` phase in interactive mode, offer the user a proposal question round instead of silently deciding whether the proposal is clear enough. Ask 3–5 concrete product questions to improve the PRD/proposal by uncovering business rules, implications, impact, edge cases, product tradeoffs, and decision gaps; then summarize assumptions and ask whether the user wants corrections or a second question round. Do not ask about test commands, PR shape, changed-line budget, or other harness mechanics at proposal time unless the user explicitly asks to discuss delivery.
@@ -1381,7 +1381,7 @@ Hard gate rules:
 
 	if strings.Contains(prompt, "### SDD Session Preflight (HARD GATE)") &&
 		strings.Contains(prompt, "openspec/config.yaml") &&
-		strings.Contains(prompt, "Never launch `sdd-apply`") &&
+		strings.Contains(prompt, "Never launch `qa-apply`") &&
 		strings.Contains(prompt, "Match the user's current language") &&
 		strings.Contains(prompt, "Ask all four preflight groups in one single `question` tool call") &&
 		strings.Contains(prompt, "groups as tabs") &&

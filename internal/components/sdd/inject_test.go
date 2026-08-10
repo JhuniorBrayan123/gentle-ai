@@ -770,7 +770,7 @@ func TestInjectOpenCodeMigratesPreservedLegacyOrchestratorPromptReferences(t *te
 		"approve only the immediate next phase",
 		"proposal question round",
 		"business rules, implications, impact, edge cases",
-		"Never launch `sdd-apply` just because the user asked to implement a feature",
+		"Never launch `qa-apply` just because the user asked to implement a feature",
 		"### Mandatory Delegation Triggers (Non-Skippable)",
 		"fully mandatory",
 		"Bounded read rule",
@@ -1251,7 +1251,7 @@ Map answers to canonical values: A1/Interactive -> interactive.
 		"approve only the immediate next phase",
 		"proposal question round",
 		"business rules, implications, impact, edge cases",
-		"Never launch `sdd-apply` just because the user asked to implement a feature",
+		"Never launch `qa-apply` just because the user asked to implement a feature",
 	} {
 		if !strings.Contains(text, wanted) {
 			t.Fatalf("opencode.json missing migrated partial prompt content %q", wanted)

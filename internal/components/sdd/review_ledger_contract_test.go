@@ -330,7 +330,15 @@ func TestKilocodeReviewSettingsMatchCurrentMainBaseline(t *testing.T) {
 	// sub-agents were introduced; the shared orchestrator contract embedded by
 	// Kilocode embeds the renamed conductor identity, so the hash moved again.
 	// Deliberate baseline update, computed from the merged tree.
-	const want = "55c881c6e65f9a1e1d033b04e8c1371f980fefd0f041c325a391760f7cd3306a"
+	//
+	// gentle-ai fork PR6 (qa-orchestrator change, Option A): the OpenCode
+	// conductor's sub-agent launch mentions retargeted from sdd-apply/sdd-verify/
+	// sdd-explore to qa-apply/qa-verify/qa-explore (entry routing, review
+	// workload guard, strict TDD forwarding, apply-progress continuity, and
+	// the four command bodies). Kilocode embeds the same OpenCode conductor in
+	// `agent.gentle-orchestrator.prompt`, so the hash moved again. Deliberate,
+	// not drift.
+	const want = "cdb8fa560ed5d41bf98c11ecaf4e7d115eaec7b79e3263cf1fd56768468050bf"
 	if got != want {
 		t.Fatalf("Kilocode settings SHA-256 = %s, want current-main baseline %s", got, want)
 	}

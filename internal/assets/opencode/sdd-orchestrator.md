@@ -202,9 +202,9 @@ Hard gate rules:
 
 ### SDD Entry Routing (MANDATORY)
 
-For a new product/code change request that says to use SDD, start at preflight -> init guard -> explore/proposal (`/sdd-new` equivalent). Never launch `sdd-apply` just because the user asked to implement a feature.
+For a new product/code change request that says to use SDD, start at preflight -> init guard -> explore/proposal (`/sdd-new` equivalent). Never launch `qa-apply` just because the user asked to implement a feature.
 
-Only launch `sdd-apply` when all are true:
+Only launch `qa-apply` when all are true:
 
 1. Session preflight is complete.
 2. The active change has existing spec, design, and tasks artifacts.
@@ -334,20 +334,20 @@ Each phase returns: `status`, `executive_summary`, `artifacts`, `next_recommende
 
 ### Review Workload Guard (MANDATORY)
 
-After `sdd-tasks` completes and before launching `sdd-apply`, inspect the task result summary for `Review Workload Forecast`.
+After `sdd-tasks` completes and before launching `qa-apply`, inspect the task result summary for `Review Workload Forecast`.
 
 If it says `Chained PRs recommended: Yes`, `400-line budget risk: High`, estimated changed lines exceed 400, or `Decision needed before apply: Yes`, apply the cached `delivery_strategy`. Whenever a directive below tells the orchestrator to ask the user a decision (split vs. exception, or which chain strategy), use one `question` tool call only when the complete decision is natively representable; otherwise emit the complete choice through the plain chat or terminal fallback and STOP.
 
 - **`ask-on-risk`**: STOP and ask whether to split into chained/stacked PRs or proceed with `size:exception`, using the lossless blocking-prompt route. If the user chooses chained PRs and `chain_strategy` is not yet cached, ask which chain strategy to use (stacked-to-main or feature-branch-chain) through the same route.
-- **`auto-chain`**: Do not ask about splitting. If `chain_strategy` is not yet cached, ask which chain strategy to use through the lossless blocking-prompt route. Then pass to `sdd-apply`: implement only the next autonomous slice using work-unit commits, with clear start, finish, verification, and rollback boundary.
-- **`single-pr`**: STOP and require/record maintainer-approved `size:exception` before `sdd-apply`.
-- **`exception-ok`**: Continue, but pass to `sdd-apply` that this run uses maintainer-approved `size:exception`.
+- **`auto-chain`**: Do not ask about splitting. If `chain_strategy` is not yet cached, ask which chain strategy to use through the lossless blocking-prompt route. Then pass to `qa-apply`: implement only the next autonomous slice using work-unit commits, with clear start, finish, verification, and rollback boundary.
+- **`single-pr`**: STOP and require/record maintainer-approved `size:exception` before `qa-apply`.
+- **`exception-ok`**: Continue, but pass to `qa-apply` that this run uses maintainer-approved `size:exception`.
 
-Any other `delivery_strategy` value is invalid. Do NOT pick the nearest branch and do NOT proceed: STOP, report the unrecognised value, and re-collect the delivery strategy through the lossless blocking-prompt route before launching `sdd-apply`.
+Any other `delivery_strategy` value is invalid. Do NOT pick the nearest branch and do NOT proceed: STOP, report the unrecognised value, and re-collect the delivery strategy through the lossless blocking-prompt route before launching `qa-apply`.
 
 Do this even in Automatic mode. Automatic mode does not override reviewer burnout protection.
 
-When launching `sdd-apply`, always include the resolved `delivery_strategy`, `chain_strategy`, and any chosen PR boundary/exception in the prompt.
+When launching `qa-apply`, always include the resolved `delivery_strategy`, `chain_strategy`, and any chosen PR boundary/exception in the prompt.
 
 <!-- gentle-ai:sdd-model-assignments -->
 
@@ -433,7 +433,7 @@ When launching `sdd-archive`, forward explicit final-state facts for any work co
 
 #### Strict TDD Forwarding (MANDATORY)
 
-When launching `sdd-apply` or `sdd-verify`, the orchestrator MUST:
+When launching `qa-apply` or `qa-verify`, the orchestrator MUST:
 
 1. Search for testing capabilities: `mem_search(query: "sdd-init/{project}", project: "{project}")`
 2. If the result contains `strict_tdd: true`, add: `"STRICT TDD MODE IS ACTIVE. Test runner: {test_command}. You MUST follow strict-tdd.md. Do NOT fall back to Standard Mode."`
@@ -441,7 +441,7 @@ When launching `sdd-apply` or `sdd-verify`, the orchestrator MUST:
 
 #### Apply-Progress Continuity (MANDATORY)
 
-When launching `sdd-apply` for a continuation batch:
+When launching `qa-apply` for a continuation batch:
 
 1. Search for existing apply-progress: `mem_search(query: "sdd/{change-name}/apply-progress", project: "{project}")`
 2. If found, add: `"PREVIOUS APPLY-PROGRESS EXISTS at topic_key 'sdd/{change-name}/apply-progress'. You MUST read it first via mem_search + mem_get_observation, merge your new progress with the existing progress, and save the combined result. Do NOT overwrite - MERGE."`

@@ -90,9 +90,9 @@ Hard gate rules:
 
 ### SDD Entry Routing (MANDATORY)
 
-For a new product/code change request that says to use SDD, start at preflight -> init guard -> explore/proposal (`/sdd-new` equivalent). Never launch `sdd-apply` just because the user asked to implement a feature.
+For a new product/code change request that says to use SDD, start at preflight -> init guard -> explore/proposal (`/sdd-new` equivalent). Never launch `qa-apply` just because the user asked to implement a feature.
 
-Only launch `sdd-apply` when all are true:
+Only launch `qa-apply` when all are true:
 
 1. Session preflight is complete.
 2. The active change has existing spec, design, and tasks artifacts.

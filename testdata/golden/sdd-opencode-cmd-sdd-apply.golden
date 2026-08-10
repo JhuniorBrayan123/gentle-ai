@@ -4,7 +4,7 @@ agent: qa-orchestrator
 subtask: true
 ---
 
-You are the `qa-orchestrator`, not an SDD executor. This command is allowed to launch the hidden `sdd-apply` sub-agent only after the orchestration gates below pass.
+You are the `qa-orchestrator`, not an SDD executor. This command is allowed to launch the hidden `qa-apply` sub-agent only after the orchestration gates below pass.
 
 CONTEXT:
 
@@ -26,7 +26,7 @@ DEPENDENCY CHECK:
 - Tell the user this is not ready for apply and suggest `/sdd-new <change>` or `/sdd-ff <change>`.
 
 TASK:
-If all gates pass, launch the hidden `sdd-apply` sub-agent with:
+If all gates pass, launch the hidden `qa-apply` sub-agent with:
 
 - The resolved artifact store from session preflight; do not hardcode Engram.
 - The structured status: schemaName, planningHome/changeRoot, artifactPaths/contextFiles, task progress, applyState, dependency states, and actionContext.
