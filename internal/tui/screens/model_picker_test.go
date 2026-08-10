@@ -61,15 +61,15 @@ func TestRenderModelPickerScrollsToReviewAgents(t *testing.T) {
 	if !strings.Contains(output, "review-refuter") || !strings.Contains(output, "↑ more assignments") {
 		t.Fatalf("review rows are not visible at cursor %d:\n%s", cursor, output)
 	}
-	if strings.Contains(output, "gentle-orchestrator") {
+	if strings.Contains(output, "qa-orchestrator") {
 		t.Fatalf("picker did not window rows around review cursor:\n%s", output)
 	}
 }
 
 func TestModelPickerRows_OrchestratorIsFirst(t *testing.T) {
 	rows := ModelPickerRows()
-	if rows[0] != "gentle-orchestrator" {
-		t.Fatalf("ModelPickerRows()[0] = %q, want %q", rows[0], "gentle-orchestrator")
+	if rows[0] != "qa-orchestrator" {
+		t.Fatalf("ModelPickerRows()[0] = %q, want %q", rows[0], "qa-orchestrator")
 	}
 }
 
@@ -94,7 +94,7 @@ func TestModelPickerRows_SubAgentsStartAtIndexTwo(t *testing.T) {
 // ─── handleModelNav: orchestrator row (idx 0) ──────────────────────────────
 
 func TestHandleModelNav_OrchestratorRowAssignsOnlyOrchestrator(t *testing.T) {
-	state := makeTestState(0) // row 0 = gentle-orchestrator
+	state := makeTestState(0) // row 0 = qa-orchestrator
 	assignments := make(map[string]model.ModelAssignment)
 
 	handled, updated := handleModelNav("enter", state, assignments)
@@ -103,7 +103,7 @@ func TestHandleModelNav_OrchestratorRowAssignsOnlyOrchestrator(t *testing.T) {
 		t.Fatal("handleModelNav should return handled=true on enter")
 	}
 
-	// "gentle-orchestrator" key must be set
+	// "qa-orchestrator" key must be set
 	orch, ok := updated[SDDOrchestratorPhase]
 	if !ok || orch.ProviderID == "" {
 		t.Fatalf("expected %q to be assigned, got: %v", SDDOrchestratorPhase, updated)
@@ -220,8 +220,8 @@ func TestHandleModelNav_SubAgentRow_AssignsCorrectPhase(t *testing.T) {
 // ─── SDDOrchestratorPhase constant ────────────────────────────────────────
 
 func TestSDDOrchestratorPhaseConstant(t *testing.T) {
-	if SDDOrchestratorPhase != "gentle-orchestrator" {
-		t.Fatalf("SDDOrchestratorPhase = %q, want %q", SDDOrchestratorPhase, "gentle-orchestrator")
+	if SDDOrchestratorPhase != "qa-orchestrator" {
+		t.Fatalf("SDDOrchestratorPhase = %q, want %q", SDDOrchestratorPhase, "qa-orchestrator")
 	}
 }
 

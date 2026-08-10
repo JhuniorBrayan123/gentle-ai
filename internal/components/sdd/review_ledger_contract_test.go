@@ -623,7 +623,7 @@ func assertNoReviewerLifecycleInstructions(t *testing.T, label, content string) 
 	}
 }
 
-func readGentleOrchestratorPrompt(t *testing.T, settingsPath string) string {
+func readQAOrchestratorPrompt(t *testing.T, settingsPath string) string {
 	t.Helper()
 	payload, err := os.ReadFile(settingsPath)
 	if err != nil {
@@ -634,7 +634,7 @@ func readGentleOrchestratorPrompt(t *testing.T, settingsPath string) string {
 		t.Fatal(err)
 	}
 	agentsMap := root["agent"].(map[string]any)
-	orchestrator := agentsMap["gentle-orchestrator"].(map[string]any)
+	orchestrator := agentsMap["qa-orchestrator"].(map[string]any)
 	return orchestrator["prompt"].(string)
 }
 

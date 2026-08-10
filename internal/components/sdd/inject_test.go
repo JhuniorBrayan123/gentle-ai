@@ -518,8 +518,11 @@ func TestInjectOpenCodeWritesCommandFiles(t *testing.T) {
 	if !strings.Contains(settingsText, `"agent"`) {
 		t.Fatal("opencode.json missing agent key for SDD commands")
 	}
-	if !strings.Contains(settingsText, `"gentle-orchestrator"`) {
-		t.Fatal("opencode.json missing gentle-orchestrator agent")
+	if !strings.Contains(settingsText, `"qa-orchestrator"`) {
+		t.Fatal("opencode.json missing qa-orchestrator agent")
+	}
+	if strings.Contains(settingsText, `"gentle-orchestrator"`) {
+		t.Fatal("opencode.json should not install legacy gentle-orchestrator agent")
 	}
 	if strings.Contains(settingsText, `"sdd-orchestrator"`) {
 		t.Fatal("opencode.json should not install legacy sdd-orchestrator agent")
@@ -554,7 +557,7 @@ func TestInjectOpenCodeIsIdempotent(t *testing.T) {
 	}
 	settingsPath := opencodeAdapter().SettingsPath(home)
 	firstSettings, err := os.ReadFile(settingsPath)
-	if err != nil || !bytes.Contains(firstSettings, []byte(`"default_agent": "gentle-orchestrator"`)) {
+	if err != nil || !bytes.Contains(firstSettings, []byte(`"default_agent": "qa-orchestrator"`)) {
 		t.Fatalf("first settings missing managed default: %s, err = %v", firstSettings, err)
 	}
 
@@ -726,7 +729,9 @@ func TestInjectOpenCodeMigratesPreservedLegacyOrchestratorPromptReferences(t *te
 	text := string(settingsBytes)
 	for _, unwanted := range []string{
 		"Bind this to the dedicated `sdd-orchestrator` agent only.",
+		"Bind this to the dedicated `gentle-orchestrator` agent only.",
 		"agent.sdd-orchestrator.model",
+		"agent.gentle-orchestrator.model",
 		"run a fresh-context review unless the diff is trivial docs/text",
 		"run a fresh audit before continuing",
 		"use fresh context for adversarial review of diffs",
@@ -742,8 +747,8 @@ func TestInjectOpenCodeMigratesPreservedLegacyOrchestratorPromptReferences(t *te
 		}
 	}
 	for _, wanted := range []string{
-		"Bind this to the dedicated `gentle-orchestrator` agent only.",
-		"agent.gentle-orchestrator.model",
+		"Bind this to the dedicated `qa-orchestrator` agent only.",
+		"agent.qa-orchestrator.model",
 		"### SDD Session Preflight (HARD GATE)",
 		"Use the `question` tool for SDD Session Preflight",
 		"Ask all four preflight groups in one single `question` tool call",
@@ -856,7 +861,10 @@ func TestInjectOpenCodeUpgradesPromptOwnedLensRouter(t *testing.T) {
 	if err := json.Unmarshal(settingsBytes, &settings); err != nil {
 		t.Fatalf("Unmarshal(opencode.json) error = %v", err)
 	}
-	prompt := settings.Agent["gentle-orchestrator"].Prompt
+	if _, exists := settings.Agent["gentle-orchestrator"]; exists {
+		t.Fatal("legacy gentleman-conductor gentle-orchestrator agent should be removed")
+	}
+	prompt := settings.Agent["qa-orchestrator"].Prompt
 	if !strings.HasPrefix(prompt, userContent+"\n\n") {
 		t.Fatalf("user-authored content outside the migration block changed:\n%s", prompt)
 	}
@@ -1112,7 +1120,7 @@ PRESERVE_THIS_UNRELATED_SECTION exactly as authored.
 		t.Fatalf("first Inject() error = %v", err)
 	}
 
-	prompt := readGentleOrchestratorPrompt(t, settingsPath)
+	prompt := readQAOrchestratorPrompt(t, settingsPath)
 	assertTextContainsClauses(t, "migrated preserved OpenCode prompt", prompt, requiredLedgerClauses)
 	assertTextContainsClauses(t, "migrated preserved OpenCode prompt", prompt, []string{requiredOrchestratorMergeModeClause})
 	for _, preserved := range []string{
@@ -1144,7 +1152,7 @@ PRESERVE_THIS_UNRELATED_SECTION exactly as authored.
 	if _, err := Inject(home, opencodeAdapter(), model.SDDModeMulti, opts); err != nil {
 		t.Fatalf("second Inject() error = %v", err)
 	}
-	secondPrompt := readGentleOrchestratorPrompt(t, settingsPath)
+	secondPrompt := readQAOrchestratorPrompt(t, settingsPath)
 	if secondPrompt != prompt {
 		diffAt := 0
 		for diffAt < len(prompt) && diffAt < len(secondPrompt) && prompt[diffAt] == secondPrompt[diffAt] {
@@ -1406,19 +1414,22 @@ func TestInjectOpenCodeMigratesLegacyBaseOrchestratorToGentleOrchestrator(t *tes
 	if _, exists := agentMap["sdd-orchestrator"]; exists {
 		t.Fatal("legacy base sdd-orchestrator should be removed")
 	}
+	if _, exists := agentMap["gentle-orchestrator"]; exists {
+		t.Fatal("retired gentle-orchestrator should be removed after migration")
+	}
 	if _, exists := agentMap["sdd-orchestrator-cheap"]; !exists {
 		t.Fatal("named profile orchestrator should be preserved")
 	}
-	gentleOrchestratorAgent, ok := agentMap["gentle-orchestrator"].(map[string]any)
+	gentleOrchestratorAgent, ok := agentMap["qa-orchestrator"].(map[string]any)
 	if !ok {
-		t.Fatal("gentle-orchestrator agent not found or wrong type")
+		t.Fatal("qa-orchestrator agent not found or wrong type")
 	}
 	prompt, _ := gentleOrchestratorAgent["prompt"].(string)
 	if !strings.Contains(prompt, legacyPrompt) {
-		t.Fatalf("gentle-orchestrator prompt = %q, want it to preserve migrated legacy prompt", prompt)
+		t.Fatalf("qa-orchestrator prompt = %q, want it to preserve migrated legacy prompt", prompt)
 	}
 	if !strings.Contains(prompt, "### SDD Session Preflight (HARD GATE)") {
-		t.Fatalf("gentle-orchestrator prompt = %q, want appended preflight migration", prompt)
+		t.Fatalf("qa-orchestrator prompt = %q, want appended preflight migration", prompt)
 	}
 }
 
@@ -1467,16 +1478,19 @@ func TestInjectOpenCodeMigratesMisnamedGentlemanSDDOrchestrator(t *testing.T) {
 	if _, exists := agentMap["gentleman"]; exists {
 		t.Fatal("misnamed SDD gentleman agent should be removed")
 	}
-	gentleOrchestratorAgent, ok := agentMap["gentle-orchestrator"].(map[string]any)
+	if _, exists := agentMap["gentle-orchestrator"]; exists {
+		t.Fatal("retired gentle-orchestrator should be removed after migration")
+	}
+	gentleOrchestratorAgent, ok := agentMap["qa-orchestrator"].(map[string]any)
 	if !ok {
-		t.Fatal("gentle-orchestrator agent not found or wrong type")
+		t.Fatal("qa-orchestrator agent not found or wrong type")
 	}
 	prompt, _ := gentleOrchestratorAgent["prompt"].(string)
 	if !strings.Contains(prompt, priorPrompt) {
-		t.Fatalf("gentle-orchestrator prompt = %q, want it to preserve migrated misnamed prompt", prompt)
+		t.Fatalf("qa-orchestrator prompt = %q, want it to preserve migrated misnamed prompt", prompt)
 	}
 	if !strings.Contains(prompt, "### SDD Session Preflight (HARD GATE)") {
-		t.Fatalf("gentle-orchestrator prompt = %q, want appended preflight migration", prompt)
+		t.Fatalf("qa-orchestrator prompt = %q, want appended preflight migration", prompt)
 	}
 }
 
@@ -1528,16 +1542,19 @@ func TestInjectOpenCodeDeletesRevokedGentlemanAgent(t *testing.T) {
 	if _, exists := agentMap["gentleman"]; exists {
 		t.Fatal("revoked gentleman agent should be removed")
 	}
-	gentleOrchestratorAgent, ok := agentMap["gentle-orchestrator"].(map[string]any)
+	if _, exists := agentMap["gentle-orchestrator"]; exists {
+		t.Fatal("retired gentle-orchestrator should be removed after migration")
+	}
+	gentleOrchestratorAgent, ok := agentMap["qa-orchestrator"].(map[string]any)
 	if !ok {
-		t.Fatal("gentle-orchestrator agent not found or wrong type")
+		t.Fatal("qa-orchestrator agent not found or wrong type")
 	}
 	prompt, _ := gentleOrchestratorAgent["prompt"].(string)
 	if !strings.Contains(prompt, "CURRENT_GENTLE_ORCHESTRATOR_PROMPT") {
-		t.Fatalf("gentle-orchestrator prompt = %q, want it to preserve current prompt", prompt)
+		t.Fatalf("qa-orchestrator prompt = %q, want it to preserve current prompt", prompt)
 	}
 	if !strings.Contains(prompt, "### SDD Session Preflight (HARD GATE)") {
-		t.Fatalf("gentle-orchestrator prompt = %q, want appended preflight migration", prompt)
+		t.Fatalf("qa-orchestrator prompt = %q, want appended preflight migration", prompt)
 	}
 }
 
@@ -1633,8 +1650,11 @@ func TestInjectOpenCodeMigratesLegacyAgentsKey(t *testing.T) {
 	if _, ok := agentMap["legacy-agent"]; !ok {
 		t.Fatal("legacy agent was not migrated under agent key")
 	}
-	if _, ok := agentMap["gentle-orchestrator"]; !ok {
-		t.Fatal("gentle-orchestrator agent missing after merge")
+	if _, ok := agentMap["qa-orchestrator"]; !ok {
+		t.Fatal("qa-orchestrator agent missing after merge")
+	}
+	if _, ok := agentMap["gentle-orchestrator"]; ok {
+		t.Fatal("retired gentle-orchestrator agent should not remain after merge")
 	}
 	if _, ok := agentMap["sdd-orchestrator"]; ok {
 		t.Fatal("legacy sdd-orchestrator agent should not remain after merge")
@@ -2349,7 +2369,10 @@ func TestInjectOpenCodeMultiModeRemovesLegacyDelegateTools(t *testing.T) {
 		t.Fatalf("Unmarshal(opencode.json) error = %v", err)
 	}
 	agentMap := root["agent"].(map[string]any)
-	orchestrator := agentMap["gentle-orchestrator"].(map[string]any)
+	if _, legacy := agentMap["gentle-orchestrator"]; legacy {
+		t.Fatal("retired gentle-orchestrator agent should be removed after sync")
+	}
+	orchestrator := agentMap["qa-orchestrator"].(map[string]any)
 	tools := orchestrator["tools"].(map[string]any)
 
 	for _, legacyTool := range []string{"delegate", "delegation_read", "delegation_list"} {
@@ -2403,7 +2426,10 @@ func TestInjectOpenCodeSingleModeRemovesLegacyDelegateTools(t *testing.T) {
 		t.Fatalf("Unmarshal(opencode.json) error = %v", err)
 	}
 	agentMap := root["agent"].(map[string]any)
-	orchestrator := agentMap["gentle-orchestrator"].(map[string]any)
+	if _, legacy := agentMap["gentle-orchestrator"]; legacy {
+		t.Fatal("retired gentle-orchestrator agent should be removed after sync")
+	}
+	orchestrator := agentMap["qa-orchestrator"].(map[string]any)
 	tools := orchestrator["tools"].(map[string]any)
 
 	for _, legacyTool := range []string{"delegate", "delegation_read", "delegation_list"} {
@@ -2593,10 +2619,13 @@ func TestInjectOpenCodeEmptySDDModeDefaultsSingle(t *testing.T) {
 		t.Fatalf("agent key has unexpected type: %T", agentRaw)
 	}
 
-	// Empty mode defaults to single — gentle-orchestrator + 10 SDD sub-agents +
+	// Empty mode defaults to single — qa-orchestrator + 10 SDD sub-agents +
 	// 3 JD agents + 4 review agents + 1 batched refuter = 19 agents.
-	if _, ok := agentMap["gentle-orchestrator"]; !ok {
-		t.Fatal("missing gentle-orchestrator agent")
+	if _, ok := agentMap["qa-orchestrator"]; !ok {
+		t.Fatal("missing qa-orchestrator agent")
+	}
+	if _, ok := agentMap["gentle-orchestrator"]; ok {
+		t.Fatal("retired gentle-orchestrator agent should not be installed")
 	}
 	if len(agentMap) != 25 {
 		t.Fatalf("agent count = %d, want 25", len(agentMap))
@@ -2727,8 +2756,11 @@ func TestInjectOpenCodeSingleToMultiSwitch(t *testing.T) {
 	}
 
 	agentMap, _ := root["agent"].(map[string]any)
-	if _, ok := agentMap["gentle-orchestrator"]; !ok {
-		t.Fatal("missing gentle-orchestrator after switch to multi")
+	if _, ok := agentMap["qa-orchestrator"]; !ok {
+		t.Fatal("missing qa-orchestrator after switch to multi")
+	}
+	if _, ok := agentMap["gentle-orchestrator"]; ok {
+		t.Fatal("retired gentle-orchestrator should not remain after switch to multi")
 	}
 	if _, ok := agentMap["sdd-orchestrator"]; ok {
 		t.Fatal("legacy sdd-orchestrator should not remain after switch to multi")
@@ -3180,7 +3212,7 @@ func TestInjectOpenCodeMultiModeUsesRootModelForUnassignedAgents(t *testing.T) {
 	// pre-existing in the user's config should get the root model injected.
 	// Since we started with only {"model":"openai/gpt-5"} (no agent entries),
 	// ALL agents are "new" from the 3-way logic perspective and should get rootModel.
-	for _, phase := range []string{"gentle-orchestrator", "sdd-init", "sdd-verify"} {
+	for _, phase := range []string{"qa-orchestrator", "sdd-init", "sdd-verify"} {
 		agentDef, ok := agentMap[phase].(map[string]any)
 		if !ok {
 			t.Fatalf("phase %q agent not found or wrong type", phase)
@@ -4817,8 +4849,11 @@ func TestInjectOpenCodeMultiModeWithPreExistingMinimalConfig(t *testing.T) {
 	if !ok {
 		t.Fatal("opencode.json missing agent key after merge")
 	}
-	if _, ok := agentMap["gentle-orchestrator"]; !ok {
-		t.Fatal("missing gentle-orchestrator after merge with pre-existing config")
+	if _, ok := agentMap["qa-orchestrator"]; !ok {
+		t.Fatal("missing qa-orchestrator after merge with pre-existing config")
+	}
+	if _, ok := agentMap["gentle-orchestrator"]; ok {
+		t.Fatal("retired gentle-orchestrator should be removed after merge with pre-existing config")
 	}
 	if _, ok := agentMap["sdd-orchestrator"]; ok {
 		t.Fatal("legacy sdd-orchestrator should be removed after merge with pre-existing config")
@@ -4893,14 +4928,17 @@ func TestInjectOpenCodeMultiModeWithPreExistingFullConfig(t *testing.T) {
 		t.Fatal("opencode.json missing agent key after merge")
 	}
 
-	// All multi-mode agents must be present with gentle-orchestrator as the base orchestrator.
+	// All multi-mode agents must be present with qa-orchestrator as the base orchestrator.
 	for _, agentName := range []string{
-		"gentle-orchestrator", "sdd-init", "sdd-explore", "sdd-propose",
+		"qa-orchestrator", "sdd-init", "sdd-explore", "sdd-propose",
 		"sdd-spec", "sdd-design", "sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive",
 	} {
 		if _, ok := agentMap[agentName]; !ok {
 			t.Fatalf("missing agent %q after merge with full pre-existing config", agentName)
 		}
+	}
+	if _, legacy := agentMap["gentle-orchestrator"]; legacy {
+		t.Fatal("retired gentle-orchestrator agent should be removed after merge with full pre-existing config")
 	}
 }
 
@@ -4962,14 +5000,17 @@ func TestInjectOpenCodeMultiModeAssignsGentleOrchestratorModelFromLegacyOrchestr
 	if _, exists := agentMap["sdd-orchestrator"]; exists {
 		t.Fatal("legacy sdd-orchestrator agent should not be installed")
 	}
+	if _, exists := agentMap["gentle-orchestrator"]; exists {
+		t.Fatal("retired gentle-orchestrator agent should not be installed")
+	}
 
-	// gentle-orchestrator must receive the historical sdd-orchestrator assignment.
-	gentleOrchestratorAgent, ok := agentMap["gentle-orchestrator"].(map[string]any)
+	// qa-orchestrator must receive the historical sdd-orchestrator assignment.
+	gentleOrchestratorAgent, ok := agentMap["qa-orchestrator"].(map[string]any)
 	if !ok {
-		t.Fatal("gentle-orchestrator agent not found or wrong type")
+		t.Fatal("qa-orchestrator agent not found or wrong type")
 	}
 	if m, _ := gentleOrchestratorAgent["model"].(string); m != "openai/gpt-4o" {
-		t.Fatalf("gentle-orchestrator model = %q, want %q", m, "openai/gpt-4o")
+		t.Fatalf("qa-orchestrator model = %q, want %q", m, "openai/gpt-4o")
 	}
 }
 
@@ -5008,15 +5049,18 @@ func TestInjectOpenCodeMultiModeInstallsGentleOrchestratorWithModel(t *testing.T
 		t.Fatal("opencode.json missing agent map")
 	}
 
-	gentleOrchestratorAgent, ok := agentMap["gentle-orchestrator"].(map[string]any)
+	gentleOrchestratorAgent, ok := agentMap["qa-orchestrator"].(map[string]any)
 	if !ok {
-		t.Fatal("gentle-orchestrator agent not found or wrong type")
+		t.Fatal("qa-orchestrator agent not found or wrong type")
 	}
 	if m, _ := gentleOrchestratorAgent["model"].(string); m != "openai/gpt-4o" {
-		t.Fatalf("gentle-orchestrator model = %q, want %q", m, "openai/gpt-4o")
+		t.Fatalf("qa-orchestrator model = %q, want %q", m, "openai/gpt-4o")
 	}
 	if _, exists := agentMap["sdd-orchestrator"]; exists {
 		t.Fatal("legacy sdd-orchestrator agent should not be installed")
+	}
+	if _, exists := agentMap["gentle-orchestrator"]; exists {
+		t.Fatal("retired gentle-orchestrator agent should not be installed")
 	}
 }
 
@@ -7006,5 +7050,114 @@ func TestInjectRefreshesStaleArchiveSkillWithFinalStateAuthority(t *testing.T) {
 	}
 	if !strings.Contains(string(workflowContent), "### Archive Final-State Handoff (MANDATORY)") {
 		t.Fatal("installed lazy SDD workflow missing archive final-state handoff section")
+	}
+}
+
+// TestMigrateLegacyOpenCodeQAOrchestratorConvergence verifies that every
+// legacy conductor document shape converges onto the single canonical
+// qa-orchestrator agent in one sync, with zero legacy keys remaining, prompt
+// preservation when the canonical key was absent, and idempotence (a second
+// pass is a no-op).
+//
+// The QA migration runs after migrateLegacyOpenCodeSDDOrchestrator in
+// mergeJSONFile, so the tests exercise the full documented pipeline: run the
+// sdd step, then the qa step, exactly as a sync would. The table seeds the
+// pre-sync document state.
+func TestMigrateLegacyOpenCodeQAOrchestratorConvergence(t *testing.T) {
+	const preservedPrompt = "PRESERVED_ORCHESTRATOR_PROMPT"
+	const otherPrompt = "OTHER_LEGACY_PROMPT"
+
+	states := []struct {
+		name     string
+		seed     string
+		wantKeep string // prompt the converged qa-orchestrator must carry
+	}{
+		{
+			name: "only-sdd",
+			seed: `{"agent":{"sdd-orchestrator":{"mode":"primary","prompt":"` + preservedPrompt + `"}}}`,
+			wantKeep: preservedPrompt,
+		},
+		{
+			name: "only-gentle",
+			seed: `{"agent":{"gentle-orchestrator":{"mode":"primary","prompt":"` + preservedPrompt + `"}}}`,
+			wantKeep: preservedPrompt,
+		},
+		{
+			name: "sdd-plus-gentle",
+			seed: `{"agent":{"sdd-orchestrator":{"mode":"primary","prompt":"` + otherPrompt + `"},"gentle-orchestrator":{"mode":"primary","prompt":"` + preservedPrompt + `"}}}`,
+			wantKeep: preservedPrompt,
+		},
+		{
+			name: "gentle-plus-partial-qa",
+			seed: `{"agent":{"gentle-orchestrator":{"mode":"primary","prompt":"` + otherPrompt + `"},"qa-orchestrator":{"mode":"primary","prompt":"` + preservedPrompt + `"}}}`,
+			wantKeep: preservedPrompt,
+		},
+		{
+			name: "already-converged",
+			seed: `{"agent":{"qa-orchestrator":{"mode":"primary","prompt":"` + preservedPrompt + `"}}}`,
+			wantKeep: preservedPrompt,
+		},
+	}
+
+	for _, st := range states {
+		t.Run(st.name, func(t *testing.T) {
+			// Run the exact sync pipeline: sdd step folds sdd-orchestrator into
+			// gentle-orchestrator (and revokes the misnamed gentleman), then the
+			// qa step converges gentle-orchestrator onto qa-orchestrator.
+			afterSDD, err := migrateLegacyOpenCodeSDDOrchestrator([]byte(st.seed))
+			if err != nil {
+				t.Fatalf("migrateLegacyOpenCodeSDDOrchestrator() error = %v", err)
+			}
+			out, err := migrateLegacyOpenCodeQAOrchestrator(afterSDD)
+			if err != nil {
+				t.Fatalf("migrateLegacyOpenCodeQAOrchestrator() error = %v", err)
+			}
+
+			root := map[string]any{}
+			if err := json.Unmarshal(out, &root); err != nil {
+				t.Fatalf("result is not valid JSON: %v", err)
+			}
+			agents, _ := root["agent"].(map[string]any)
+			for _, legacy := range []string{"sdd-orchestrator", "gentle-orchestrator"} {
+				if _, exists := agents[legacy]; exists {
+					t.Fatalf("legacy agent %q survived convergence: %#v", legacy, agents)
+				}
+			}
+			canonical, ok := agents["qa-orchestrator"].(map[string]any)
+			if !ok {
+				t.Fatalf("converged agent qa-orchestrator missing or wrong type: %#v", agents)
+			}
+			if got, _ := canonical["prompt"].(string); got != st.wantKeep {
+				t.Fatalf("qa-orchestrator prompt = %q, want %q", got, st.wantKeep)
+			}
+
+			// Idempotence: a second full pass must be a byte-identical no-op.
+			afterSDDSecond, err := migrateLegacyOpenCodeSDDOrchestrator(out)
+			if err != nil {
+				t.Fatalf("second migrateLegacyOpenCodeSDDOrchestrator() error = %v", err)
+			}
+			second, err := migrateLegacyOpenCodeQAOrchestrator(afterSDDSecond)
+			if err != nil {
+				t.Fatalf("second migrateLegacyOpenCodeQAOrchestrator() error = %v", err)
+			}
+			if string(second) != string(out) {
+				t.Fatalf("migration is not idempotent:\nfirst:\n%s\nsecond:\n%s", out, second)
+			}
+		})
+	}
+}
+
+// TestMigrateLegacyOpenCodeQAOrchestratorNoOp pins the no-op surface: empty
+// input, non-JSON, and documents without a gentle-orchestrator key must pass
+// through byte-for-byte unchanged.
+func TestMigrateLegacyOpenCodeQAOrchestratorNoOp(t *testing.T) {
+	for _, in := range []string{``, `   `, `{"agent":{}}`, `not json`, `{"agent":{"qa-orchestrator":{"mode":"primary"}}}`} {
+		out, err := migrateLegacyOpenCodeQAOrchestrator([]byte(in))
+		if err != nil {
+			t.Fatalf("unexpected error for %q: %v", in, err)
+		}
+		if string(out) != in {
+			t.Fatalf("input %q mutated to %q, want unchanged", in, string(out))
+		}
 	}
 }

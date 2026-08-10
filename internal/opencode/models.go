@@ -503,6 +503,21 @@ func JDPhases() []string {
 	}
 }
 
+// QAPhases returns the ordered list of QA executor sub-agent names.
+// These are the 6 qa-* executors (explore/spec/apply/verify/review/docs)
+// added by the qa-orchestrator specialization. They support independent
+// model configuration like every other configurable agent phase.
+func QAPhases() []string {
+	return []string{
+		"qa-explore",
+		"qa-spec",
+		"qa-apply",
+		"qa-verify",
+		"qa-review",
+		"qa-docs",
+	}
+}
+
 const ReviewRefuterAgent = "review-refuter"
 
 // ReviewLensPhases returns the ordered native bounded-review lens agents.
@@ -529,6 +544,7 @@ func ReviewPhases() []string {
 func ConfigurableAgentPhases() []string {
 	phases := SDDPhases()
 	phases = append(phases, JDPhases()...)
+	phases = append(phases, QAPhases()...)
 	phases = append(phases, ReviewPhases()...)
 	return phases
 }
