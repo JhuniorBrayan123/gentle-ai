@@ -33,6 +33,8 @@ var foundationSkills = []model.SkillID{
 	model.SkillRDDDefectWorkflow,
 	model.SkillSystemicIssueTriage,
 	model.SkillQASupervisor,
+	model.SkillQADocAccess,
+	model.SkillQAEvidence,
 	model.SkillGitlabMRFlow,
 	model.SkillGitlabReleaseTag,
 }

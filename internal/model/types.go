@@ -91,6 +91,8 @@ const (
 	SkillSystemicIssueTriage SkillID = "systemic-issue-triage"
 	SkillGentleAIBench       SkillID = "gentle-ai-bench"
 	SkillQASupervisor        SkillID = "qa-supervisor"
+	SkillQADocAccess         SkillID = "qa-doc-access"
+	SkillQAEvidence          SkillID = "qa-evidence"
 	SkillGitlabMRFlow        SkillID = "gitlab-mr-flow"
 	SkillGitlabReleaseTag    SkillID = "gitlab-release-tag"
 )

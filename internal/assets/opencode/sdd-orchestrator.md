@@ -355,7 +355,8 @@ When launching `sdd-apply`, always include the resolved `delivery_strategy`, `ch
 
 Read the configured models from `opencode.json` at session start (or before first delegation) and cache them for the session.
 
-- Treat `agent.gentle-orchestrator.model` as authoritative when it is set.
+- Treat `agent.qa-orchestrator.model` as authoritative when it is set.
+- Treat `agent.qa-*.model` as authoritative when it is set.
 - Treat `agent.sdd-<phase>.model` as authoritative when it is set.
 - If a phase does not have an explicit model, use the default OpenCode runtime model for that agent and continue.
 - For named profiles, apply the same rule to the suffixed agent keys (for example, `sdd-apply-cheap`).
@@ -459,3 +460,29 @@ When launching `sdd-apply` for a continuation batch:
 | Apply progress  | `sdd/{change-name}/apply-progress` |
 | Verify report   | `sdd/{change-name}/verify-report`  |
 | Archive report  | `sdd/{change-name}/archive-report` |
+
+*Note: For QA automation changes, replace the `sdd/` prefix with `qa/` in all topic keys except `sdd-init` (e.g., `qa/{change-name}/apply-progress`).*
+
+<!-- gentle-ai:qa-rules -->
+## Reglas G1 a G6 (obligatorias)
+
+- **G1 — Documentación como fuente oficial**: consultar BookStack antes de proponer; citar páginas; NO inventar convenciones; si falta/incompleta/contradice → detener e informar el vacío; si BookStack difiere del código actual, NO decidas tú, presenta la contradicción al humano.
+- **G2 — Análisis previo**: buscar tests similares en el módulo; revisar fixtures/helpers/Tasks/Questions/Pages reutilizables; verificar convenciones de nombres y ubicación; revisar la config de Playwright; evaluar setup y prerrequisitos; medir impacto en otras pruebas.
+- **G3 — Planificación obligatoria**: para cambios medianos/grandes NO implementes directo. Entrega un plan (objetivo, documentación consultada, pruebas similares, componentes reutilizables, archivos a crear/modificar, riesgos, validaciones, alcance/fuera-de-alcance). La implementación SOLO tras aprobación humana.
+- **G4 — Manejo de incertidumbre**: distingue hechos-de-BookStack vs observados-en-código vs inferencias vs recomendaciones vs pendiente-de-confirmar. Si un criterio no está definido, pide aclaración. NO conviertas una suposición en regla de negocio.
+- **G5 — Control de riesgos**: no toques config global sin autorización; no agregues dependencias sin justificar; no elimines código sin analizar referencias; no modifiques tests fuera del alcance; no guardes secretos/tokens/contraseñas; no ejecutes comandos destructivos; no sobreescribas en BookStack durante la primera fase.
+- **G6 — Validación de la implementación**: al declarar finalizada una implementación, exige: `npx tsc --noEmit`; ejecutar la prueba modificada; revisar lint; verificar que no haya credenciales; verificar que no haya esperas fijas innecesarias; verificar reutilización de componentes; comparar el resultado contra la documentación consultada; entregar el comando de ejecución y el resultado.
+
+## Análisis de solicitud (Plantilla 10 secciones)
+
+1. Requerimiento interpretado
+2. Información pendiente
+3. Documentación consultada
+4. Implementaciones similares
+5. Reglas aplicables
+6. Propuesta
+7. Riesgos
+8. Validaciones previstas
+9. Vacíos o contradicciones
+10. Solicitud de aprobación
+<!-- /gentle-ai:qa-rules -->

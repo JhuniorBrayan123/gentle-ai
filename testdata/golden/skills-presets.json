@@ -25,7 +25,12 @@
       "comment-writer",
       "work-unit-commits",
       "rdd-defect-workflow",
-      "systemic-issue-triage"
+      "systemic-issue-triage",
+      "qa-supervisor",
+      "qa-doc-access",
+      "qa-evidence",
+      "gitlab-mr-flow",
+      "gitlab-release-tag"
     ]
   },
   {
@@ -54,7 +59,12 @@
       "comment-writer",
       "work-unit-commits",
       "rdd-defect-workflow",
-      "systemic-issue-triage"
+      "systemic-issue-triage",
+      "qa-supervisor",
+      "qa-doc-access",
+      "qa-evidence",
+      "gitlab-mr-flow",
+      "gitlab-release-tag"
     ]
   },
   {
