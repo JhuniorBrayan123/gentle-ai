@@ -65,6 +65,13 @@ Before designing, read the actual code that will be affected:
 
 If the design changes routing, shell commands, subprocesses, VCS/PR automation, executable-file classification, or process integration, read `references/threat-matrix.md` and include its matrix in the design. Mark every row `Applicable` or explicit `N/A` with a reason. Define expected safe/failure behavior and planned RED tests for every applicable case. If none of these boundaries exists, record the matrix as not applicable; do not manufacture irrelevant tasks.
 
+### Step 2b: UI Locator Pre-flight (conditional)
+
+If the design touches UI components in SmartClic/erp-mf-* microfrontends, run the 2-level locator flow BEFORE proposing selectors:
+1. **Level 0 (always first)**: Reuse existing locators from the automation project's POM (`src/pages/**`) and Screenplay tasks/questions. Do NOT reinvent.
+2. **Level 1 (only if missing)**: Load the `qa-locator-hunting` skill and hunt in GitLab via MCP (map domain→`erp-mf-<dominio>`: comun/logistica/puntoventa/facturacion; confirm the exact project in the SmartClic group; search by visible text; extract the real selector from Angular `.html`/React `.tsx` templates; priority `data-testid`/`id`/`name`/`formControlName`/`aria-label` over CSS classes).
+3. **Honest fallback**: No GitLab access or not found → report "locator no encontrado" and ask for the microfront URL/path. NEVER invent selectors.
+
 ### Step 3: Write design.md
 
 **IF mode is `openspec` or `hybrid`:** Create the design document:
