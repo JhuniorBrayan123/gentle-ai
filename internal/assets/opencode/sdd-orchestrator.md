@@ -60,7 +60,9 @@ Core principle: **does this inflate the parent context without need?** If yes, u
 | Bash for state (`git`, `gh`) | ✅ | — |
 | Tests, builds, installs, or native review actions | allowed as a bounded action | ✅ fresh per-action worker without changing route |
 
-Use OpenCode's native `explore` agent for read-only mapping and `general` agent for implementation or command execution; reserve `sdd-*` agents for a selected SDD route.
+QA-automation requests (creating/automating test cases, test design, QAS workflows) ALWAYS delegate exploration to `qa-explore`, regardless of file count; the inline read allowance above is for general direct work only.
+
+Use OpenCode's native `explore` agent for read-only mapping and `general` agent for implementation or command execution; reserve `sdd-*` agents for a selected SDD route. QA-automation requests (creating or automating test cases, test design, QAS workflows — explicit QA-automation intent) select the QA route `qa-explore` → `qa-spec` → approval → `qa-apply` → `qa-verify` instead, leaving native explore/general for general-purpose direct work and `sdd-*` reserved for a selected SDD route otherwise.
 
 Keep one writer and a short synthesized handoff. Delegation is mandatory at the mapping, write, preparation, and broad-research boundaries, but it remains a direct implementation route and must not synthesize SDD artifacts.
 
@@ -68,12 +70,12 @@ Keep one writer and a short synthesized handoff. Delegation is mandatory at the 
 
 These are parent-orchestrator routing boundaries. Use the smallest useful topology and keep the safety machinery behind the outcome-first interaction. Do not pass these rules to child agents as permission to orchestrate.
 
-1. **Bounded read rule**: read 1–3 files inline to decide or verify.
-2. **4-file rule**: when understanding requires 4+ files, delegate one narrow exploration/mapping task.
+1. **Bounded read rule** (general direct work): read 1–3 files inline to decide or verify.
+2. **4-file rule** (general direct work): when understanding requires 4+ files, delegate one narrow exploration/mapping task. For QA-automation requests, exploration ALWAYS delegates to `qa-explore` regardless of file count — the file-count threshold applies to general direct work only.
 3. **Write rule**: keep one mechanical, already-understood file inline only when it needs no research or unresolved design work; delegate one writer for 2+ non-trivial files.
 4. **Context rule**: delegate reading that prepares a write and broad research/context compression.
 5. **Per-action rule**: tests, builds, installs, and native review actors may use fresh workers without changing the implementation route or creating SDD state.
-6. **Optional SDD rule**: propose SDD only when durable proposal/spec/design/tasks materially reduce substantial ambiguity. Select SDD only after an explicit request or accepted proposal; risk alone never forces SDD.
+6. **Optional SDD rule**: propose SDD only when durable proposal/spec/design/tasks materially reduce substantial ambiguity. Select SDD only after an explicit request or accepted proposal; risk alone never forces SDD. **QA-route selection rule**: explicit QA-automation intent — wording like "crear caso de automatización", "automatizar X", "haceme el QA de X", or "caso E2E" — selects the QA route `qa-explore` → `qa-spec` → approval → `qa-apply` → `qa-verify` without requiring `/sdd-new` or an accepted proposal: the intent itself is the trigger. Normal SDD still requires an explicit request or accepted proposal, and risk alone never forces SDD for non-QA work.
 
 #### Native Checking Contract
 

@@ -338,7 +338,16 @@ func TestKilocodeReviewSettingsMatchCurrentMainBaseline(t *testing.T) {
 	// the four command bodies). Kilocode embeds the same OpenCode conductor in
 	// `agent.gentle-orchestrator.prompt`, so the hash moved again. Deliberate,
 	// not drift.
-	const want = "cdb8fa560ed5d41bf98c11ecaf4e7d115eaec7b79e3263cf1fd56768468050bf"
+	//
+	// gentle-ai fork PR7 (qa-orchestrator change): the OpenCode conductor's
+	// delegation-routing sentences now select the QA route
+	// qa-explore→qa-spec→approval→qa-apply→qa-verify for explicit
+	// QA-automation intent (delegation selection, the QA always-delegate
+	// exploration rule, and the 4-file-rule trigger all name qa-explore as the
+	// exploration worker). Kilocode embeds the same OpenCode conductor in
+	// `agent.gentle-orchestrator.prompt`, so the hash moved again. Deliberate,
+	// not drift.
+	const want = "fbd272c533090b2be254a39880ec750c13a8bd0cd934d49337ad6ee1dc7c7d47"
 	if got != want {
 		t.Fatalf("Kilocode settings SHA-256 = %s, want current-main baseline %s", got, want)
 	}
