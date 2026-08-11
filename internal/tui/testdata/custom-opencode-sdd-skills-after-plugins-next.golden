@@ -14,6 +14,12 @@ SDD Skills
   [x] SDD Archive
   [x] SDD Onboard
   [x] Judgment Day
+  [x] qa-explore
+  [x] qa-spec
+  [x] qa-apply
+  [x] qa-verify
+  [x] qa-review
+  [x] qa-docs
 
 Foundation Skills
   [x] Go Testing
@@ -29,6 +35,11 @@ Foundation Skills
   [x] Work Unit Commits
   [x] RDD Defect Workflow
   [x] Systemic Issue Triage
+  [x] qa-supervisor
+  [x] qa-doc-access
+  [x] qa-evidence
+  [x] gitlab-mr-flow
+  [x] gitlab-release-tag
 
   Continue
   Back

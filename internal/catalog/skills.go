@@ -38,7 +38,8 @@ var mvpSkills = []Skill{
 	{ID: model.SkillWorkUnitCommits, Name: "work-unit-commits", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillRDDDefectWorkflow, Name: "rdd-defect-workflow", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillSystemicIssueTriage, Name: "systemic-issue-triage", Category: "workflow", Priority: "p0"},
-	// Custom team skills
+// Custom team skills
+	{ID: model.SkillQALocatorHunting, Name: "qa-locator-hunting", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQASupervisor, Name: "qa-supervisor", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQADocAccess, Name: "qa-doc-access", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQAEvidence, Name: "qa-evidence", Category: "workflow", Priority: "p0"},

@@ -97,12 +97,13 @@ func TestNormalizeInstallFlagsAcceptsBundledSkills(t *testing.T) {
 	input, err := NormalizeInstallFlags(InstallFlags{Skills: []string{
 		string(model.SkillSystemicIssueTriage),
 		string(model.SkillGentleAIBench),
+		string(model.SkillQALocatorHunting),
 	}}, system.DetectionResult{})
 	if err != nil {
 		t.Fatalf("NormalizeInstallFlags() error = %v", err)
 	}
 
-	want := []model.SkillID{model.SkillSystemicIssueTriage, model.SkillGentleAIBench}
+	want := []model.SkillID{model.SkillSystemicIssueTriage, model.SkillGentleAIBench, model.SkillQALocatorHunting}
 	if !reflect.DeepEqual(input.Selection.Skills, want) {
 		t.Fatalf("skills = %v, want %v", input.Selection.Skills, want)
 	}

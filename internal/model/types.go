@@ -96,6 +96,7 @@ const (
 	SkillRDDDefectWorkflow   SkillID = "rdd-defect-workflow"
 	SkillSystemicIssueTriage SkillID = "systemic-issue-triage"
 	SkillGentleAIBench       SkillID = "gentle-ai-bench"
+SkillQALocatorHunting    SkillID = "qa-locator-hunting"
 	SkillQASupervisor        SkillID = "qa-supervisor"
 	SkillQADocAccess         SkillID = "qa-doc-access"
 	SkillQAEvidence          SkillID = "qa-evidence"
