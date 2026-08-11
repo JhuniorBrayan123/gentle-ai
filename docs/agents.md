@@ -99,7 +99,7 @@ Kiro uses native custom agents in `~/.kiro/agents/`. `gentle-ai` writes phase ag
 
 ### OpenCode
 
-- Full multi-agent overlay with 11 named agents in `opencode.json` (`gentle-orchestrator` plus 10 SDD phase agents)
+- Full multi-agent overlay with 17 named agents in `opencode.json` (`qa-orchestrator` plus 16 SDD/QA phase agents)
 - Slash commands for SDD phases (`/sdd-new`, `/sdd-explore`, etc.)
 - Native OpenCode `task` subagents; experimental background execution is available when OpenCode is launched with `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true`
 - The TUI model picker includes providers and models discovered from the local `opencode.json`, including custom providers

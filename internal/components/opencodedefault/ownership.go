@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ManagedAgent = "gentle-orchestrator"
+	ManagedAgent = "qa-orchestrator"
 	schema       = "gentle-ai.opencode-default-agent"
 	version      = 1
 )

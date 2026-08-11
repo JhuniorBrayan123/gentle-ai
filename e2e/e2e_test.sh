@@ -1116,8 +1116,8 @@ test_full_preset_opencode() {
         assert_file_contains "$agents_md" "gentle-ai:engram-protocol" "AGENTS.md has engram protocol"
         assert_no_duplicate_section "$agents_md" "engram-protocol" "No duplicate engram section in AGENTS.md"
         # SDD orchestrator for OpenCode lives in opencode.json as an agent definition (not AGENTS.md)
-        assert_file_contains "$settings" '"gentle-orchestrator"' "opencode.json has gentle-orchestrator agent"
-        assert_file_not_contains "$settings" '"sdd-orchestrator"' "opencode.json does not have legacy base sdd-orchestrator agent"
+        assert_file_contains "$settings" '"qa-orchestrator"' "opencode.json has qa-orchestrator agent"
+        assert_file_not_contains "$settings" '"gentle-orchestrator"' "opencode.json does not have legacy gentle-orchestrator agent"
         # AGENTS.md must NOT have a sdd-orchestrator HTML section (it's handled by opencode.json)
         assert_file_not_contains "$agents_md" "<!-- gentle-ai:sdd-orchestrator -->" "AGENTS.md has no SDD section marker (opencode uses json agent)"
 
@@ -1125,7 +1125,7 @@ test_full_preset_opencode() {
         assert_file_count_min "$HOME/.config/opencode/commands" "*.md" 7 "SDD command files"
 
         # Skills
-        assert_file_count_min "$HOME/.config/opencode/skills" "SKILL.md" 11 "At least 11 skill files"
+        assert_file_count_min "$HOME/.config/opencode/skills" "SKILL.md" 30 "At least 30 skill files"
 
         log_pass "Full preset: all OpenCode injection-only components coexist"
     else
@@ -1891,8 +1891,8 @@ test_integrity_sdd_orchestrator_in_opencode_json() {
     if $BINARY install --agent opencode --component sdd --persona neutral 2>&1; then
         local settings="$HOME/.config/opencode/opencode.json"
         assert_file_exists "$settings" "opencode.json exists"
-        assert_file_contains "$settings" '"gentle-orchestrator"' "Has gentle-orchestrator agent"
-        assert_file_not_contains "$settings" '"sdd-orchestrator"' "Does not have legacy base sdd-orchestrator agent"
+        assert_file_contains "$settings" '"qa-orchestrator"' "Has qa-orchestrator agent"
+        assert_file_not_contains "$settings" '"gentle-orchestrator"' "Does not have legacy gentle-orchestrator agent"
         assert_file_contains "$settings" '"agent"' "Has agent key"
         assert_valid_json "$settings" "opencode.json is valid JSON"
     else

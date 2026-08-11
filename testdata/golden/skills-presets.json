@@ -13,6 +13,12 @@
       "sdd-archive",
       "sdd-onboard",
       "judgment-day",
+      "qa-explore",
+      "qa-spec",
+      "qa-apply",
+      "qa-verify",
+      "qa-review",
+      "qa-docs",
       "go-testing",
       "gentle-ai-bench",
       "skill-creator",
@@ -25,7 +31,12 @@
       "comment-writer",
       "work-unit-commits",
       "rdd-defect-workflow",
-      "systemic-issue-triage"
+      "systemic-issue-triage",
+      "qa-supervisor",
+      "qa-doc-access",
+      "qa-evidence",
+      "gitlab-mr-flow",
+      "gitlab-release-tag"
     ]
   },
   {
@@ -42,6 +53,12 @@
       "sdd-archive",
       "sdd-onboard",
       "judgment-day",
+      "qa-explore",
+      "qa-spec",
+      "qa-apply",
+      "qa-verify",
+      "qa-review",
+      "qa-docs",
       "go-testing",
       "gentle-ai-bench",
       "skill-creator",
@@ -54,7 +71,12 @@
       "comment-writer",
       "work-unit-commits",
       "rdd-defect-workflow",
-      "systemic-issue-triage"
+      "systemic-issue-triage",
+      "qa-supervisor",
+      "qa-doc-access",
+      "qa-evidence",
+      "gitlab-mr-flow",
+      "gitlab-release-tag"
     ]
   },
   {
@@ -70,7 +92,13 @@
       "sdd-verify",
       "sdd-archive",
       "sdd-onboard",
-      "judgment-day"
+      "judgment-day",
+      "qa-explore",
+      "qa-spec",
+      "qa-apply",
+      "qa-verify",
+      "qa-review",
+      "qa-docs"
     ]
   }
 ]

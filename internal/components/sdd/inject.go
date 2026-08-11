@@ -741,13 +741,13 @@ func Inject(homeDir string, adapter agents.Adapter, sddMode model.SDDModeID, opt
 			}
 		}
 
-		if !hasOpenCodeAgentKey(settingsText, "gentle-orchestrator") {
+		if !hasOpenCodeAgentKey(settingsText, "qa-orchestrator") {
 			// In-memory check failed — try reading from disk as last resort.
 			if diskBytes, readErr := os.ReadFile(settingsPath); readErr == nil {
 				settingsText = string(diskBytes)
 			}
-			if !hasOpenCodeAgentKey(settingsText, "gentle-orchestrator") {
-				return InjectionResult{}, fmt.Errorf("post-check: %q missing gentle-orchestrator agent definition — OpenCode /sdd-* commands will fail", settingsPath)
+			if !hasOpenCodeAgentKey(settingsText, "qa-orchestrator") {
+				return InjectionResult{}, fmt.Errorf("post-check: %q missing qa-orchestrator agent definition — OpenCode /sdd-* commands will fail", settingsPath)
 			}
 		}
 		if hasOpenCodeAgentKey(settingsText, "sdd-orchestrator") {
@@ -756,6 +756,14 @@ func Inject(homeDir string, adapter agents.Adapter, sddMode model.SDDModeID, opt
 			}
 			if hasOpenCodeAgentKey(settingsText, "sdd-orchestrator") {
 				return InjectionResult{}, fmt.Errorf("post-check: %q still contains legacy sdd-orchestrator agent definition after OpenCode SDD sync", settingsPath)
+			}
+		}
+		if hasOpenCodeAgentKey(settingsText, "gentle-orchestrator") {
+			if diskBytes, readErr := os.ReadFile(settingsPath); readErr == nil {
+				settingsText = string(diskBytes)
+			}
+			if hasOpenCodeAgentKey(settingsText, "gentle-orchestrator") {
+				return InjectionResult{}, fmt.Errorf("post-check: %q still contains legacy gentle-orchestrator agent definition after OpenCode SDD sync", settingsPath)
 			}
 		}
 		if sddMode == model.SDDModeMulti && !strings.Contains(settingsText, `"sdd-apply"`) {
@@ -831,7 +839,7 @@ func inlineOpenCodeSDDPrompts(overlayBytes []byte, homeDir, settingsPath string,
 
 	// Inline the orchestrator prompt (always inlined, not a file reference),
 	// unless an external strategy requested preserving the existing prompt.
-	orchestratorRaw, ok := agentsMap["gentle-orchestrator"]
+	orchestratorRaw, ok := agentsMap["qa-orchestrator"]
 	if !ok {
 		return overlayBytes, nil
 	}
@@ -840,9 +848,15 @@ func inlineOpenCodeSDDPrompts(overlayBytes []byte, homeDir, settingsPath string,
 		return overlayBytes, nil
 	}
 	if preserveExistingOrchestratorPrompt {
-		existingPrompt, err := readOpenCodeAgentPrompt(settingsPath, "gentle-orchestrator")
+		existingPrompt, err := readOpenCodeAgentPrompt(settingsPath, "qa-orchestrator")
 		if err != nil {
 			return nil, err
+		}
+		if existingPrompt == "" {
+			existingPrompt, err = readOpenCodeAgentPrompt(settingsPath, "gentle-orchestrator")
+			if err != nil {
+				return nil, err
+			}
 		}
 		if existingPrompt == "" {
 			existingPrompt, err = readOpenCodeAgentPrompt(settingsPath, "sdd-orchestrator")
@@ -1030,11 +1044,33 @@ func migratePreservedOpenCodeOrchestratorPrompt(prompt string) string {
 	return ensurePreservedOpenCodeReviewExecutionContract(migrated)
 }
 
+// migratePreservedOpenCodeQAOrchestratorPrompt renames the preserved conductor
+// naming from the retired gentle-orchestrator key to the canonical
+// qa-orchestrator key. It mirrors migratePreservedOpenCodeOrchestratorPrompt
+// (:1027-1031) but only for the gentle -> qa hop; the caller chains the sdd ->
+// gentle migration first so a single render converges any legacy prompt
+// (sdd-orchestrator, gentle-orchestrator, or misnamed gentleman) onto the
+// canonical qa-orchestrator naming.
+func migratePreservedOpenCodeQAOrchestratorPrompt(prompt string) string {
+	if prompt == "" {
+		return prompt
+	}
+
+	replacer := strings.NewReplacer(
+		"Bind this to the dedicated `gentle-orchestrator` agent only.",
+		"Bind this to the dedicated `qa-orchestrator` agent only.",
+		"agent.gentle-orchestrator.model",
+		"agent.qa-orchestrator.model",
+	)
+	return replacer.Replace(prompt)
+}
+
 func renderPreservedOpenCodeOrchestratorPrompt(
 	prompt string,
 	agent model.AgentID,
 ) string {
 	migrated := migratePreservedOpenCodeOrchestratorPrompt(prompt)
+	migrated = migratePreservedOpenCodeQAOrchestratorPrompt(migrated)
 	return strings.ReplaceAll(migrated, runtimeAgentIDPlaceholder, string(agent))
 }
 
@@ -1336,7 +1372,7 @@ Hard gate rules:
 
 - ` + "`openspec/config.yaml`" + `, existing SDD artifacts, previous ` + "`sdd-init`" + ` results, or installed SDD assets do NOT satisfy session preflight.
 - If the session has no preflight block, ask the single grouped ` + "`question`" + ` tool preflight above. Do not run init, delegate phases, edit files, or apply tasks until all four choices are collected.
-- For a new feature request that says to use SDD, start at preflight -> init guard -> explore/proposal. Never launch ` + "`sdd-apply`" + ` just because the user asked to implement a feature.
+- For a new feature request that says to use SDD, start at preflight -> init guard -> explore/proposal. Never launch ` + "`qa-apply`" + ` just because the user asked to implement a feature.
 - In ` + "`interactive`" + ` mode, pause after each delegated phase returns, summarize the phase, then ask before launching the next phase via the ` + "`question`" + ` tool, and STOP. Use the ` + "`question`" + ` tool for this between-phase decision: present the proceed/adjust/stop options through a single ` + "`question`" + ` tool call; do NOT render the options as a plain markdown bullet list or plain chat text. Match the user's language and active persona for the question labels; for Spanish neutral fallback frame it as: "¿Quiere ajustar algo o continuamos?". Do not run /sdd-ff phases back-to-back unless execution mode is ` + "`auto`" + `.
 - Interactive approval is phase-scoped. Words like "continue", "dale", or "go on" approve only the immediate next phase, not the rest of the SDD pipeline. Do not treat a generated artifact as approved until the user has had a chance to review or explicitly delegate that review.
 - Before the ` + "`sdd-propose`" + ` phase in interactive mode, offer the user a proposal question round instead of silently deciding whether the proposal is clear enough. Ask 3–5 concrete product questions to improve the PRD/proposal by uncovering business rules, implications, impact, edge cases, product tradeoffs, and decision gaps; then summarize assumptions and ask whether the user wants corrections or a second question round. Do not ask about test commands, PR shape, changed-line budget, or other harness mechanics at proposal time unless the user explicitly asks to discuss delivery.
@@ -1345,7 +1381,7 @@ Hard gate rules:
 
 	if strings.Contains(prompt, "### SDD Session Preflight (HARD GATE)") &&
 		strings.Contains(prompt, "openspec/config.yaml") &&
-		strings.Contains(prompt, "Never launch `sdd-apply`") &&
+		strings.Contains(prompt, "Never launch `qa-apply`") &&
 		strings.Contains(prompt, "Match the user's current language") &&
 		strings.Contains(prompt, "Ask all four preflight groups in one single `question` tool call") &&
 		strings.Contains(prompt, "groups as tabs") &&
@@ -1821,6 +1857,10 @@ func mergeJSONFile(path string, overlay []byte) (mergeJSONResult, error) {
 	if err != nil {
 		return mergeJSONResult{}, fmt.Errorf("migrate opencode sdd orchestrator agent: %w", err)
 	}
+	baseJSON, err = migrateLegacyOpenCodeQAOrchestrator(baseJSON)
+	if err != nil {
+		return mergeJSONResult{}, fmt.Errorf("migrate opencode qa orchestrator agent: %w", err)
+	}
 	baseJSON, err = migrateLegacyOpenCodeCommandPrompt(baseJSON)
 	if err != nil {
 		return mergeJSONResult{}, fmt.Errorf("migrate opencode command prompt field: %w", err)
@@ -1961,6 +2001,54 @@ func looksLikeOpenCodeSDDConductor(agentRaw any) bool {
 	_, allowsApply := replaceRaw["sdd-apply"]
 	_, allowsVerify := replaceRaw["sdd-verify"]
 	return allowsApply && allowsVerify
+}
+
+// migrateLegacyOpenCodeQAOrchestrator renames the retired gentle-orchestrator
+// base OpenCode SDD conductor to the canonical qa-orchestrator agent. The
+// conductor is now the qa-orchestrator primary agent; gentle-orchestrator (and
+// by extension sdd-orchestrator, already folded into gentle by the step above)
+// are legacy keys that must converge onto the single canonical agent. Named
+// profile agents such as gentle-orchestrator-cheap intentionally remain
+// untouched because they are generated profile-specific coordinators.
+//
+// The step runs after migrateLegacyOpenCodeSDDOrchestrator so a document that
+// only ever declared sdd-orchestrator converges through gentle-orchestrator to
+// qa-orchestrator in one sync. When both gentle-orchestrator and
+// qa-orchestrator already exist, the canonical qa-orchestrator definition wins
+// and the legacy key is dropped.
+func migrateLegacyOpenCodeQAOrchestrator(baseJSON []byte) ([]byte, error) {
+	if len(strings.TrimSpace(string(baseJSON))) == 0 {
+		return baseJSON, nil
+	}
+
+	root := map[string]any{}
+	if err := json.Unmarshal(baseJSON, &root); err != nil {
+		return baseJSON, nil
+	}
+
+	agentsRaw, ok := root["agent"]
+	if !ok {
+		return baseJSON, nil
+	}
+	agentsMap, ok := agentsRaw.(map[string]any)
+	if !ok {
+		return baseJSON, nil
+	}
+
+	legacy, hasLegacy := agentsMap["gentle-orchestrator"]
+	if !hasLegacy {
+		return baseJSON, nil
+	}
+	if _, hasQAOrchestrator := agentsMap["qa-orchestrator"]; !hasQAOrchestrator {
+		agentsMap["qa-orchestrator"] = legacy
+	}
+	delete(agentsMap, "gentle-orchestrator")
+
+	encoded, err := json.MarshalIndent(root, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append(encoded, '\n'), nil
 }
 
 func hasOpenCodeAgentKey(settingsText, agentKey string) bool {
@@ -2652,28 +2740,29 @@ func injectModelAssignments(overlayBytes []byte, assignments map[string]model.Mo
 }
 
 // normalizeOpenCodeSDDModelAssignments accepts the historical
-// sdd-orchestrator assignment key as an input alias, but writes it to the
-// current base coordinator key: gentle-orchestrator. Named profile keys remain unchanged.
+// sdd-orchestrator and gentle-orchestrator assignment keys as input aliases,
+// but writes them to the current base coordinator key: qa-orchestrator. Named
+// profile keys remain unchanged.
 func normalizeOpenCodeSDDModelAssignments(assignments map[string]model.ModelAssignment) map[string]model.ModelAssignment {
 	if len(assignments) == 0 {
 		return assignments
 	}
 	legacyAssignment, hasLegacy := assignments["sdd-orchestrator"]
 	if !hasLegacy {
+		legacyAssignment, hasLegacy = assignments["gentle-orchestrator"]
+	}
+	if !hasLegacy {
 		return assignments
 	}
-	if _, hasGentleOrchestrator := assignments["gentle-orchestrator"]; hasGentleOrchestrator {
-		return assignments
-	}
-
 	normalized := make(map[string]model.ModelAssignment, len(assignments))
 	for key, assignment := range assignments {
-		if key == "sdd-orchestrator" {
+		switch key {
+		case "sdd-orchestrator", "gentle-orchestrator", "qa-orchestrator":
 			continue
 		}
 		normalized[key] = assignment
 	}
-	normalized["gentle-orchestrator"] = legacyAssignment
+	normalized["qa-orchestrator"] = legacyAssignment
 	return normalized
 }
 

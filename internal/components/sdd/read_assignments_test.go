@@ -14,7 +14,7 @@ func TestReadCurrentModelAssignments(t *testing.T) {
 
 	content := `{
   "agent": {
-    "gentle-orchestrator": { "model": "anthropic:claude-sonnet-4-20250514" },
+    "qa-orchestrator": { "model": "anthropic:claude-sonnet-4-20250514" },
     "sdd-apply": { "model": "openai:gpt-4o" },
     "sdd-verify": { "model": "anthropic:claude-haiku-3-20240307" },
     "some-other-agent": { "model": "anthropic:claude-sonnet-4-20250514" }
@@ -34,7 +34,7 @@ func TestReadCurrentModelAssignments(t *testing.T) {
 		providerID string
 		modelID    string
 	}{
-		{"gentle-orchestrator", "anthropic", "claude-sonnet-4-20250514"},
+		{"qa-orchestrator", "anthropic", "claude-sonnet-4-20250514"},
 		{"sdd-apply", "openai", "gpt-4o"},
 		{"sdd-verify", "anthropic", "claude-haiku-3-20240307"},
 	}
@@ -100,7 +100,7 @@ func TestReadCurrentModelAssignmentsNoFile(t *testing.T) {
 	}
 }
 
-func TestReadCurrentModelAssignmentsMapsLegacyOrchestratorToGentleOrchestrator(t *testing.T) {
+func TestReadCurrentModelAssignmentsMapsLegacyOrchestratorToQAOrchestrator(t *testing.T) {
 	dir := t.TempDir()
 	settingsPath := filepath.Join(dir, "opencode.json")
 
@@ -120,9 +120,38 @@ func TestReadCurrentModelAssignmentsMapsLegacyOrchestratorToGentleOrchestrator(t
 	if _, exists := got["sdd-orchestrator"]; exists {
 		t.Fatal("legacy sdd-orchestrator key should be normalized")
 	}
+	if _, exists := got["gentle-orchestrator"]; exists {
+		t.Fatal("legacy gentle-orchestrator key should be normalized")
+	}
 	want := model.ModelAssignment{ProviderID: "anthropic", ModelID: "claude-opus-4-5"}
-	if got["gentle-orchestrator"] != want {
-		t.Fatalf("gentle-orchestrator assignment = %+v, want %+v", got["gentle-orchestrator"], want)
+	if got["qa-orchestrator"] != want {
+		t.Fatalf("qa-orchestrator assignment = %+v, want %+v", got["qa-orchestrator"], want)
+	}
+}
+
+func TestReadCurrentModelAssignmentsMapsGentleOrchestratorToQAOrchestrator(t *testing.T) {
+	dir := t.TempDir()
+	settingsPath := filepath.Join(dir, "opencode.json")
+
+	content := `{
+  "agent": {
+    "gentle-orchestrator": { "model": "anthropic:claude-opus-4-5" }
+  }
+}`
+	if err := os.WriteFile(settingsPath, []byte(content), 0o644); err != nil {
+		t.Fatalf("write settings: %v", err)
+	}
+
+	got, err := ReadCurrentModelAssignments(settingsPath)
+	if err != nil {
+		t.Fatalf("ReadCurrentModelAssignments() error = %v", err)
+	}
+	if _, exists := got["gentle-orchestrator"]; exists {
+		t.Fatal("legacy gentle-orchestrator key should be normalized")
+	}
+	want := model.ModelAssignment{ProviderID: "anthropic", ModelID: "claude-opus-4-5"}
+	if got["qa-orchestrator"] != want {
+		t.Fatalf("qa-orchestrator assignment = %+v, want %+v", got["qa-orchestrator"], want)
 	}
 }
 
@@ -151,7 +180,7 @@ func TestReadCurrentModelAssignmentsPartialModels(t *testing.T) {
 	// Some agents have model, some don't
 	content := `{
   "agent": {
-    "gentle-orchestrator": { "model": "anthropic:claude-opus-4-5" },
+    "qa-orchestrator": { "model": "anthropic:claude-opus-4-5" },
     "sdd-apply": { "prompt": "You are a coder" },
     "sdd-verify": {}
   }
@@ -165,18 +194,18 @@ func TestReadCurrentModelAssignmentsPartialModels(t *testing.T) {
 		t.Fatalf("ReadCurrentModelAssignments() error = %v", err)
 	}
 
-	// Only gentle-orchestrator has a model — only it should appear
+	// Only qa-orchestrator has a model — only it should appear
 	if len(got) != 1 {
 		t.Errorf("ReadCurrentModelAssignments() len = %d, want 1; got %v", len(got), got)
 	}
 
-	a, ok := got["gentle-orchestrator"]
+	a, ok := got["qa-orchestrator"]
 	if !ok {
-		t.Fatal("gentle-orchestrator missing from result")
+		t.Fatal("qa-orchestrator missing from result")
 	}
 	want := model.ModelAssignment{ProviderID: "anthropic", ModelID: "claude-opus-4-5"}
 	if a != want {
-		t.Errorf("gentle-orchestrator assignment = %+v, want %+v", a, want)
+		t.Errorf("qa-orchestrator assignment = %+v, want %+v", a, want)
 	}
 }
 
@@ -187,7 +216,7 @@ func TestReadCurrentModelAssignmentsMalformedModelField(t *testing.T) {
 	// Model without colon — should be skipped without error
 	content := `{
   "agent": {
-    "gentle-orchestrator": { "model": "no-colon-here" },
+    "qa-orchestrator": { "model": "no-colon-here" },
     "sdd-apply": { "model": "anthropic:claude-sonnet-4-20250514" }
   }
 }`
@@ -200,8 +229,8 @@ func TestReadCurrentModelAssignmentsMalformedModelField(t *testing.T) {
 		t.Fatalf("ReadCurrentModelAssignments() error = %v", err)
 	}
 
-	// Malformed gentle-orchestrator skipped, sdd-apply parsed
-	if _, ok := got["gentle-orchestrator"]; ok {
+	// Malformed qa-orchestrator skipped, sdd-apply parsed
+	if _, ok := got["qa-orchestrator"]; ok {
 		t.Error("malformed model 'no-colon-here' should be skipped")
 	}
 	a, ok := got["sdd-apply"]
@@ -222,7 +251,7 @@ func TestReadCurrentModelAssignmentsSlashSeparator(t *testing.T) {
 
 	content := `{
   "agent": {
-    "gentle-orchestrator": { "model": "zai-coding-plan/glm-5-turbo" }
+    "qa-orchestrator": { "model": "zai-coding-plan/glm-5-turbo" }
   }
 }`
 	if err := os.WriteFile(settingsPath, []byte(content), 0o644); err != nil {
@@ -234,9 +263,9 @@ func TestReadCurrentModelAssignmentsSlashSeparator(t *testing.T) {
 		t.Fatalf("ReadCurrentModelAssignments() error = %v", err)
 	}
 
-	a, ok := got["gentle-orchestrator"]
+	a, ok := got["qa-orchestrator"]
 	if !ok {
-		t.Fatal("gentle-orchestrator missing from result — slash-separated format not parsed")
+		t.Fatal("qa-orchestrator missing from result — slash-separated format not parsed")
 	}
 	if a.ProviderID != "zai-coding-plan" {
 		t.Errorf("ProviderID = %q, want %q", a.ProviderID, "zai-coding-plan")
@@ -322,7 +351,7 @@ func TestReadCurrentModelAssignmentsMixedSeparators(t *testing.T) {
 
 	content := `{
   "agent": {
-    "gentle-orchestrator": { "model": "anthropic:claude-sonnet-4-20250514" },
+    "qa-orchestrator": { "model": "anthropic:claude-sonnet-4-20250514" },
     "sdd-apply":        { "model": "zai-coding-plan/glm-5-turbo" },
     "sdd-verify":       { "model": "openai:gpt-4o" },
     "sdd-explore":      { "model": "custom-provider/some-model-v2" }
@@ -342,7 +371,7 @@ func TestReadCurrentModelAssignmentsMixedSeparators(t *testing.T) {
 		providerID string
 		modelID    string
 	}{
-		{"gentle-orchestrator", "anthropic", "claude-sonnet-4-20250514"},
+		{"qa-orchestrator", "anthropic", "claude-sonnet-4-20250514"},
 		{"sdd-apply", "zai-coding-plan", "glm-5-turbo"},
 		{"sdd-verify", "openai", "gpt-4o"},
 		{"sdd-explore", "custom-provider", "some-model-v2"},

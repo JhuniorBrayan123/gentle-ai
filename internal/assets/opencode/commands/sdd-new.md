@@ -1,6 +1,6 @@
 ---
 description: Start a new SDD change — runs exploration then creates a proposal
-agent: gentle-orchestrator
+agent: qa-orchestrator
 ---
 
 Follow the SDD orchestrator workflow for starting a new change named "$ARGUMENTS".
@@ -10,7 +10,7 @@ SDD Session Preflight must already be complete for this session. It must include
 
 WORKFLOW:
 
-1. Launch sdd-explore sub-agent to investigate the codebase for this change
+1. Launch qa-explore sub-agent to investigate the codebase for this change
 2. Present the exploration summary to the user
 3. Launch sdd-propose sub-agent to create a proposal based on the exploration
 4. Present the proposal summary and ask the user if they want to continue with specs and design

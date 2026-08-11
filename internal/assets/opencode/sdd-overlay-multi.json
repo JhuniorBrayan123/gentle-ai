@@ -1,8 +1,8 @@
 {
   "agent": {
-    "gentle-orchestrator": {
+    "qa-orchestrator": {
       "mode": "primary",
-      "description": "Gentle AI SDD Orchestrator - coordinates sub-agents, never does work inline",
+      "description": "Gentle AI QA-SDD Orchestrator - coordinates sub-agents, never does work inline",
       "prompt": "{file:./AGENTS.md}",
       "permission": {
         "question": "allow",
@@ -21,6 +21,12 @@
             "sdd-verify": "allow",
             "sdd-archive": "allow",
             "sdd-onboard": "allow",
+            "qa-explore": "allow",
+            "qa-spec": "allow",
+            "qa-apply": "allow",
+            "qa-verify": "allow",
+            "qa-review": "allow",
+            "qa-docs": "allow",
             "jd-judge-a": "allow",
             "jd-judge-b": "allow",
             "jd-fix-agent": "allow",
@@ -161,6 +167,78 @@
         "write": true,
         "edit": true,
         "bash": true
+      }
+    },
+    "qa-explore": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Locate existing QA tests, fixtures, and reuse candidates before any change (G2 prior analysis)",
+      "prompt": "__PROMPT_FILE_qa-explore__",
+      "tools": {
+        "read": true,
+        "write": false,
+        "edit": false,
+        "bash": true
+      }
+    },
+    "qa-spec": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Design test scenarios and plan before any implementation (G3 test design)",
+      "prompt": "__PROMPT_FILE_qa-spec__",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": false
+      }
+    },
+    "qa-apply": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Implement approved QA spec changes following project conventions (G5 implementation)",
+      "prompt": "__PROMPT_FILE_qa-apply__",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "qa-verify": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Validate implemented changes and produce reproducible evidence (G6 validation + evidence)",
+      "prompt": "__PROMPT_FILE_qa-verify__",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "qa-review": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Adversarial standards review against BookStack and project conventions — find problems, never modify code (G1 review)",
+      "prompt": "__PROMPT_FILE_qa-review__",
+      "tools": {
+        "read": true,
+        "write": false,
+        "edit": false,
+        "bash": true
+      }
+    },
+    "qa-docs": {
+      "mode": "subagent",
+      "hidden": true,
+      "description": "Detect documentation gaps and produce drafts only — never write BookStack (G1.4 doc-gap detection)",
+      "prompt": "__PROMPT_FILE_qa-docs__",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": false
       }
     },
     "jd-judge-a": {

@@ -76,6 +76,12 @@ const (
 	SkillSDDTasks            SkillID = "sdd-tasks"
 	SkillSDDArchive          SkillID = "sdd-archive"
 	SkillSDDOnboard          SkillID = "sdd-onboard"
+	SkillQAExplore           SkillID = "qa-explore"
+	SkillQASpec              SkillID = "qa-spec"
+	SkillQAApply             SkillID = "qa-apply"
+	SkillQAVerify            SkillID = "qa-verify"
+	SkillQAReview            SkillID = "qa-review"
+	SkillQADocs              SkillID = "qa-docs"
 	SkillGoTesting           SkillID = "go-testing"
 	SkillCreator             SkillID = "skill-creator"
 	SkillImprover            SkillID = "skill-improver"
@@ -90,7 +96,12 @@ const (
 	SkillRDDDefectWorkflow   SkillID = "rdd-defect-workflow"
 	SkillSystemicIssueTriage SkillID = "systemic-issue-triage"
 	SkillGentleAIBench       SkillID = "gentle-ai-bench"
-	SkillQALocatorHunting    SkillID = "qa-locator-hunting"
+SkillQALocatorHunting    SkillID = "qa-locator-hunting"
+	SkillQASupervisor        SkillID = "qa-supervisor"
+	SkillQADocAccess         SkillID = "qa-doc-access"
+	SkillQAEvidence          SkillID = "qa-evidence"
+	SkillGitlabMRFlow        SkillID = "gitlab-mr-flow"
+	SkillGitlabReleaseTag    SkillID = "gitlab-release-tag"
 )
 
 type PersonaID string

@@ -109,7 +109,8 @@ var (
 		model.ComponentOpenCodeGentleLogo,
 	}
 	configuredAgents = []string{
-		"gentle-orchestrator",
+		"qa-orchestrator",
+		"gentle-orchestrator", // legacy key — kept for backward-compat cleanup
 		"sdd-orchestrator", // legacy key — kept for backward-compat cleanup
 		"sdd-init",
 		"sdd-explore",
@@ -121,6 +122,12 @@ var (
 		"sdd-verify",
 		"sdd-archive",
 		"sdd-onboard",
+		"qa-explore",
+		"qa-spec",
+		"qa-apply",
+		"qa-verify",
+		"qa-review",
+		"qa-docs",
 		"jd-judge-a",
 		"jd-judge-b",
 		"jd-fix-agent",

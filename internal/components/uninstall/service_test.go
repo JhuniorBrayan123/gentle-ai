@@ -579,10 +579,13 @@ func TestComponentOperationsSDD_RemovesBaseAndProfileAgentsFromSettings(t *testi
 
 	initial := []byte(`{
 	  "agent": {
+	    "qa-orchestrator": {"mode": "primary", "model": "anthropic:claude-sonnet-4"},
+	    "gentle-orchestrator": {"mode": "primary", "model": "anthropic:claude-sonnet-4"},
 	    "sdd-orchestrator": {"mode": "primary", "model": "anthropic:claude-sonnet-4"},
 	    "sdd-apply": {"mode": "subagent", "model": "anthropic:claude-sonnet-4"},
 	    "sdd-onboard": {"mode": "subagent", "model": "anthropic:claude-sonnet-4"},
 	    "sdd-verify": {"mode": "subagent", "model": "anthropic:claude-sonnet-4"},
+	    "qa-verify": {"mode": "subagent", "model": "anthropic:claude-sonnet-4"},
 	    "sdd-orchestrator-fast": {"mode": "primary", "model": "openai:gpt-4.1-mini"},
 	    "sdd-apply-fast": {"mode": "subagent", "model": "openai:gpt-4.1-mini"},
 	    "sdd-onboard-fast": {"mode": "subagent", "model": "openai:gpt-4.1-mini"},
@@ -631,10 +634,13 @@ func TestComponentOperationsSDD_RemovesBaseAndProfileAgentsFromSettings(t *testi
 	}
 
 	for _, removedKey := range []string{
+		"qa-orchestrator",
+		"gentle-orchestrator",
 		"sdd-orchestrator",
 		"sdd-apply",
 		"sdd-onboard",
 		"sdd-verify",
+		"qa-verify",
 		"sdd-orchestrator-fast",
 		"sdd-apply-fast",
 		"sdd-onboard-fast",

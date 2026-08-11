@@ -15,6 +15,12 @@ var sddSkills = []model.SkillID{
 	model.SkillSDDArchive,
 	model.SkillSDDOnboard,
 	model.SkillJudgmentDay,
+	model.SkillQAExplore,
+	model.SkillQASpec,
+	model.SkillQAApply,
+	model.SkillQAVerify,
+	model.SkillQAReview,
+	model.SkillQADocs,
 }
 
 // foundationSkills are baseline learning skills for the "recommended" tier.
@@ -32,6 +38,11 @@ var foundationSkills = []model.SkillID{
 	model.SkillWorkUnitCommits,
 	model.SkillRDDDefectWorkflow,
 	model.SkillSystemicIssueTriage,
+	model.SkillQASupervisor,
+	model.SkillQADocAccess,
+	model.SkillQAEvidence,
+	model.SkillGitlabMRFlow,
+	model.SkillGitlabReleaseTag,
 }
 
 // SkillsForPreset returns which skills should be installed for a given preset.

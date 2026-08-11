@@ -1,6 +1,6 @@
 # Gentle AI — SDD Orchestrator Instructions
 
-Bind this to the dedicated `gentle-orchestrator` agent only. Do NOT apply it to executor phase agents such as `sdd-apply` or `sdd-verify`.
+Bind this to the dedicated `qa-orchestrator` agent only. Do NOT apply it to executor phase agents such as `sdd-apply` or `sdd-verify`.
 
 ## SDD Orchestrator
 
@@ -60,7 +60,9 @@ Core principle: **does this inflate the parent context without need?** If yes, u
 | Bash for state (`git`, `gh`) | ✅ | — |
 | Tests, builds, installs, or native review actions | allowed as a bounded action | ✅ fresh per-action worker without changing route |
 
-Use OpenCode's native `explore` agent for read-only mapping and `general` agent for implementation or command execution; reserve `sdd-*` agents for a selected SDD route.
+QA-automation requests (creating/automating test cases, test design, QAS workflows) ALWAYS delegate exploration to `qa-explore`, regardless of file count; the inline read allowance above is for general direct work only.
+
+Use OpenCode's native `explore` agent for read-only mapping and `general` agent for implementation or command execution; reserve `sdd-*` agents for a selected SDD route. QA-automation requests (creating or automating test cases, test design, QAS workflows — explicit QA-automation intent) select the QA route `qa-explore` → `qa-spec` → approval → `qa-apply` → `qa-verify` instead, leaving native explore/general for general-purpose direct work and `sdd-*` reserved for a selected SDD route otherwise.
 
 Keep one writer and a short synthesized handoff. Delegation is mandatory at the mapping, write, preparation, and broad-research boundaries, but it remains a direct implementation route and must not synthesize SDD artifacts.
 
@@ -68,12 +70,12 @@ Keep one writer and a short synthesized handoff. Delegation is mandatory at the 
 
 These are parent-orchestrator routing boundaries. Use the smallest useful topology and keep the safety machinery behind the outcome-first interaction. Do not pass these rules to child agents as permission to orchestrate.
 
-1. **Bounded read rule**: read 1–3 files inline to decide or verify.
-2. **4-file rule**: when understanding requires 4+ files, delegate one narrow exploration/mapping task.
+1. **Bounded read rule** (general direct work): read 1–3 files inline to decide or verify.
+2. **4-file rule** (general direct work): when understanding requires 4+ files, delegate one narrow exploration/mapping task. For QA-automation requests, exploration ALWAYS delegates to `qa-explore` regardless of file count — the file-count threshold applies to general direct work only.
 3. **Write rule**: keep one mechanical, already-understood file inline only when it needs no research or unresolved design work; delegate one writer for 2+ non-trivial files.
 4. **Context rule**: delegate reading that prepares a write and broad research/context compression.
 5. **Per-action rule**: tests, builds, installs, and native review actors may use fresh workers without changing the implementation route or creating SDD state.
-6. **Optional SDD rule**: propose SDD only when durable proposal/spec/design/tasks materially reduce substantial ambiguity. Select SDD only after an explicit request or accepted proposal; risk alone never forces SDD.
+6. **Optional SDD rule**: propose SDD only when durable proposal/spec/design/tasks materially reduce substantial ambiguity. Select SDD only after an explicit request or accepted proposal; risk alone never forces SDD. **QA-route selection rule**: explicit QA-automation intent — wording like "crear caso de automatización", "automatizar X", "haceme el QA de X", or "caso E2E" — selects the QA route `qa-explore` → `qa-spec` → approval → `qa-apply` → `qa-verify` without requiring `/sdd-new` or an accepted proposal: the intent itself is the trigger. Normal SDD still requires an explicit request or accepted proposal, and risk alone never forces SDD for non-QA work.
 
 #### Native Checking Contract
 
@@ -202,9 +204,9 @@ Hard gate rules:
 
 ### SDD Entry Routing (MANDATORY)
 
-For a new product/code change request that says to use SDD, start at preflight -> init guard -> explore/proposal (`/sdd-new` equivalent). Never launch `sdd-apply` just because the user asked to implement a feature.
+For a new product/code change request that says to use SDD, start at preflight -> init guard -> explore/proposal (`/sdd-new` equivalent). Never launch `qa-apply` just because the user asked to implement a feature.
 
-Only launch `sdd-apply` when all are true:
+Only launch `qa-apply` when all are true:
 
 1. Session preflight is complete.
 2. The active change has existing spec, design, and tasks artifacts.
@@ -334,20 +336,20 @@ Each phase returns: `status`, `executive_summary`, `artifacts`, `next_recommende
 
 ### Review Workload Guard (MANDATORY)
 
-After `sdd-tasks` completes and before launching `sdd-apply`, inspect the task result summary for `Review Workload Forecast`.
+After `sdd-tasks` completes and before launching `qa-apply`, inspect the task result summary for `Review Workload Forecast`.
 
 If it says `Chained PRs recommended: Yes`, `400-line budget risk: High`, estimated changed lines exceed 400, or `Decision needed before apply: Yes`, apply the cached `delivery_strategy`. Whenever a directive below tells the orchestrator to ask the user a decision (split vs. exception, or which chain strategy), use one `question` tool call only when the complete decision is natively representable; otherwise emit the complete choice through the plain chat or terminal fallback and STOP.
 
 - **`ask-on-risk`**: STOP and ask whether to split into chained/stacked PRs or proceed with `size:exception`, using the lossless blocking-prompt route. If the user chooses chained PRs and `chain_strategy` is not yet cached, ask which chain strategy to use (stacked-to-main or feature-branch-chain) through the same route.
-- **`auto-chain`**: Do not ask about splitting. If `chain_strategy` is not yet cached, ask which chain strategy to use through the lossless blocking-prompt route. Then pass to `sdd-apply`: implement only the next autonomous slice using work-unit commits, with clear start, finish, verification, and rollback boundary.
-- **`single-pr`**: STOP and require/record maintainer-approved `size:exception` before `sdd-apply`.
-- **`exception-ok`**: Continue, but pass to `sdd-apply` that this run uses maintainer-approved `size:exception`.
+- **`auto-chain`**: Do not ask about splitting. If `chain_strategy` is not yet cached, ask which chain strategy to use through the lossless blocking-prompt route. Then pass to `qa-apply`: implement only the next autonomous slice using work-unit commits, with clear start, finish, verification, and rollback boundary.
+- **`single-pr`**: STOP and require/record maintainer-approved `size:exception` before `qa-apply`.
+- **`exception-ok`**: Continue, but pass to `qa-apply` that this run uses maintainer-approved `size:exception`.
 
-Any other `delivery_strategy` value is invalid. Do NOT pick the nearest branch and do NOT proceed: STOP, report the unrecognised value, and re-collect the delivery strategy through the lossless blocking-prompt route before launching `sdd-apply`.
+Any other `delivery_strategy` value is invalid. Do NOT pick the nearest branch and do NOT proceed: STOP, report the unrecognised value, and re-collect the delivery strategy through the lossless blocking-prompt route before launching `qa-apply`.
 
 Do this even in Automatic mode. Automatic mode does not override reviewer burnout protection.
 
-When launching `sdd-apply`, always include the resolved `delivery_strategy`, `chain_strategy`, and any chosen PR boundary/exception in the prompt.
+When launching `qa-apply`, always include the resolved `delivery_strategy`, `chain_strategy`, and any chosen PR boundary/exception in the prompt.
 
 <!-- gentle-ai:sdd-model-assignments -->
 
@@ -355,7 +357,8 @@ When launching `sdd-apply`, always include the resolved `delivery_strategy`, `ch
 
 Read the configured models from `opencode.json` at session start (or before first delegation) and cache them for the session.
 
-- Treat `agent.gentle-orchestrator.model` as authoritative when it is set.
+- Treat `agent.qa-orchestrator.model` as authoritative when it is set.
+- Treat `agent.qa-*.model` as authoritative when it is set.
 - Treat `agent.sdd-<phase>.model` as authoritative when it is set.
 - If a phase does not have an explicit model, use the default OpenCode runtime model for that agent and continue.
 - For named profiles, apply the same rule to the suffixed agent keys (for example, `sdd-apply-cheap`).
@@ -432,7 +435,7 @@ When launching `sdd-archive`, forward explicit final-state facts for any work co
 
 #### Strict TDD Forwarding (MANDATORY)
 
-When launching `sdd-apply` or `sdd-verify`, the orchestrator MUST:
+When launching `qa-apply` or `qa-verify`, the orchestrator MUST:
 
 1. Search for testing capabilities: `mem_search(query: "sdd-init/{project}", project: "{project}")`
 2. If the result contains `strict_tdd: true`, add: `"STRICT TDD MODE IS ACTIVE. Test runner: {test_command}. You MUST follow strict-tdd.md. Do NOT fall back to Standard Mode."`
@@ -440,7 +443,7 @@ When launching `sdd-apply` or `sdd-verify`, the orchestrator MUST:
 
 #### Apply-Progress Continuity (MANDATORY)
 
-When launching `sdd-apply` for a continuation batch:
+When launching `qa-apply` for a continuation batch:
 
 1. Search for existing apply-progress: `mem_search(query: "sdd/{change-name}/apply-progress", project: "{project}")`
 2. If found, add: `"PREVIOUS APPLY-PROGRESS EXISTS at topic_key 'sdd/{change-name}/apply-progress'. You MUST read it first via mem_search + mem_get_observation, merge your new progress with the existing progress, and save the combined result. Do NOT overwrite - MERGE."`
@@ -459,3 +462,29 @@ When launching `sdd-apply` for a continuation batch:
 | Apply progress  | `sdd/{change-name}/apply-progress` |
 | Verify report   | `sdd/{change-name}/verify-report`  |
 | Archive report  | `sdd/{change-name}/archive-report` |
+
+*Note: For QA automation changes, replace the `sdd/` prefix with `qa/` in all topic keys except `sdd-init` (e.g., `qa/{change-name}/apply-progress`).*
+
+<!-- gentle-ai:qa-rules -->
+## Reglas G1 a G6 (obligatorias)
+
+- **G1 — Documentación como fuente oficial**: consultar BookStack antes de proponer; citar páginas; NO inventar convenciones; si falta/incompleta/contradice → detener e informar el vacío; si BookStack difiere del código actual, NO decidas tú, presenta la contradicción al humano.
+- **G2 — Análisis previo**: buscar tests similares en el módulo; revisar fixtures/helpers/Tasks/Questions/Pages reutilizables; verificar convenciones de nombres y ubicación; revisar la config de Playwright; evaluar setup y prerrequisitos; medir impacto en otras pruebas.
+- **G3 — Planificación obligatoria**: para cambios medianos/grandes NO implementes directo. Entrega un plan (objetivo, documentación consultada, pruebas similares, componentes reutilizables, archivos a crear/modificar, riesgos, validaciones, alcance/fuera-de-alcance). La implementación SOLO tras aprobación humana.
+- **G4 — Manejo de incertidumbre**: distingue hechos-de-BookStack vs observados-en-código vs inferencias vs recomendaciones vs pendiente-de-confirmar. Si un criterio no está definido, pide aclaración. NO conviertas una suposición en regla de negocio.
+- **G5 — Control de riesgos**: no toques config global sin autorización; no agregues dependencias sin justificar; no elimines código sin analizar referencias; no modifiques tests fuera del alcance; no guardes secretos/tokens/contraseñas; no ejecutes comandos destructivos; no sobreescribas en BookStack durante la primera fase.
+- **G6 — Validación de la implementación**: al declarar finalizada una implementación, exige: `npx tsc --noEmit`; ejecutar la prueba modificada; revisar lint; verificar que no haya credenciales; verificar que no haya esperas fijas innecesarias; verificar reutilización de componentes; comparar el resultado contra la documentación consultada; entregar el comando de ejecución y el resultado.
+
+## Análisis de solicitud (Plantilla 10 secciones)
+
+1. Requerimiento interpretado
+2. Información pendiente
+3. Documentación consultada
+4. Implementaciones similares
+5. Reglas aplicables
+6. Propuesta
+7. Riesgos
+8. Validaciones previstas
+9. Vacíos o contradicciones
+10. Solicitud de aprobación
+<!-- /gentle-ai:qa-rules -->

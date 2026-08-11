@@ -324,7 +324,30 @@ func TestKilocodeReviewSettingsMatchCurrentMainBaseline(t *testing.T) {
 	// ordinary running session is sufficient."). It now names that ordinary-
 	// session boundary explicitly. Kilocode embeds the same paragraph, so the
 	// hash moved again. Deliberate, not drift.
-	const want = "76140e795ccdf306b5a8d80082bbb9f70dac43db1715523dee7f088238dd1b65"
+	//
+	// gentle-ai fork PR1-PR4 (qa-orchestrator change): the canonical OpenCode
+	// conductor renamed gentle-orchestrator -> qa-orchestrator and the 6 qa-*
+	// sub-agents were introduced; the shared orchestrator contract embedded by
+	// Kilocode embeds the renamed conductor identity, so the hash moved again.
+	// Deliberate baseline update, computed from the merged tree.
+	//
+	// gentle-ai fork PR6 (qa-orchestrator change, Option A): the OpenCode
+	// conductor's sub-agent launch mentions retargeted from sdd-apply/sdd-verify/
+	// sdd-explore to qa-apply/qa-verify/qa-explore (entry routing, review
+	// workload guard, strict TDD forwarding, apply-progress continuity, and
+	// the four command bodies). Kilocode embeds the same OpenCode conductor in
+	// `agent.gentle-orchestrator.prompt`, so the hash moved again. Deliberate,
+	// not drift.
+	//
+	// gentle-ai fork PR7 (qa-orchestrator change): the OpenCode conductor's
+	// delegation-routing sentences now select the QA route
+	// qa-explore→qa-spec→approval→qa-apply→qa-verify for explicit
+	// QA-automation intent (delegation selection, the QA always-delegate
+	// exploration rule, and the 4-file-rule trigger all name qa-explore as the
+	// exploration worker). Kilocode embeds the same OpenCode conductor in
+	// `agent.gentle-orchestrator.prompt`, so the hash moved again. Deliberate,
+	// not drift.
+	const want = "fbd272c533090b2be254a39880ec750c13a8bd0cd934d49337ad6ee1dc7c7d47"
 	if got != want {
 		t.Fatalf("Kilocode settings SHA-256 = %s, want current-main baseline %s", got, want)
 	}
@@ -623,7 +646,7 @@ func assertNoReviewerLifecycleInstructions(t *testing.T, label, content string) 
 	}
 }
 
-func readGentleOrchestratorPrompt(t *testing.T, settingsPath string) string {
+func readQAOrchestratorPrompt(t *testing.T, settingsPath string) string {
 	t.Helper()
 	payload, err := os.ReadFile(settingsPath)
 	if err != nil {
@@ -634,7 +657,7 @@ func readGentleOrchestratorPrompt(t *testing.T, settingsPath string) string {
 		t.Fatal(err)
 	}
 	agentsMap := root["agent"].(map[string]any)
-	orchestrator := agentsMap["gentle-orchestrator"].(map[string]any)
+	orchestrator := agentsMap["qa-orchestrator"].(map[string]any)
 	return orchestrator["prompt"].(string)
 }
 

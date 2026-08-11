@@ -336,7 +336,7 @@ See [Backup & Rollback Guide](docs/rollback.md) for details.
 
 ### OpenCode SDD Profiles
 
-Assign different AI models to different SDD phases -- a powerful model for design, a fast one for implementation, a cheap one for exploration. OpenCode uses **`gentle-orchestrator`** as the base SDD conductor, and generated named profiles still appear as `sdd-orchestrator-{name}` entries.
+Assign different AI models to different SDD phases -- a powerful model for design, a fast one for implementation, a cheap one for exploration. OpenCode uses **`qa-orchestrator`** as the base SDD conductor, and generated named profiles still appear as `sdd-orchestrator-{name}` entries.
 
 ```bash
 # Via CLI
@@ -346,12 +346,12 @@ gentle-ai sync --profile-phase cheap:sdd-design:anthropic/claude-sonnet-4-202505
 # Or via TUI: gentle-ai → "OpenCode SDD Profiles" → Create
 ```
 
-After creating a profile, open OpenCode and press **Tab** to switch between `gentle-orchestrator` (default) and your custom profiles.
+After creating a profile, open OpenCode and press **Tab** to switch between `qa-orchestrator` (default) and your custom profiles.
 
 | What you need         | Use this                                                        |
 | --------------------- | --------------------------------------------------------------- |
-| Default SDD conductor | `gentle-orchestrator`                                           |
-| Legacy configs        | `sdd-orchestrator` is migrated to `gentle-orchestrator` on sync |
+| Default SDD conductor | `qa-orchestrator`                                           |
+| Legacy configs        | `gentle-orchestrator` and `sdd-orchestrator` migrate to `qa-orchestrator` on sync |
 | Named model profiles  | `sdd-orchestrator-cheap`, `sdd-orchestrator-premium`, etc.      |
 
 **Full guide**: [OpenCode SDD Profiles](docs/opencode-profiles.md)

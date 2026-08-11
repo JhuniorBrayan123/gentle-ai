@@ -38,7 +38,19 @@ var mvpSkills = []Skill{
 	{ID: model.SkillWorkUnitCommits, Name: "work-unit-commits", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillRDDDefectWorkflow, Name: "rdd-defect-workflow", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillSystemicIssueTriage, Name: "systemic-issue-triage", Category: "workflow", Priority: "p0"},
+// Custom team skills
 	{ID: model.SkillQALocatorHunting, Name: "qa-locator-hunting", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQASupervisor, Name: "qa-supervisor", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQADocAccess, Name: "qa-doc-access", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQAEvidence, Name: "qa-evidence", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQAExplore, Name: "qa-explore", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQASpec, Name: "qa-spec", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQAApply, Name: "qa-apply", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQAVerify, Name: "qa-verify", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQAReview, Name: "qa-review", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQADocs, Name: "qa-docs", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillGitlabMRFlow, Name: "gitlab-mr-flow", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillGitlabReleaseTag, Name: "gitlab-release-tag", Category: "workflow", Priority: "p0"},
 }
 
 func MVPSkills() []Skill {
