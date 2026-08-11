@@ -90,6 +90,7 @@ const (
 	SkillRDDDefectWorkflow   SkillID = "rdd-defect-workflow"
 	SkillSystemicIssueTriage SkillID = "systemic-issue-triage"
 	SkillGentleAIBench       SkillID = "gentle-ai-bench"
+	SkillQALocatorHunting    SkillID = "qa-locator-hunting"
 )
 
 type PersonaID string
