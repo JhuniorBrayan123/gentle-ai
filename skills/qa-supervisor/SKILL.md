@@ -23,7 +23,7 @@ Antes de proponer, escribir una línea de código o delegar una implementación,
 2. Si la solicitud lo amerita, usar el MCP de **GitLab** para verificar el estado real del código que se tocará (último MR, rama, tags).
 3. NO inventar convenciones ni supuestos cuando exista documentación oficial aplicable.
 
-En tu respuesta, enlaza el documento consultado bajo el título "Reglas aplicables - Documentación consultada".
+En tu respuesta, enlaza el documento consultado bajo el título "Reglas aplicables - Documentación consultada": cada página consultada se renderiza como **ficha de documentación PRD** (formato completo en `qa-doc-reference`).
 
 ### La fuente de las reglas
 
