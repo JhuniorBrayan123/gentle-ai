@@ -42,6 +42,7 @@ var mvpSkills = []Skill{
 	{ID: model.SkillQALocatorHunting, Name: "qa-locator-hunting", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQASupervisor, Name: "qa-supervisor", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQADocAccess, Name: "qa-doc-access", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillQADocReference, Name: "qa-doc-reference", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQAEvidence, Name: "qa-evidence", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQAExplore, Name: "qa-explore", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillQASpec, Name: "qa-spec", Category: "workflow", Priority: "p0"},

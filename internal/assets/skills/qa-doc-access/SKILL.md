@@ -10,6 +10,6 @@ metadata:
 ## BookStack Search Protocol (MANDATORY)
 
 1. Use the BookStack MCP to search for official documentation before making assumptions.
-2. Cite all pages used with exact URLs.
+2. Cite all pages used with exact URLs, rendered as a ficha de documentación PRD (see `qa-doc-reference`).
 3. STOP and ask the user if there is a gap or divergence between docs and code.
 4. NEVER self-decide a divergence; always defer to official docs or human judgment.

@@ -99,6 +99,7 @@ const (
 SkillQALocatorHunting    SkillID = "qa-locator-hunting"
 	SkillQASupervisor        SkillID = "qa-supervisor"
 	SkillQADocAccess         SkillID = "qa-doc-access"
+	SkillQADocReference       SkillID = "qa-doc-reference"
 	SkillQAEvidence          SkillID = "qa-evidence"
 	SkillGitlabMRFlow        SkillID = "gitlab-mr-flow"
 	SkillGitlabReleaseTag    SkillID = "gitlab-release-tag"
