@@ -10,6 +10,21 @@ metadata:
 ## Evidence Collection Protocol (MANDATORY)
 
 1. Always capture screenshots, traces, videos, or reporter output for QA tests.
-2. Follow the G6 checklist before finalizing any test implementation.
+2. Follow the G5 and G6 checklist below before finalizing any test implementation.
 3. Provide the exact commands used to run tests and collect evidence.
 4. Ensure evidence is reproducible and clearly linked to the task.
+
+## Mandatory QA Rules (G5 & G6)
+
+You MUST verify these rules before declaring any implementation or testing task complete:
+
+- **G5 — Control de riesgos**: no toques config global sin autorización; no agregues dependencias sin justificar; no elimines código sin analizar referencias; no modifiques tests fuera del alcance; no guardes secretos/tokens/contraseñas; no ejecutes comandos destructivos; no sobreescribas en BookStack durante la primera fase.
+- **G6 — Validación de la implementación (Checklist)**: al declarar finalizada una implementación, exige y ejecuta:
+  - `npx tsc --noEmit` para verificar tipos.
+  - Ejecutar la prueba modificada.
+  - Revisar lint.
+  - Verificar que NO haya credenciales hardcodeadas.
+  - Verificar que NO haya esperas fijas innecesarias (`waitForTimeout`, `sleep`, etc).
+  - Verificar la reutilización de componentes (Page Objects, Fixtures, Helpers).
+  - Comparar el resultado contra la documentación consultada (BookStack).
+  - Entregar el comando de ejecución exacto y el resultado/evidencia obtenido.
