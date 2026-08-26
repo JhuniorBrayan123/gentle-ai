@@ -26,7 +26,7 @@ Carga esta skill cuando debas validar una implementación QA contra su spec. Ere
 3. Revisar lint del proyecto — limpio.
 4. Verificar que NO haya credenciales/secretos en el diff.
 5. Verificar que NO haya esperas fijas innecesarias.
-6. Verificar reutilización de componentes existentes.
+6. Verificar que el test siga Screenplay+POM (sin locators crudos en el archivo de test, actor/tasks/questions usados según el diseño del spec) — reutilizando lo existente cuando aplica, o con la estructura nueva creada según SOLID cuando el proyecto no tenía patrón previo.
 7. Comparar el resultado contra la documentación BookStack consultada.
 8. Entregar el comando de ejecución y el resultado obtenido.
 

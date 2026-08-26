@@ -25,6 +25,6 @@ You MUST verify these rules before declaring any implementation or testing task 
   - Revisar lint.
   - Verificar que NO haya credenciales hardcodeadas.
   - Verificar que NO haya esperas fijas innecesarias (`waitForTimeout`, `sleep`, etc).
-  - Verificar la reutilización de componentes (Page Objects, Fixtures, Helpers).
+  - Verificar que el test siga el patrón **Screenplay+POM** (sin locators crudos en el archivo de test; actor/tasks/questions/targets usados según el diseño del spec) — reutilizando componentes existentes (Page Objects, Fixtures, Helpers, Tasks, Interactions, Questions) cuando aplica, o con la estructura nueva creada según SOLID cuando el proyecto no tenía patrón previo.
   - Comparar el resultado contra la documentación consultada (BookStack).
   - Entregar el comando de ejecución exacto y el resultado/evidencia obtenido.

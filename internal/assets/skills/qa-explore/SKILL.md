@@ -23,9 +23,12 @@ Carga esta skill cuando debas explorar un cambio QA (automatización de tests, c
 
 1. **Contexto en memoria**: `mem_search` sobre el módulo/test solicitado para recuperar decisiones y exploraciones previas.
 2. **Documentación oficial**: `bookstack_bookstack_search` con términos del módulo/PRD; cita páginas usadas.
-3. **Tests similares**: localiza tests existentes del módulo, fixtures, helpers, Tasks/Interactions/Questions/Pages reutilizables, config de Playwright y convenciones de nombres/ubicación.
+3. **Tests similares y arquitectura Screenplay+POM**: localiza tests existentes del módulo, fixtures, helpers, config de Playwright y convenciones de nombres/ubicación. Determina explícitamente si el proyecto ya implementa Screenplay+POM y con qué convenciones propias (no asumas las de otro proyecto):
+   - Revisa `tsconfig.json`/`jsconfig.json`/config del bundler para los path aliases reales del proyecto (Actors, Tasks, Interactions, Questions, Targets/Pages, Abilities), sea cual sea su nombre.
+   - Si existen: inventaría Actors, Interactions, Questions, Targets, Tasks reutilizables por módulo, con ruta y alias real.
+   - Si **no existen** (proyecto nuevo o sin este patrón todavía): repórtalo explícitamente como "sin estructura Screenplay+POM previa" — es una entrada válida y esperada para G3, no un vacío a rellenar con supuestos.
 4. **Impacto**: evalúa setup, prerrequisitos e impacto en otras pruebas.
-5. **Salida**: reporte de exploración con componentes, convenciones, candidatos de reuso e impacto — en `qa/{change}/explore`.
+5. **Salida**: reporte de exploración con componentes, convenciones, candidatos de reuso, estado de la arquitectura Screenplay+POM (existente con convenciones detectadas, o inexistente) e impacto — en `qa/{change}/explore`.
 
 ## Guardrails
 

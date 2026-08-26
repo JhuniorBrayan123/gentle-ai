@@ -26,7 +26,7 @@ Carga esta skill cuando debas revisar adversarially un cambio QA (diff, PR, impl
 2. Cumplimiento de **G2**: ¿análisis previo de tests similares y reuso de componentes?
 3. Cumplimiento de **G3**: ¿hubo plan aprobado antes de implementar?
 4. Cumplimiento de **G4**: ¿se distinguen hechos de inferencias? ¿hay supuestos promovidos a regla?
-5. Cumplimiento de **G5**: ¿cambios fuera de alcance, deps sin justificar, config global, secretos, esperas fijas?
+5. Cumplimiento de **G5**: ¿cambios fuera de alcance, deps sin justificar, config global, secretos, esperas fijas? ¿el test usa `actor.realiza`/`actor.pregunta` en vez de locators crudos? ¿coincide la implementación con el diseño Screenplay+POM aprobado en el spec (reuso o creación declarada)? ¿los componentes nuevos creados respetan SOLID (una responsabilidad por Interaction/Question/Target, sin acoplar Tasks a detalles de Playwright)?
 6. Cumplimiento de **G6**: ¿validación tsc + ejecución + evidencia completa?
 
 ## Reporte

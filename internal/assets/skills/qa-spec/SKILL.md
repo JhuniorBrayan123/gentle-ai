@@ -27,8 +27,12 @@ Carga esta skill cuando debas diseñar una prueba QA (escenarios, precondiciones
 4. **Datos de prueba** (positivos, negativos, límites).
 5. **Escenarios** con pasos y aserciones esperadas.
 6. **Cobertura** positiva/negativa y archivos afectados.
-7. **Riesgos** e impacto en otras pruebas.
-8. **Validaciones previstas** (tsc, ejecución, evidencia).
+7. **Diseño Screenplay+POM** (según lo reportado por G2):
+   - **Si el proyecto ya tiene la estructura**: declara por escenario el Actor a usar, y qué Tasks/Interactions/Questions/Targets se **reutilizan** (ruta y alias exactos) vs. se **crean nuevos** siguiendo la convención de nombres/carpetas ya observada en ese proyecto.
+   - **Si el proyecto no tiene la estructura (o está incompleta)**: diseña la estructura mínima necesaria antes de implementar — qué Actor, Abilities, Targets, Interactions, Questions y Tasks se van a crear, aplicando **SOLID**: SRP (un Target = locators de una vista/componente; una Interaction = una acción; una Question = una lectura/aserción), OCP (Tasks nuevas se agregan componiendo Interactions, sin reabrir las existentes), ISP (Questions exponen solo lo que el escenario necesita, no objetos de estado completos), DIP (el Actor y las Tasks dependen de Abilities/abstracciones, no de detalles de Playwright directamente).
+   - En ambos casos: confirma explícitamente que el archivo de test **no** contendrá locators/`page.getByText`/`page.getByRole` directos — solo orquestación vía actor.
+8. **Riesgos** e impacto en otras pruebas.
+9. **Validaciones previstas** (tsc, ejecución, evidencia).
 
 ## Guardrails
 
