@@ -95,10 +95,23 @@ For a new product/code change request that says to use SDD, start at preflight -
 Only launch `sdd-apply` when all are true:
 
 1. Session preflight is complete.
-2. The active change has existing spec, design, and tasks artifacts.
+2. The active change has spec, design, and tasks artifacts that are **gated for this execution** — see `Signed Artifact Gate` below. Merely existing (e.g. a `mem_search` hit from a prior session) does not satisfy this.
 3. The user explicitly asked to apply/continue implementation, or the prior SDD planning phase completed and the orchestrator has passed the review workload guard.
 
 If any dependency is missing, STOP and propose `/sdd-new` or `/sdd-ff`; do not implement.
+
+### Signed Artifact Gate (MANDATORY)
+
+Before delegating to the next phase agent/sub-agent, the immediate upstream artifact required by the `Context Protocol` table must be **gated for this execution**, not merely present from a prior session. This applies to every edge in the `Dependency Graph` — `proposal -> specs`, `specs`/`design -> tasks`, `tasks -> apply`, `apply -> verify`, `verify -> archive` — not only the entry into `sdd-apply`.
+
+An artifact counts as gated only when one of:
+
+- **Automatic mode**: it passed the `Automatic Mode Gatekeeper` contract/no-hallucination/no-drift/routing checks in this run.
+- **Interactive mode**: the user reviewed the phase's `executive_summary` and explicitly approved continuing.
+
+A `mem_search` hit on a prior session's artifact is a candidate to reuse, never a substitute for gating. Before treating a found artifact as satisfying a dependency: re-present its `executive_summary` to the user for approval (interactive), or run it through the gatekeeper's contract/no-drift checks against the current change's scope (automatic). If the found artifact predates or diverges from the current request's scope, or cannot be validated against it, treat that dependency as **missing** — re-run the phase instead of skipping ahead on the strength of an old artifact.
+
+Do not synthesize a downstream phase's output (e.g. drafting a task breakdown inline while summarizing "what I found") as a substitute for actually running that phase through its gate.
 
 ### SDD Init Guard (MANDATORY)
 
