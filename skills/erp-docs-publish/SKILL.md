@@ -37,18 +37,22 @@ autorizada a escribir en BookStack.
    BookStack, o pasos marcados "[pendiente de confirmar con el equipo]" /
    "[pendiente de verificar]", RECHAZA publicar esa parte hasta que el
    humano la resuelva.
-3. Confirma contra `Estándar - Convención de títulos`, `Estándar - Enlaces
-   cruzados` y `SOP001` (libro "99. Plantillas ERP2 y Estándares") que el
-   nombre, tags y ubicación siguen vigentes antes de publicar — si el
-   estándar cambió desde que se escribió el borrador, avisa al humano en
-   vez de publicar con datos desactualizados.
-4. Usa las herramientas MCP de BookStack para:
-   - Crear una página nueva si el flujo no tiene página existente (usando
-     el naming/numeración confirmados en el paso 3 — para `Guía`, verifica
-     de nuevo el último NNN en uso justo antes de crear, por si otra
-     página se publicó entre el borrador y ahora).
-   - Actualizar la página existente citada en la sección "Documentación
-     relacionada" / origen del borrador, si ya existe.
+3. **Re-verifica el destino, no confíes ciegamente en lo que decidió
+   `erp-docs-write`.** Vuelve a correr `bookstack_bookstack_search` para
+   este flujo justo antes de publicar: si aparece una página que no
+   estaba cuando se armó el borrador (alguien más la creó mientras tanto),
+   o si el libro/capítulo confirmado en el borrador ya no coincide con
+   `Estándar - Convención de títulos` / `Estándar - Enlaces cruzados` /
+   `SOP001`, DETENTE y presenta el cambio al humano — nunca decidas tú
+   entre "actualizar la que apareció" o "crear igual" sin preguntar.
+4. Usa las herramientas MCP de BookStack para, exactamente en el destino
+   confirmado (en el borrador, o re-confirmado en el paso 3):
+   - Crear una página nueva si el flujo sigue sin página existente (usando
+     el naming/numeración confirmados — para `Guía`, verifica de nuevo el
+     último NNN en uso justo antes de crear, por si otra página se
+     publicó entre el borrador y ahora).
+   - Actualizar la página existente (mismo ID) si ya existe — nunca crear
+     una segunda página para el mismo flujo.
 5. Publica EXACTAMENTE el contenido aprobado — ninguna edición no aprobada
    se cuela en la publicación. Aplica los tags (`audiencia`, `tipo-
    contenido`, `modulo`, `version-producto`) y fija `estado: vigente`.
