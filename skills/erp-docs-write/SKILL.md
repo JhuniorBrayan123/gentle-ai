@@ -155,10 +155,9 @@ titular, pero como referencia base:
   ese paso (no lo aplanes ni lo mezcles con el paso principal). Cuando un
   paso pide capturar datos con varios campos (ej. datos del cliente,
   medio de pago), preséntalos como tabla `Campo | Descripción` en vez de
-  prosa. Marca `Captura sugerida: [qué debería verse en la pantalla]`
-  después de cada paso donde una captura de pantalla ayude — nunca
-  generes una imagen real, solo el marcador de texto para que el
-  responsable la complete.
+  prosa. NO agregues marcadores de "Captura sugerida" ni ningún otro
+  indicador de screenshot — no es función de esta skill sugerir dónde va
+  una imagen; el texto del paso debe bastar por sí solo.
 - **4. Confirmación** — el mensaje de éxito real (si el código/BookStack
   lo confirma) y los campos garantizados que muestra el comprobante
   resultante (ver regla dura arriba).
