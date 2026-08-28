@@ -40,6 +40,7 @@ var foundationSkills = []model.SkillID{
 	model.SkillSystemicIssueTriage,
 	model.SkillQASupervisor,
 	model.SkillQADocAccess,
+	model.SkillQADocReference,
 	model.SkillQAEvidence,
 	model.SkillGitlabMRFlow,
 	model.SkillGitlabReleaseTag,
