@@ -52,6 +52,8 @@ var mvpSkills = []Skill{
 	{ID: model.SkillQADocs, Name: "qa-docs", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillGitlabMRFlow, Name: "gitlab-mr-flow", Category: "workflow", Priority: "p0"},
 	{ID: model.SkillGitlabReleaseTag, Name: "gitlab-release-tag", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillERPDocsWrite, Name: "erp-docs-write", Category: "workflow", Priority: "p0"},
+	{ID: model.SkillERPDocsPublish, Name: "erp-docs-publish", Category: "workflow", Priority: "p0"},
 }
 
 func MVPSkills() []Skill {

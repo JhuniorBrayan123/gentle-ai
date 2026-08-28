@@ -40,9 +40,12 @@ var foundationSkills = []model.SkillID{
 	model.SkillSystemicIssueTriage,
 	model.SkillQASupervisor,
 	model.SkillQADocAccess,
+	model.SkillQADocReference,
 	model.SkillQAEvidence,
 	model.SkillGitlabMRFlow,
 	model.SkillGitlabReleaseTag,
+	model.SkillERPDocsWrite,
+	model.SkillERPDocsPublish,
 }
 
 // SkillsForPreset returns which skills should be installed for a given preset.
