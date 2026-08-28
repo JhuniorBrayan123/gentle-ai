@@ -58,41 +58,42 @@ humana explícita.
 
 ## Confirmación de destino (MANDATORY — antes de redactar, no después)
 
-**Regla dura: esta skill NUNCA actualiza una página existente.** Su único
-destino posible es crear una página nueva. Publicar en el libro/capítulo
-equivocado tampoco se corrige editando el contenido después — hay que
-evitarlo antes de escribir una sola línea. Por eso, antes de producir el
-borrador, la skill DEBE presentar al humano lo siguiente y esperar su
-confirmación (no asumir ni decidir sola):
+**Regla dura: la skill NUNCA decide sola si crea o actualiza.** Puede
+hacer ambas cosas — pero solo la que el humano confirme explícitamente
+para esta página en concreto. Por defecto, ante la duda, propone crear
+página nueva (no actualizar) — actualizar es la excepción explícita, no
+la opción por defecto. Publicar en el libro/capítulo equivocado tampoco
+se corrige editando el contenido después — hay que evitarlo antes de
+escribir una sola línea. Por eso, antes de producir el borrador, la skill
+DEBE presentar al humano lo siguiente y esperar su confirmación:
 
-1. **Búsqueda de páginas existentes (solo para avisar, no para decidir
-   actualizar)**: ejecuta `bookstack_bookstack_search` con el nombre del
-   flujo/término y sinónimos de negocio razonables (ej. "boleta",
-   "comprobante", "emisión de boleta"). Lista TODOS los resultados
-   relevantes encontrados (título, ID, libro/capítulo, URL) — incluso
-   coincidencias parciales o dudosas. Esto es solo para que el humano
-   sepa que ya existe contenido relacionado y decida si igual quiere una
-   página nueva, si prefiere que él mismo la actualice manualmente, o si
-   cancela — la skill jamás propone ni ejecuta una actualización. Pregunta
-   explícitamente:
-   > "Encontré estas páginas relacionadas: [lista]. Esta skill solo crea
-   > páginas nuevas, nunca actualiza una existente — ¿igual quieres que
-   > cree una nueva (enlazándola a estas), o prefieres actualizar tú
-   > mismo la que ya existe?"
-   Si la búsqueda no encuentra nada, dilo explícitamente ("no encontré
-   ninguna página existente para este flujo") en vez de asumir
-   silenciosamente que no existe.
-2. **Ubicación propuesta**: antes de redactar, propone en qué libro y
-   capítulo iría cada página (`Concepto -` y `Guía -`), basándote en la
-   taxonomía vigente (`SOP001`, `Estándar - Cómo documentar`) y en dónde
-   viven las páginas `Guía -`/`Concepto -` ya existentes de ese mismo
-   módulo. Pregunta explícitamente:
+1. **Búsqueda de páginas existentes**: ejecuta `bookstack_bookstack_search`
+   con el nombre del flujo/término y sinónimos de negocio razonables (ej.
+   "boleta", "comprobante", "emisión de boleta"). Lista TODOS los
+   resultados relevantes encontrados (título, ID, libro/capítulo, URL) —
+   incluso coincidencias parciales o dudosas — y pregunta explícitamente:
+   > "Encontré estas páginas relacionadas: [lista]. ¿Alguna es la que
+   > debo actualizar (dime el ID exacto), o es contenido nuevo y creo una
+   > página aparte?"
+   Si el humano confirma una página puntual (por ID) para actualizar,
+   usa esa página como destino — nunca actualices "la que más se parece"
+   sin que el humano haya señalado el ID exacto. Si el humano no elige
+   ninguna o no hay resultados, el destino es crear página nueva. Si la
+   búsqueda no encuentra nada, dilo explícitamente ("no encontré ninguna
+   página existente para este flujo") en vez de asumir silenciosamente
+   que no existe.
+2. **Ubicación propuesta** (solo aplica si el destino es página nueva):
+   antes de redactar, propone en qué libro y capítulo iría cada página
+   (`Concepto -` y `Guía -`), basándote en la taxonomía vigente (`SOP001`,
+   `Estándar - Cómo documentar`) y en dónde viven las páginas `Guía -`/
+   `Concepto -` ya existentes de ese mismo módulo. Pregunta explícitamente:
    > "Propongo publicar el Concepto en [libro/capítulo] y la Guía en
    > [libro/capítulo]. ¿Confirmas, o va en otro lugar?"
-3. Solo después de que el humano responda ambos puntos, redacta el
-   borrador — con el destino (siempre página nueva, en el libro/capítulo
-   confirmado) ya fijado y guardado junto al borrador en Engram, para que
-   `erp-docs-publish` no tenga que volver a adivinarlo.
+3. Solo después de que el humano responda, redacta el borrador — con el
+   destino ya fijado y guardado junto al borrador en Engram (`crear` +
+   libro/capítulo confirmado, o `actualizar` + ID de página confirmado
+   por el humano), para que `erp-docs-publish` no tenga que volver a
+   adivinarlo ni a preguntar de nuevo.
 
 ## Regla dura: nada de pasos o datos inventados (mecánica obligatoria, no opcional)
 
