@@ -46,11 +46,15 @@ humana explícita.
   - Nunca decidas solo con la búsqueda si existe o no una página previa —
     sigue la sección "Confirmación de destino" de abajo antes de redactar.
 - **Código Screenplay+POM del proyecto de automatización** —
-  `src/screenplay/{tasks,interactions,questions,targets}/**` y
-  `src/actors/**` — fuente de la verdad para cada paso, cada dato de
-  pantalla, cada mensaje de confirmación y cada validación de resultado que
-  aparezca en el borrador. NUNCA se lee el código fuente del backend/
-  frontend de ERP2 — solo el proyecto de automatización.
+  `src/screenplay/{tasks,interactions,questions,targets}/**`,
+  `src/actors/**`, y también `src/task/**` (convención más antigua del
+  mismo proyecto, con Tasks reales como `EmitirGuiaRemitente.task.ts`) —
+  fuente de la verdad para cada paso, cada dato de pantalla, cada mensaje
+  de confirmación y cada validación de resultado que aparezca en el
+  borrador. Busca en AMBAS convenciones antes de asumir que un flujo "no
+  tiene automatización" — puede estar en la carpeta antigua. NUNCA se lee
+  el código fuente del backend/frontend de ERP2 — solo el proyecto de
+  automatización.
 
 ## Confirmación de destino (MANDATORY — antes de redactar, no después)
 
@@ -90,15 +94,43 @@ confirmación (no asumir ni decidir sola):
    confirmado) ya fijado y guardado junto al borrador en Engram, para que
    `erp-docs-publish` no tenga que volver a adivinarlo.
 
-## Regla dura: nada de pasos o datos inventados
+## Regla dura: nada de pasos o datos inventados (mecánica obligatoria, no opcional)
 
-Todo paso "crítico" (navegación entre pantallas, mensaje de confirmación,
-campo de datos, criterio de verificación de resultado) debe anclarse en un
-Target/Interaction/Question/tipo real del código, citando el nombre de
-archivo como evidencia interna (no se imprime en la página final, pero debe
-poder mostrarse si el humano lo pide). Si no encuentras respaldo en código
-ni en BookStack para un paso, NO lo inventes: márcalo como
-"[pendiente de confirmar con el equipo]" y sigue.
+**PROHIBIDO redactar el procedimiento de memoria/conocimiento general de
+ERPs, aunque suene plausible.** El único método válido para escribir el
+"Procedimiento paso a paso" es:
+
+1. Localiza el/los archivo(s) de Task/Interaction que implementan el flujo
+   (busca en `src/task/**`, `src/screenplay/tasks/**`,
+   `src/screenplay/interactions/**` por nombre del flujo — ej. para
+   "emitir guía de remisión remitente" es
+   `EmitirGuiaRemitente.task.ts`/`NavegarAGuiaRemitente.task.ts`, no un
+   nombre parecido ni un archivo distinto "que debería existir").
+2. Lee el archivo completo y extrae, EN ORDEN, cada `test.step('...')`
+   (o Interaction/Task equivalente) que ejecuta. Ese orden es el único
+   orden válido para el procedimiento — no lo reordenes, no lo resumas
+   saltándote pasos condicionales, y no fusiones dos `test.step` en uno
+   salvo que sean literalmente la misma acción de UI.
+3. Cada paso de la guía = un `test.step` real (o un grupo mínimo cuando
+   varios `test.step` seguidos son la misma pantalla/acción, ej. "abrir
+   menú X" + "seleccionar Y" si son navegación directa a un mismo lugar).
+   Si el código tiene una rama condicional (ej. `if (data.modalidad ===
+   'PUBLICA')`), la guía debe reflejar AMBAS ramas como alternativas
+   explícitas (no elegir una y omitir la otra).
+4. Si un paso del flujo real no tiene una traducción evidente a lenguaje
+   de cliente (ej. un campo interno de test), no lo inventes ni lo
+   ocultes sin más: pregunta al humano cómo describirlo o dilo
+   explícitamente como "[pendiente de confirmar con el equipo]".
+5. Antes de entregar el borrador, verifica tú mismo: ¿cada paso escrito
+   corresponde a un `test.step` que puedes señalar por nombre de archivo
+   y línea? Si no puedes responder eso para algún paso, ese paso está
+   inventado — bórralo o reemplázalo por la verificación real.
+
+Un guía que omite un paso real del código (ej. seleccionar la caja antes
+de poder elegir producto, o completar punto de partida/llegada en una
+guía de remisión) o que inventa un paso que el código no tiene (ej. un
+campo "Observaciones" que no existe en el Task) es una violación de esta
+regla, sin importar qué tan natural suene en la redacción.
 
 Ejemplo real de esta regla aplicada (emisión de boleta, Punto de Venta):
 la secuencia "Nueva venta → entra a la caja → recién ahí se puede
@@ -131,6 +163,15 @@ titular, pero como referencia base:
   viven las guías de ese módulo).
 
 ## Salida requerida — DOS páginas separadas, nunca mezcladas
+
+**Lista cerrada de secciones — no agregues, quites ni renombres ninguna.**
+El `Concepto` tiene exactamente 4 secciones de contenido (más la tabla de
+metadatos) y la `Guía` exactamente 7 (más la tabla de metadatos), listadas
+abajo. Nombres de sección PROHIBIDOS por reincidentes — si aparecen en tu
+borrador, bórralos: "Requisitos previos", "Datos de salida esperados",
+"Validaciones del sistema", "Nota importante" (como sección aparte —
+cualquier aclaración de ese tipo va integrada en el paso que corresponde,
+no en una sección nueva).
 
 ### 1. `Concepto - [Término]`
 
