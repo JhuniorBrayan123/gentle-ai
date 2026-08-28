@@ -16,7 +16,9 @@ parte del pipeline `qa-supervisor` → `qa-explore` → `qa-spec` → `qa-apply`
 `qa-review` → `qa-verify` → `qa-docs`.
 
 Esta es la ÚNICA skill del par `erp-docs-write` / `erp-docs-publish`
-autorizada a escribir en BookStack.
+autorizada a escribir en BookStack. Y solo hace UNA cosa: **crear páginas
+nuevas**. Nunca actualiza/modifica una página ya existente, bajo ninguna
+circunstancia.
 
 ## Precondición obligatoria
 
@@ -43,16 +45,15 @@ autorizada a escribir en BookStack.
    estaba cuando se armó el borrador (alguien más la creó mientras tanto),
    o si el libro/capítulo confirmado en el borrador ya no coincide con
    `Estándar - Convención de títulos` / `Estándar - Enlaces cruzados` /
-   `SOP001`, DETENTE y presenta el cambio al humano — nunca decidas tú
-   entre "actualizar la que apareció" o "crear igual" sin preguntar.
-4. Usa las herramientas MCP de BookStack para, exactamente en el destino
-   confirmado (en el borrador, o re-confirmado en el paso 3):
-   - Crear una página nueva si el flujo sigue sin página existente (usando
-     el naming/numeración confirmados — para `Guía`, verifica de nuevo el
-     último NNN en uso justo antes de crear, por si otra página se
-     publicó entre el borrador y ahora).
-   - Actualizar la página existente (mismo ID) si ya existe — nunca crear
-     una segunda página para el mismo flujo.
+   `SOP001`, DETENTE y presenta el cambio al humano. Esto NUNCA se
+   resuelve actualizando la página que apareció — solo confirma si igual
+   se crea la nueva (enlazándola) o si el humano prefiere cancelar.
+4. Usa `bookstack_create_page` para crear la página nueva en el destino
+   confirmado (en el borrador, o re-confirmado en el paso 3) — para
+   `Guía`, verifica de nuevo el último NNN en uso justo antes de crear,
+   por si otra página se publicó entre el borrador y ahora. Nunca uses
+   `bookstack_update_page` ni ninguna otra operación que modifique una
+   página existente.
 5. Publica EXACTAMENTE el contenido aprobado — ninguna edición no aprobada
    se cuela en la publicación. Aplica los tags (`audiencia`, `tipo-
    contenido`, `modulo`, `version-producto`) y fija `estado: vigente`.
@@ -71,14 +72,15 @@ autorizada a escribir en BookStack.
 - PROHIBIDO publicar una `Guía` con un número `NNN` ya usado por otra
   página del mismo capítulo — vuelve a verificar el correlativo antes de
   crear.
-- Cita siempre la(s) página(s) resultante(s) (creada o actualizada) al
-  confirmar la publicación al humano.
+- PROHIBIDO usar `bookstack_update_page` o modificar de cualquier forma
+  una página ya existente — esta skill solo crea páginas nuevas, siempre.
+- Cita siempre la(s) página(s) nueva(s) creada(s) al confirmar la
+  publicación al humano.
 
 ## Comandos de referencia
 
 - Lectura de borrador: MCP Engram (`mem_get_observation` / `mem_search`
   topic `erp-docs/{flow}/draft`).
-- Publicación: MCP BookStack (`bookstack_create_page`,
-  `bookstack_update_page`).
+- Publicación: MCP BookStack (`bookstack_create_page` únicamente).
 - Registro de publicación: MCP Engram (`mem_save` topic
   `erp-docs/{flow}/publish-log`).
