@@ -103,6 +103,8 @@ SkillQALocatorHunting    SkillID = "qa-locator-hunting"
 	SkillQAEvidence          SkillID = "qa-evidence"
 	SkillGitlabMRFlow        SkillID = "gitlab-mr-flow"
 	SkillGitlabReleaseTag    SkillID = "gitlab-release-tag"
+	SkillERPDocsWrite        SkillID = "erp-docs-write"
+	SkillERPDocsPublish      SkillID = "erp-docs-publish"
 )
 
 type PersonaID string

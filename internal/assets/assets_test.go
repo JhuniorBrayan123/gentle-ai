@@ -1636,9 +1636,9 @@ func TestEmbeddedAssetCount(t *testing.T) {
 		}
 	}
 
-// We expect 39 skill directories (10 SDD + judgment-day + 13 foundation/review + hermes-ephemeral-delegation + 13 custom (qa-supervisor, qa-doc-access, qa-evidence, qa-explore, qa-spec, qa-apply, qa-verify, qa-review, qa-docs, gitlab-mr-flow, gitlab-release-tag, qa-locator-hunting, qa-doc-reference) + _shared).
-	if skillDirs != 39 {
-		t.Fatalf("expected 39 skill directories, got %d", skillDirs)
+// We expect 41 skill directories (10 SDD + judgment-day + 13 foundation/review + hermes-ephemeral-delegation + 15 custom (qa-supervisor, qa-doc-access, qa-evidence, qa-explore, qa-spec, qa-apply, qa-verify, qa-review, qa-docs, gitlab-mr-flow, gitlab-release-tag, qa-locator-hunting, qa-doc-reference, erp-docs-write, erp-docs-publish) + _shared).
+	if skillDirs != 41 {
+		t.Fatalf("expected 41 skill directories, got %d", skillDirs)
 	}
 
 	// Verify each skill directory has a SKILL.md.
