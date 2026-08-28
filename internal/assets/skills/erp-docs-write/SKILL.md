@@ -166,12 +166,27 @@ titular, pero como referencia base:
 
 **Lista cerrada de secciones — no agregues, quites ni renombres ninguna.**
 El `Concepto` tiene exactamente 4 secciones de contenido (más la tabla de
-metadatos) y la `Guía` exactamente 7 (más la tabla de metadatos), listadas
-abajo. Nombres de sección PROHIBIDOS por reincidentes — si aparecen en tu
-borrador, bórralos: "Requisitos previos", "Datos de salida esperados",
-"Validaciones del sistema", "Nota importante" (como sección aparte —
-cualquier aclaración de ese tipo va integrada en el paso que corresponde,
-no en una sección nueva).
+metadatos) y la `Guía` exactamente estas 7, ni una más (más la tabla de
+metadatos) — la última SIEMPRE es la 7, "Flujo resumido":
+
+```
+1. Objetivo
+2. Procedimiento paso a paso
+3. Confirmación
+4. Acciones disponibles después
+5. Consultar esto más adelante
+6. Problemas frecuentes
+7. Flujo resumido
+```
+
+Antes de entregar el borrador, cuenta las secciones numeradas de la Guía:
+si la última no es exactamente "7. Flujo resumido" (ej. si llegaste a
+"8. Flujo resumido"), coló una sección de más — revisa y bórrala, no
+renumeres para que cuadre. Nombres de sección PROHIBIDOS por reincidentes
+— si aparecen en tu borrador, bórralos: "Requisitos previos", "Datos de
+salida esperados", "Validaciones del sistema", "Nota importante" (como
+sección aparte — cualquier aclaración de ese tipo va integrada en el paso
+que corresponde, no en una sección nueva).
 
 ### 1. `Concepto - [Término]`
 
