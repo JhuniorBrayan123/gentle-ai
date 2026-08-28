@@ -101,10 +101,23 @@ DEBE presentar al humano lo siguiente y esperar su confirmación:
 ERPs, aunque suene plausible.** El único método válido para escribir el
 "Procedimiento paso a paso" es:
 
-1. Localiza el/los archivo(s) de Task/Interaction que implementan el flujo
-   (busca en `src/task/**`, `src/screenplay/tasks/**`,
-   `src/screenplay/interactions/**` por nombre del flujo — ej. para
-   "emitir guía de remisión remitente" es
+0. **Antes de buscar el Task específico del documento, busca el/los Task(s)
+   de entrada compartidos del módulo.** En Punto de Venta, TODO comprobante
+   (Boleta, Factura, Cotización, Guía de Remisión, Nota de Crédito/Débito,
+   etc.) entra por el mismo camino: `PuntoVentaSetupPage.navegarANuevaVenta()`
+   ("Ventas y compras" → "Nueva venta") y luego la apertura/continuación de
+   caja (`CajaPage.abrirCajaCompleta()`: "Aperturar caja" → "Apertura" →
+   "Sí, aperturar"; o `continuarVendiendo()`/`ClickContinuarVendiendo`:
+   "Continuar vendiendo" si ya estaba abierta). Esos pasos van SIEMPRE
+   primero en el procedimiento, para cualquier tipo de comprobante — no son
+   exclusivos de la guía de Boleta. Nunca redactes un paso que salte
+   directo de "entrar al módulo" a "seleccionar el tipo de comprobante"
+   sin pasar por la caja, salvo que confirmes en código que ese flujo en
+   particular de verdad no pasa por ahí.
+1. Localiza el/los archivo(s) de Task/Interaction que implementan la parte
+   específica del documento (busca en `src/task/**`,
+   `src/screenplay/tasks/**`, `src/screenplay/interactions/**` por nombre
+   del flujo — ej. para "emitir guía de remisión remitente" es
    `EmitirGuiaRemitente.task.ts`/`NavegarAGuiaRemitente.task.ts`, no un
    nombre parecido ni un archivo distinto "que debería existir").
 2. Lee el archivo completo y extrae, EN ORDEN, cada `test.step('...')`
@@ -231,7 +244,10 @@ que corresponde, no en una sección nueva).
   reales, validaciones reales) — si no hay evidencia de un problema
   frecuente real, no la inventes.
 - **7. Flujo resumido** — el procedimiento reducido a una lista corta de
-  etapas, en **texto plano** (nunca imagen ni SVG), formato:
+  etapas, en **texto plano** (nunca imagen ni SVG). **Cada etapa y cada
+  flecha van en su propia línea, en bloque vertical — NUNCA todo en una
+  sola línea/párrafo separado por flechas inline.** Formato exacto a
+  copiar:
 
   ```
   Etapa 1
@@ -241,9 +257,12 @@ que corresponde, no en una sección nueva).
   Etapa 3
   ```
 
-  usando separadores de texto simple (`↓`, líneas `------`), consistente
-  con la regla RAG de "texto plano, sin decoración" — nada de HTML ni
-  colores.
+  Mal ejemplo (PROHIBIDO): `Etapa 1 ↓ Etapa 2 ↓ Etapa 3` en un mismo
+  renglón — si tu borrador quedó así, rehazlo como bloque vertical antes
+  de entregarlo. Cada etapa del resumen debe corresponder 1 a 1 con un
+  paso (o grupo de sub-pasos) real de la sección 2, en el mismo orden —
+  nunca inventes ni reordenes etapas aquí que no aparecían en el
+  procedimiento detallado.
 
 ## Guardrails de formato (RAG-friendly, obligatorio — ver `SOP001` §7)
 
