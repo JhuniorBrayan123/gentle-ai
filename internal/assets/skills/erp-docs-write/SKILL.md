@@ -145,11 +145,7 @@ titular, pero como referencia base:
   paso a paso.
 - **1. Objetivo** — qué logra el usuario siguiendo esta guía, en 1-2
   líneas.
-- **2. Requisitos previos** — lista de condiciones necesarias antes de
-  empezar (sesión iniciada, caja abierta si aplica, datos disponibles,
-  etc.), sacadas de las precondiciones reales que valida el código/la
-  guía existente del módulo.
-- **3. Procedimiento paso a paso** — pasos numerados, uno por acción real
+- **2. Procedimiento paso a paso** — pasos numerados, uno por acción real
   de UI, en el orden real de ejecución. Cuando un paso implica cambiar de
   pantalla o tiene sub-acciones, usa sub-numeración `N.1`, `N.2`, ... bajo
   ese paso (no lo aplanes ni lo mezcles con el paso principal). Cuando un
@@ -158,20 +154,20 @@ titular, pero como referencia base:
   prosa. NO agregues marcadores de "Captura sugerida" ni ningún otro
   indicador de screenshot — no es función de esta skill sugerir dónde va
   una imagen; el texto del paso debe bastar por sí solo.
-- **4. Confirmación** — el mensaje de éxito real (si el código/BookStack
+- **3. Confirmación** — el mensaje de éxito real (si el código/BookStack
   lo confirma) y los campos garantizados que muestra el comprobante
   resultante (ver regla dura arriba).
-- **5. Acciones disponibles después** — qué puede hacer el usuario con el
+- **4. Acciones disponibles después** — qué puede hacer el usuario con el
   resultado (visualizar, imprimir, descargar, enviar, etc.), solo las que
   el código respalda.
-- **6. Consultar esto más adelante** — cómo volver a encontrar el
+- **5. Consultar esto más adelante** — cómo volver a encontrar el
   resultado (pantalla de búsqueda real, filtros reales disponibles, cómo
   leer el estado desde la misma grilla sin pasos de más).
-- **7. Problemas frecuentes** — tabla `Situación | Acción recomendada`,
+- **6. Problemas frecuentes** — tabla `Situación | Acción recomendada`,
   solo con casos que el código o BookStack respaldan (mensajes de error
   reales, validaciones reales) — si no hay evidencia de un problema
   frecuente real, no la inventes.
-- **8. Flujo resumido** — el procedimiento reducido a una lista corta de
+- **7. Flujo resumido** — el procedimiento reducido a una lista corta de
   etapas, en **texto plano** (nunca imagen ni SVG), formato:
 
   ```
