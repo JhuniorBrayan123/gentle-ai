@@ -103,17 +103,35 @@ ERPs, aunque suene plausible.** El único método válido para escribir el
 
 0. **Antes de buscar el Task específico del documento, busca el/los Task(s)
    de entrada compartidos del módulo.** En Punto de Venta, TODO comprobante
-   (Boleta, Factura, Cotización, Guía de Remisión, Nota de Crédito/Débito,
-   etc.) entra por el mismo camino: `PuntoVentaSetupPage.navegarANuevaVenta()`
-   ("Ventas y compras" → "Nueva venta") y luego la apertura/continuación de
-   caja (`CajaPage.abrirCajaCompleta()`: "Aperturar caja" → "Apertura" →
-   "Sí, aperturar"; o `continuarVendiendo()`/`ClickContinuarVendiendo`:
+   (Boleta, Factura, Cotización, Guía de Remisión, Nota de Venta, Nota de
+   Crédito/Débito, etc.) entra por el mismo camino:
+   `PuntoVentaSetupPage.navegarANuevaVenta()` ("Ventas y compras" → "Nueva
+   venta") y luego la apertura/continuación de caja
+   (`CajaPage.abrirCajaCompleta()`: "Aperturar caja" → "Apertura" → "Sí,
+   aperturar"; o `continuarVendiendo()`/`ClickContinuarVendiendo`:
    "Continuar vendiendo" si ya estaba abierta). Esos pasos van SIEMPRE
    primero en el procedimiento, para cualquier tipo de comprobante — no son
-   exclusivos de la guía de Boleta. Nunca redactes un paso que salte
-   directo de "entrar al módulo" a "seleccionar el tipo de comprobante"
-   sin pasar por la caja, salvo que confirmes en código que ese flujo en
-   particular de verdad no pasa por ahí.
+   exclusivos de la guía de Boleta. **Formato fijo de estos pasos de
+   entrada, en el Procedimiento paso a paso y en el Flujo resumido —
+   siempre estas 3 etapas, en este orden y con este texto exacto, nunca
+   menos ni reordenadas:**
+   ```
+   Ventas y Compras
+         ↓
+   Nueva Venta
+         ↓
+   Aperturar / Continuar caja
+   ```
+   "Aperturar / Continuar caja" es UNA sola etapa (aunque dentro del
+   Procedimiento detallado sí se expliquen las dos variantes — caja
+   cerrada vs. caja abierta — como sub-pasos de ese mismo paso). Nunca la
+   partas en dos etapas separadas del Flujo resumido — "Entrar a Caja" +
+   "Continuar vendiendo" como etapas independientes está PROHIBIDO. Nunca
+   redactes un paso que salte directo de "entrar al módulo" a
+   "seleccionar el tipo de comprobante" sin pasar por la caja, ni que
+   omita "Ventas y Compras"/"Nueva Venta" como etapas del Flujo resumido,
+   salvo que confirmes en código que ese flujo en particular de verdad no
+   pasa por ahí.
 1. Localiza el/los archivo(s) de Task/Interaction que implementan la parte
    específica del documento (busca en `src/task/**`,
    `src/screenplay/tasks/**`, `src/screenplay/interactions/**` por nombre
