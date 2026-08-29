@@ -264,9 +264,19 @@ que corresponde, no en una sección nueva).
 - **7. Flujo resumido** — el procedimiento reducido a una lista corta de
   etapas, en **texto plano** (nunca imagen ni SVG). **Cada etapa y cada
   flecha van en su propia línea, en bloque vertical — NUNCA todo en una
-  sola línea/párrafo separado por flechas inline.** Formato exacto a
-  copiar:
+  sola línea/párrafo separado por flechas inline.**
 
+  **OBLIGATORIO: envuelve el bloque completo en una cerca de código
+  Markdown (tres backticks, ` ``` `), no lo dejes como texto plano
+  suelto.** En Markdown, líneas separadas por un solo salto de línea SIN
+  una cerca de código se colapsan en un mismo párrafo al renderizar a
+  HTML — es la causa exacta por la que un "Flujo resumido" bien escrito
+  en la fuente terminó mostrándose todo en una sola línea en BookStack.
+  La cerca de código (` ``` `) es la única forma de garantizar que los
+  saltos de línea se respeten visualmente. Formato exacto a copiar,
+  backticks incluidos:
+
+  ````
   ```
   Etapa 1
         ↓
@@ -274,13 +284,16 @@ que corresponde, no en una sección nueva).
         ↓
   Etapa 3
   ```
+  ````
 
   Mal ejemplo (PROHIBIDO): `Etapa 1 ↓ Etapa 2 ↓ Etapa 3` en un mismo
-  renglón — si tu borrador quedó así, rehazlo como bloque vertical antes
-  de entregarlo. Cada etapa del resumen debe corresponder 1 a 1 con un
-  paso (o grupo de sub-pasos) real de la sección 2, en el mismo orden —
-  nunca inventes ni reordenes etapas aquí que no aparecían en el
-  procedimiento detallado.
+  renglón, o el bloque de etapas SIN la cerca de código — ambos se
+  renderizan como una sola línea corrida en BookStack aunque la fuente
+  tenga saltos de línea. Antes de entregar el borrador, verifica que el
+  bloque de Flujo resumido esté envuelto en ` ``` `. Cada etapa del
+  resumen debe corresponder 1 a 1 con un paso (o grupo de sub-pasos) real
+  de la sección 2, en el mismo orden — nunca inventes ni reordenes
+  etapas aquí que no aparecían en el procedimiento detallado.
 
 ## Guardrails de formato (RAG-friendly, obligatorio — ver `SOP001` §7)
 
