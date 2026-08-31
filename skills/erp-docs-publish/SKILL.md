@@ -1,10 +1,10 @@
 ---
 name: erp-docs-publish
-description: "Trigger: publicar en BookStack un borrador ERP2 (Concepto + Guía) ya aprobado por el humano. Único punto que escribe en BookStack."
+description: "Trigger: publicar en BookStack la ficha de flujo ERP2 (una sola página) ya aprobada por el humano. Único punto que escribe en BookStack."
 license: Apache-2.0
 metadata:
   author: JhuniorBrayan123
-  version: "1.0"
+  version: "2.0"
 ---
 
 ## Activation Contract
@@ -26,10 +26,8 @@ nueva.
 ## Precondición obligatoria
 
 - Requiere un borrador APROBADO: de esta misma sesión, o recuperado desde el
-  topic Engram `erp-docs/{flow}/draft`. El borrador siempre trae DOS páginas
-  (`Concepto - [Término]` y `Guía [NNN]- [Acción]`) — nunca publiques solo
-  una si el borrador definía ambas, salvo que el humano apruebe publicar
-  parcialmente.
+  topic Engram `erp-docs/{flow}/draft`. El borrador trae UNA sola página
+  (la ficha del flujo, título `[Módulo] - [Submódulo] - [Tema]`).
 - NUNCA publica contenido que no haya sido mostrado y aprobado por el humano
   en esta conversación. Si no hay evidencia de aprobación explícita, DETENTE
   y pide confirmación antes de escribir nada en BookStack.
@@ -59,9 +57,7 @@ nueva.
      de actualizar igual.
 4. Ejecuta exactamente el destino confirmado:
    - **Crear**: usa `bookstack_create_page` en el libro/capítulo
-     confirmado — para `Guía`, verifica de nuevo el último NNN en uso
-     justo antes de crear, por si otra página se publicó entre el
-     borrador y ahora.
+     confirmado.
    - **Actualizar**: usa `bookstack_update_page` ÚNICAMENTE sobre el ID
      de página que el humano confirmó explícitamente (en `erp-docs-write`
      o en esta misma conversación) — nunca sobre una página que tú
@@ -69,11 +65,14 @@ nueva.
      borrador aprobado; no mezcles contenido viejo no revisado con el
      nuevo.
 5. Publica EXACTAMENTE el contenido aprobado — ninguna edición no aprobada
-   se cuela en la publicación. Aplica los tags (`audiencia`, `tipo-
-   contenido`, `modulo`, `version-producto`) y fija `estado: vigente`.
+   se cuela en la publicación. Nunca agregues de vuelta información
+   técnica/interna (dependencias, permisos) que el borrador haya
+   descartado a propósito del cuerpo publicado. Aplica los tags
+   (`audiencia`, `tipo-contenido`, `modulo`, `version-producto`) y fija
+   `estado: vigente`.
 6. Persiste un log vía MCP Engram bajo el topic `erp-docs/{flow}/publish-log`
-   con: qué se publicó (Concepto y/o Guía), URL/ID de cada página, y
-   contexto de fecha/hora.
+   con: qué se publicó (la ficha), URL/ID de la página, y contexto de
+   fecha/hora.
 
 ## Guardrails
 
@@ -83,9 +82,6 @@ nueva.
   sin confirmar señalados en el borrador.
 - PROHIBIDO introducir contenido nuevo no presente en el borrador aprobado
   al momento de publicar.
-- PROHIBIDO publicar una `Guía` con un número `NNN` ya usado por otra
-  página del mismo capítulo — vuelve a verificar el correlativo antes de
-  crear.
 - PROHIBIDO usar `bookstack_update_page` sobre cualquier página cuyo ID
   no haya sido confirmado explícitamente por el humano para este flujo —
   "se parece" o "probablemente es esta" no es confirmación.
