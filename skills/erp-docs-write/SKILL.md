@@ -36,8 +36,8 @@ publicado.
 confundas "permisos de backend" (interno, se excluye) con "qué plan de
 suscripción incluye esta funcionalidad" (PYME / Emprendedor / Negocio /
 Empresa / Corporativo) — eso el cliente lo necesita para saber si puede
-usar el flujo que está leyendo. Va en el campo "Plan requerido" del
-encabezado (ver "Salida requerida" abajo).
+usar el flujo que está leyendo. Va en la sección "9. Planes relacionados"
+(ver "Salida requerida" abajo) — nunca en el encabezado de metadatos.
 
 Produce SIEMPRE un borrador. Nunca escribe en BookStack — esa acción
 pertenece exclusivamente a `erp-docs-publish`, y solo corre tras
@@ -72,7 +72,7 @@ aprobación humana explícita.
   proyecto de automatización NO tiene forma de saber qué plan de
   suscripción (PYME/Emprendedor/Negocio/Empresa/Corporativo) incluye una
   funcionalidad — eso es una decisión comercial, no algo que un test E2E
-  valide. Para el campo "Plan requerido", usa este orden:
+  valide. Para la sección "9. Planes relacionados", usa este orden:
   1. **Snapshot fijo (fallback rápido, no la fuente que manda)** — matriz
      vigente al 2026-08-31, cada plan incluye todo lo del anterior más lo
      que agrega:
@@ -285,16 +285,18 @@ titular, pero como referencia base:
 
 **No agregues, quites ni renombres ninguna sección de esta lista.** Antes
 de entregar el borrador, cuenta las secciones numeradas: si la última no
-es exactamente "11. Flujo resumido", coló una sección de más — revisa y
+es exactamente "12. Flujo resumido", coló una sección de más — revisa y
 bórrala, no renumeres para que cuadre. Nombres de sección PROHIBIDOS por
 reincidentes — si aparecen, bórralos: "Requisitos previos", "Datos de
 salida esperados", "Validaciones del sistema", "Nota importante" (como
 sección aparte) y "Dependencias" (100% técnica — dependencias de módulo/
 configuración/servicio/tabla BD no tienen versión válida para cliente
 final; si el humano necesita esa información, va en la nota interna de
-Engram, nunca en el cuerpo publicado). **"Plan requerido" NO está
-prohibido** — es un campo del encabezado (no una sección numerada), y sí
-es información de cliente (ver arriba).
+Engram, nunca en el cuerpo publicado). **"9. Planes relacionados" NO está
+prohibida** — es una sección numerada del cuerpo (no un campo del
+encabezado), y sí es información de cliente (ver arriba). No la confundas
+con "Dependencias" ni con permisos de backend/RBAC — es exclusivamente
+sobre qué plan de suscripción incluye la funcionalidad.
 
 **Reincidencia adicional detectada — nombres inventados que reemplazan la
 lista cerrada en vez de sumarse a ella: "Procedimiento paso a paso" (en
@@ -320,14 +322,14 @@ no lo saltees):** lista los títulos de sección que escribiste, en orden,
 y compáralos palabra por palabra contra esta lista exacta —
 "1. Objetivo", "2. Alcance", "3. Usuarios involucrados", "4. Flujo
 principal", "5. Reglas de negocio", "6. Validaciones", "7. Casos
-especiales", "8. Entradas y salidas", "9. Errores frecuentes",
-"10. Documentación relacionada", "11. Flujo resumido" — y también que el
-encabezado de metadatos (Estado/Responsable/Área/Módulo/Submódulo/
-Audiencia/Plan requerido/Última actualización/Fuente) esté presente
-completo arriba del todo. Si un solo título no calza exacto, si falta uno,
-si sobra uno, o si la numeración salta (ej. de "1." a "3."), el borrador
-NO está listo — corrígelo antes de mostrarlo al humano, no lo entregues
-"a ver qué te parece" con la lista incompleta.
+especiales", "8. Entradas y salidas", "9. Planes relacionados",
+"10. Errores frecuentes", "11. Documentación relacionada", "12. Flujo
+resumido" — y también que el encabezado de metadatos (Estado/
+Responsable/Área/Módulo/Submódulo/Prioridad/Versión/Última actualización)
+esté presente completo arriba del todo. Si un solo título no calza exacto,
+si falta uno, si sobra uno, o si la numeración salta (ej. de "1." a "3."),
+el borrador NO está listo — corrígelo antes de mostrarlo al humano, no lo
+entregues "a ver qué te parece" con la lista incompleta.
 
 **Encabezado de metadatos — tabla `Campo | Valor`, NUNCA una cerca de
 código.** El título (`# [Módulo] - [Submódulo] - [Tema]`) va como
@@ -336,7 +338,12 @@ sufre el bug de colapso de líneas (cada fila empieza con `|`, el
 renderizador la respeta sin necesitar blanco ni cerca) y además se ve
 como un cuadro de datos, no como un bloque de código — una cerca de
 código aquí es un error de formato, no la solución (esa sí aplica al
-"Flujo resumido", que es texto plano sin estructura de tabla).
+"Flujo resumido", que es texto plano sin estructura de tabla). Ni
+"Audiencia" ni "Plan requerido" ni "Fuente" van en esta tabla —
+"Audiencia" es siempre "Cliente final" (constante, no hace falta
+repetirla), "Plan requerido" se documenta en la sección "9. Planes
+relacionados" del cuerpo, y "Fuente" (evidencia de código) va solo en la
+nota interna de Engram, nunca en el cuerpo publicado.
 
 ```
 | Campo | Valor |
@@ -346,24 +353,10 @@ código aquí es un error de formato, no la solución (esa sí aplica al
 | Área | |
 | Módulo | |
 | Submódulo | |
-| Audiencia | Cliente final |
-| Plan requerido | |
+| Prioridad | |
+| Versión | |
 | Última actualización | |
 ```
-
-**"Fuente" NO va en esta tabla — el cliente final no necesita, ni debe
-ver, nombres de archivos de código de automatización (Tasks, Interactions,
-specs).** Es exactamente el tipo de detalle técnico interno que esta
-skill prohíbe en el cuerpo publicado (ver Activation Contract). La cita de
-archivos de código sigue siendo obligatoria como evidencia de que nada se
-inventó, pero va SOLO en la nota interna que persistís en Engram junto al
-borrador (ver "Persistencia" abajo) — nunca en la tabla de metadatos ni en
-ninguna sección del cuerpo público.
-
-`Plan requerido` cita el plan de suscripción mínimo que incluye esta
-funcionalidad (ej. "Emprendedor o superior") — ver la fuente de verdad
-específica para este campo arriba (matriz de planes, nunca el código de
-automatización).
 
 `Responsable` — NO lo dejes en blanco por decisión propia sin preguntar.
 Por defecto, es la persona que te pide y aprueba la publicación de esta
@@ -371,11 +364,11 @@ ficha en la conversación actual — si te dijo su nombre (como cuando el
 humano dice "el responsable soy yo, [nombre]"), usa ese nombre
 directamente. Si no lo sabés y no te lo dijeron, preguntá explícitamente
 quién es el responsable antes de dejarlo vacío — no asumas que queda
-"pendiente" sin más. `Área` y `Plan requerido`, si no tenés evidencia
-real ni el humano te lo confirmó, sí quedan en blanco para que el humano
-los llene después — no los inventes.
+"pendiente" sin más. `Área`, `Prioridad` y `Versión`, si no tenés
+evidencia real ni el humano te lo confirmó, sí quedan en blanco para que
+el humano los llene después — no los inventes.
 
-**Las 11 secciones, en este orden exacto:**
+**Las 12 secciones, en este orden exacto:**
 
 1. **Objetivo** — para qué existe el flujo y qué necesidad de negocio
    resuelve, en 1-2 líneas.
@@ -433,12 +426,19 @@ los llene después — no los inventes.
    lenguaje de cliente.
 8. **Entradas y salidas** — Entradas/Salidas reales, traducidas a
    lenguaje de cliente (ver Regla dura arriba).
-9. **Errores frecuentes** (tabla `Situación | Acción recomendada`) — solo
-   con evidencia real; si no hay evidencia de un problema frecuente real,
-   no la inventes.
-10. **Documentación relacionada** (Opcional) — enlaces a otras fichas
+9. **Planes relacionados** (tabla `Permiso | Descripción`) — qué plan de
+   suscripción mínimo incluye esta funcionalidad (ver la fuente de verdad
+   específica arriba: matriz de planes o la página BookStack, NUNCA el
+   código de automatización). No es una tabla de permisos de backend/RBAC
+   — "Permiso" acá significa "qué permite ese plan", no un rol interno.
+   Si no hay evidencia de qué plan mínimo aplica, dejá la fila vacía y
+   pregúntale al humano en vez de adivinar.
+10. **Errores frecuentes** (tabla `Situación | Acción recomendada`) — solo
+    con evidencia real; si no hay evidencia de un problema frecuente real,
+    no la inventes.
+11. **Documentación relacionada** (Opcional) — enlaces a otras fichas
     relacionadas, si existen.
-11. **Flujo resumido** — el Flujo principal reducido a una lista corta de
+12. **Flujo resumido** — el Flujo principal reducido a una lista corta de
     etapas, en **texto plano** (nunca imagen ni SVG). **Cada etapa y cada
     flecha van en su propia línea, en bloque vertical, y el bloque
     completo va envuelto en una cerca de código Markdown (tres backticks,
