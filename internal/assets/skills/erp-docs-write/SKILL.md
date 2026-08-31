@@ -28,8 +28,16 @@ códigos internos de triage (ej. "RN-001"), tipos de validación
 Frontend/Backend, ni pasos que solo tendría sentido seguir alguien de
 soporte. Si un dato solo importa para diagnóstico interno o de
 arquitectura (dependencias de módulo/configuración/servicio/tabla BD,
-permisos de backend), NO entra en la ficha del cliente — repórtalo aparte
-como nota interna para el humano, nunca en el cuerpo publicado.
+permisos de acceso/RBAC internos), NO entra en la ficha del cliente —
+repórtalo aparte como nota interna para el humano, nunca en el cuerpo
+publicado.
+
+**Excepción — el plan de suscripción SÍ es información de cliente.** No
+confundas "permisos de backend" (interno, se excluye) con "qué plan de
+suscripción incluye esta funcionalidad" (PYME / Emprendedor / Negocio /
+Empresa / Corporativo) — eso el cliente lo necesita para saber si puede
+usar el flujo que está leyendo. Va en el campo "Plan requerido" del
+encabezado (ver "Salida requerida" abajo).
 
 Produce SIEMPRE un borrador. Nunca escribe en BookStack — esa acción
 pertenece exclusivamente a `erp-docs-publish`, y solo corre tras
@@ -60,6 +68,22 @@ aprobación humana explícita.
   ocultes ni la resuelvas copiando BookStack por default.
   - Nunca decidas solo con la búsqueda si existe o no una página previa —
     sigue la sección "Confirmación de destino" de abajo antes de redactar.
+- **Matriz de planes de suscripción — EXCEPCIÓN a "el código manda".** El
+  proyecto de automatización NO tiene forma de saber qué plan de
+  suscripción (PYME/Emprendedor/Negocio/Empresa/Corporativo) incluye una
+  funcionalidad — eso es una decisión comercial, no algo que un test E2E
+  valide. Para el campo "Plan requerido":
+  1. Busca en BookStack una página de referencia con la matriz de planes
+     vigente (ej. "Concepto - Planes de suscripción ERP2" o similar).
+  2. Si no la encuentras, busca en Engram (`mem_search`) un snapshot
+     guardado de la matriz de planes.
+  3. Si tampoco hay nada, pregúntale al humano directamente cuál es el
+     plan mínimo que incluye esta funcionalidad — NUNCA lo adivines ni lo
+     completes con el plan que "suena razonable".
+  Como los precios y el detalle de cada plan cambian con el tiempo, trata
+  cualquier matriz guardada como snapshot con fecha — si es vieja,
+  avísale al humano que puede estar desactualizada en vez de darla por
+  buena en silencio.
 
 ## Confirmación de destino (MANDATORY — antes de redactar, no después)
 
@@ -232,10 +256,12 @@ es exactamente "11. Flujo resumido", coló una sección de más — revisa y
 bórrala, no renumeres para que cuadre. Nombres de sección PROHIBIDOS por
 reincidentes — si aparecen, bórralos: "Requisitos previos", "Datos de
 salida esperados", "Validaciones del sistema", "Nota importante" (como
-sección aparte), "Dependencias" y "Planes relacionados" (esas dos son
-100% técnicas y NO tienen versión válida para cliente final — si el
-humano necesita esa información, va en la nota interna de Engram, nunca
-en el cuerpo publicado).
+sección aparte) y "Dependencias" (100% técnica — dependencias de módulo/
+configuración/servicio/tabla BD no tienen versión válida para cliente
+final; si el humano necesita esa información, va en la nota interna de
+Engram, nunca en el cuerpo publicado). **"Plan requerido" NO está
+prohibido** — es un campo del encabezado (no una sección numerada), y sí
+es información de cliente (ver arriba).
 
 **Encabezado de metadatos (formato "Campo: valor" en texto plano, uno por
 línea, no una tabla):**
@@ -248,14 +274,19 @@ Responsable:
 Módulo:
 Submódulo:
 Audiencia: Cliente final
+Plan requerido:
 Última actualización:
 Fuente:
 ```
 
 `Fuente` cita el/los archivo(s) de código de donde salió el contenido
 (ej. `EmitirGuiaRemitente.task.ts`) — es la evidencia de que esto no se
-inventó. Campos que no puedas completar con evidencia real (Responsable,
-Área) quedan en blanco para que el humano los llene — no los inventes.
+inventó. `Plan requerido` cita el plan de suscripción mínimo que incluye
+esta funcionalidad (ej. "Emprendedor o superior") — ver la fuente de
+verdad específica para este campo arriba (matriz de planes, nunca el
+código de automatización). Campos que no puedas completar con evidencia
+real (Responsable, Área, Plan requerido) quedan en blanco para que el
+humano los llene — no los inventes.
 
 **Las 11 secciones, en este orden exacto:**
 
