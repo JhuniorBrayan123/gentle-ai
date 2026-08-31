@@ -339,9 +339,17 @@ Fuente:
 inventó. `Plan requerido` cita el plan de suscripción mínimo que incluye
 esta funcionalidad (ej. "Emprendedor o superior") — ver la fuente de
 verdad específica para este campo arriba (matriz de planes, nunca el
-código de automatización). Campos que no puedas completar con evidencia
-real (Responsable, Área, Plan requerido) quedan en blanco para que el
-humano los llene — no los inventes.
+código de automatización).
+
+`Responsable` — NO lo dejes en blanco por decisión propia sin preguntar.
+Por defecto, es la persona que te pide y aprueba la publicación de esta
+ficha en la conversación actual — si te dijo su nombre (como cuando el
+humano dice "el responsable soy yo, [nombre]"), usa ese nombre
+directamente. Si no lo sabés y no te lo dijeron, preguntá explícitamente
+quién es el responsable antes de dejarlo vacío — no asumas que queda
+"pendiente" sin más. `Área` y `Plan requerido`, si no tenés evidencia
+real ni el humano te lo confirmó, sí quedan en blanco para que el humano
+los llene después — no los inventes.
 
 **Las 11 secciones, en este orden exacto:**
 
@@ -360,6 +368,38 @@ humano los llene — no los inventes.
    con varios campos, preséntalos como tabla `Campo | Descripción` en vez
    de prosa. NO agregues marcadores de "Captura sugerida" ni ningún otro
    indicador de screenshot.
+
+   **Reincidencia del bug de colapso de Markdown, ahora dentro de listas
+   numeradas.** El mismo problema que obliga a envolver el "Flujo
+   resumido" en una cerca de código (líneas separadas por un solo salto
+   se juntan en un mismo párrafo al renderizar) también ocurre **dentro
+   de un ítem de lista numerada** cuando el título del paso y su
+   instrucción van en líneas seguidas sin blanco entre medio — quedan
+   pegados en un solo renglón ("1. Ingresar a Punto de Venta Dirígete al
+   menú..."), perdiendo la separación visual. Por eso, cuando un paso
+   tenga título + descripción en prosa, van SIEMPRE como dos párrafos
+   distintos dentro del mismo ítem — título en negrita, línea en blanco,
+   después la descripción (y, si hay alternativas, cada una en su propio
+   viñeta, también separada por blanco del párrafo anterior):
+
+   ```
+   1. **Ingresar a Punto de Venta**
+
+      Dirígete al menú lateral y selecciona "Ventas y Compras". Haz clic
+      en "Nueva Venta".
+
+   2. **Aperturar o continuar con la caja**
+
+      El sistema muestra la pantalla de cajas.
+
+      - Si la caja está cerrada, haz clic en "Aperturar caja", luego en
+        "Apertura" y confirma con "Sí, aperturar".
+      - Si la caja ya está abierta, haz clic en "Continuar vendiendo".
+   ```
+
+   Mal ejemplo (PROHIBIDO): título e instrucción en líneas seguidas sin
+   blanco entre medio, aunque visualmente en el Markdown fuente parezcan
+   separadas — sin la línea en blanco, BookStack las junta en un renglón.
 5. **Reglas de negocio** (tabla `Regla | Descripción`, en lenguaje de
    cliente — sin códigos de triage tipo "RN-001" ni columna de
    prioridad interna) — ver Regla dura arriba.
