@@ -319,10 +319,18 @@ NO está listo — corrígelo antes de mostrarlo al humano, no lo entregues
 "a ver qué te parece" con la lista incompleta.
 
 **Encabezado de metadatos (formato "Campo: valor" en texto plano, uno por
-línea, no una tabla):**
+línea, no una tabla).** El título (`# [Módulo] - [Submódulo] - [Tema]`)
+va como encabezado Markdown normal, FUERA de la cerca. Los campos
+"Campo: valor" que siguen van SIEMPRE envueltos en una cerca de código
+(tres backticks) — es el mismo bug de colapso del "Flujo resumido" (líneas
+separadas por un solo salto se juntan en un párrafo al renderizar), y este
+bloque tiene exactamente esa forma. Sin la cerca, BookStack ya lo unió en
+un solo renglón corrido más de una vez — no es un caso hipotético.
 
 ```
 # [Módulo] - [Submódulo] - [Tema]
+```
+```
 Estado:
 Responsable:
 Área:
@@ -452,6 +460,16 @@ los llene después — no los inventes.
 - La metadata (estado, audiencia, módulo) va en el encabezado/tags, nunca
   como frase suelta en el cuerpo ("Estado: DRAFT" está PROHIBIDO como
   texto narrativo — usa el campo "Estado" del encabezado).
+- **Regla general contra el colapso de Markdown (ya detectada dos veces —
+  encabezado de metadatos y Flujo principal):** cualquier bloque donde
+  varias líneas deban verse SEPARADAS visualmente (una por dato, una por
+  etapa, título separado de su descripción) pero estén unidas solo por un
+  salto de línea simple, sin blanco ni cerca de código, se renderiza como
+  un único párrafo corrido en BookStack. Antes de entregar el borrador,
+  revisa cada bloque de este tipo y asegurate de envolverlo en una cerca
+  de código o separar cada parte con una línea en blanco — no asumas que
+  "se ve bien en el Markdown fuente" significa que se va a ver bien
+  renderizado.
 
 ## Guardrails (honestidad epistémica)
 
