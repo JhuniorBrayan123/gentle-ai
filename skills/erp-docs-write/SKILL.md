@@ -1,6 +1,6 @@
 ---
 name: erp-docs-write
-description: "Trigger: redactar Concepto + Guía paso a paso de un flujo ERP2 para cliente final, con BookStack y código Screenplay+POM. Produce SOLO un borrador."
+description: "Trigger: redactar Concepto, Guía paso a paso o ficha Funcional de un flujo ERP2, con BookStack y código Screenplay+POM. Produce SOLO un borrador."
 license: Apache-2.0
 metadata:
   author: JhuniorBrayan123
@@ -9,19 +9,29 @@ metadata:
 
 ## Activation Contract
 
-Carga esta skill cuando el humano pida documentación para el cliente final de
-ERP2 sobre un flujo de negocio (ej. "documenta la emisión de una boleta",
-"redacta la guía de este flujo"). Es un punto de entrada **independiente**,
+Carga esta skill cuando el humano pida documentación de un flujo o
+funcionalidad de ERP2 — para cliente final (ej. "documenta la emisión de
+una boleta", "redacta la guía de este flujo") o para uso interno (ej.
+"arma la ficha funcional de Guías de Remisión"). Es un punto de entrada
+**independiente**,
 NO forma parte del pipeline `qa-supervisor` → `qa-explore` → `qa-spec` →
 `qa-apply` → `qa-review` → `qa-verify` → `qa-docs` (ese pipeline automatiza
 pruebas Playwright; esta skill redacta documentación para el cliente que usa
 el ERP2).
 
-**Audiencia = SIEMPRE cliente final.** No redactes en tono de soporte, QA o
-implementación — nada de nombres de clases CSS, IDs de elementos, jerga
-técnica interna, ni pasos que solo tendría sentido seguir alguien de soporte.
-Si una validación solo importa para diagnóstico interno, no entra en el
-borrador cliente; repórtala aparte como nota para el humano.
+**La audiencia depende del tipo de documento pedido:**
+- `Concepto` y `Guía` son SIEMPRE para cliente final. No redactes en tono
+  de soporte, QA o implementación — nada de nombres de clases CSS, IDs de
+  elementos, jerga técnica interna, ni pasos que solo tendría sentido
+  seguir alguien de soporte. Si una validación solo importa para
+  diagnóstico interno, no entra en el borrador cliente; repórtala aparte
+  como nota para el humano.
+- `Funcional` es para audiencia interna (analistas, QA, soporte, equipo de
+  desarrollo) — sí puede usar vocabulario técnico y de negocio (reglas,
+  validaciones, dependencias, tablas de BD si se conocen). Aun así, nunca
+  incluyas selectores/IDs de test ni detalles de implementación del
+  proyecto de automatización en sí (eso pertenece al código, no a la
+  ficha funcional).
 
 Produce SIEMPRE un borrador. Nunca escribe en BookStack — esa acción
 pertenece exclusivamente a `erp-docs-publish`, y solo corre tras aprobación
@@ -45,6 +55,17 @@ humana explícita.
     ninguna).
   - Nunca decidas solo con la búsqueda si existe o no una página previa —
     sigue la sección "Confirmación de destino" de abajo antes de redactar.
+  - **Excepción para `Funcional`: BookStack NO es la fuente de verdad del
+    contenido.** Para Concepto y Guía, BookStack manda en definiciones de
+    negocio. Para Funcional, el código manda — BookStack puede estar
+    desactualizado respecto al comportamiento real del sistema. Usa
+    BookStack solo para citar contexto/historia y para la taxonomía de
+    naming, nunca para completar una sección de la ficha funcional
+    (Flujo principal, Reglas de negocio, Validaciones, Casos especiales,
+    Entradas y salidas, Errores frecuentes) cuando el código dice algo
+    distinto o cuando BookStack simplemente no tiene el dato — en ese
+    caso, confía en el código o márcalo "[pendiente de confirmar con el
+    equipo]", nunca copies BookStack sin más por default.
 - **Código Screenplay+POM del proyecto de automatización** —
   `src/screenplay/{tasks,interactions,questions,targets}/**`,
   `src/actors/**`, y también `src/task/**` (convención más antigua del
@@ -84,11 +105,16 @@ DEBE presentar al humano lo siguiente y esperar su confirmación:
    que no existe.
 2. **Ubicación propuesta** (solo aplica si el destino es página nueva):
    antes de redactar, propone en qué libro y capítulo iría cada página
-   (`Concepto -` y `Guía -`), basándote en la taxonomía vigente (`SOP001`,
-   `Estándar - Cómo documentar`) y en dónde viven las páginas `Guía -`/
-   `Concepto -` ya existentes de ese mismo módulo. Pregunta explícitamente:
-   > "Propongo publicar el Concepto en [libro/capítulo] y la Guía en
-   > [libro/capítulo]. ¿Confirmas, o va en otro lugar?"
+   (`Concepto -`, `Guía -` y/o `Funcional`), basándote en la taxonomía
+   vigente (`SOP001`, `Estándar - Cómo documentar`) y en dónde viven las
+   páginas `Guía -`/`Concepto -`/`Funcional` ya existentes de ese mismo
+   módulo. **Por defecto, `Funcional` va en el mismo libro donde ya están
+   las demás páginas nuevas que ha creado esta skill (Concepto/Guía) —
+   no propongas un libro nuevo salvo que el humano lo pida.** Pregunta
+   explícitamente:
+   > "Propongo publicar el Concepto en [libro/capítulo], la Guía en
+   > [libro/capítulo] y el Funcional en [libro/capítulo]. ¿Confirmas, o
+   > va en otro lugar?"
 3. Solo después de que el humano responda, redacta el borrador — con el
    destino ya fijado y guardado junto al borrador en Engram (`crear` +
    libro/capítulo confirmado, o `actualizar` + ID de página confirmado
@@ -98,8 +124,9 @@ DEBE presentar al humano lo siguiente y esperar su confirmación:
 ## Regla dura: nada de pasos o datos inventados (mecánica obligatoria, no opcional)
 
 **PROHIBIDO redactar el procedimiento de memoria/conocimiento general de
-ERPs, aunque suene plausible.** El único método válido para escribir el
-"Procedimiento paso a paso" es:
+ERPs, aunque suene plausible.** Esta regla aplica igual al "Procedimiento
+paso a paso" de la Guía y al "Flujo principal" de la ficha Funcional — en
+ambos casos el único método válido es:
 
 0. **Antes de buscar el Task específico del documento, busca el/los Task(s)
    de entrada compartidos del módulo.** En Punto de Venta, TODO comprobante
@@ -158,6 +185,32 @@ ERPs, aunque suene plausible.** El único método válido para escribir el
    y línea? Si no puedes responder eso para algún paso, ese paso está
    inventado — bórralo o reemplázalo por la verificación real.
 
+**Esta misma mecánica de anclaje aplica al resto de secciones del
+Funcional que describen comportamiento del sistema** — no solo al Flujo
+principal:
+- **Reglas de negocio**: cada fila sale de una condición/validación real
+  en el código (ej. funciones como `motivoAceptaDni`,
+  `motivoRequiereComprador` en `EmitirGuiaRemitente.task.ts`), citando el
+  archivo como evidencia interna. Si BookStack describe una regla que el
+  código no confirma (o la contradice), prevalece el código — anota la
+  discrepancia para el humano, no la ocultes ni la promedies.
+- **Validaciones**: cada fila sale de un mensaje de error/validación real
+  encontrado en Targets/Tasks (ej. `mensajeSinItems`,
+  `mensajeNoEncontrado` en `CotizacionTargets`), con su texto exacto.
+- **Casos especiales**: solo ramas condicionales reales del código
+  (`if`/`switch` sobre motivo, modalidad, tipo de documento, etc.).
+- **Entradas y salidas**: los tipos de datos reales que el Task recibe y
+  devuelve (ej. `DatosEmisionSimple`, `EmisionResult`), no una lista
+  genérica de "campos que suelen pedirse".
+- **Errores frecuentes (Fact)**: solo errores que el código o BookStack
+  respaldan con evidencia concreta — nunca "problemas típicos de un ERP".
+- **Dependencias** (Módulo/Configuración/Servicio/Tabla BD) y **Planes
+  relacionados** (permisos): el proyecto de automatización normalmente NO
+  expone tablas de BD ni permisos de backend — si no puedes confirmarlo
+  desde el código de automatización ni desde BookStack, dilo
+  explícitamente como "[pendiente de confirmar con el equipo]" en vez de
+  inventar una tabla o un permiso que suene razonable.
+
 Un guía que omite un paso real del código (ej. seleccionar la caja antes
 de poder elegir producto, o completar punto de partida/llegada en una
 guía de remisión) o que inventa un paso que el código no tiene (ej. un
@@ -185,21 +238,29 @@ titular, pero como referencia base:
 - `Concepto - [Término]` — ej. `Concepto - Boleta de venta electrónica`.
 - `Guía [NNN]- [Título descriptivo]` — sigue la numeración real ya en uso
   en el capítulo destino (ver arriba).
-- Tags (BookStack): `audiencia: cliente-final`, `tipo-contenido:
-  concepto|guia`, `modulo: <módulo real>`, `estado: borrador` (pasa a
-  `vigente` solo cuando `erp-docs-publish` confirma la publicación),
-  `version-producto: <la que indique el estándar vigente>`.
+- `[Módulo] - [Submódulo] - [Tema]` — título de la ficha `Funcional`, tal
+  cual la plantilla oficial (sin prefijo "Funcional -"; el tipo de página
+  queda marcado por la tag `tipo-contenido: funcional`, no por el título).
+- Tags (BookStack): `audiencia: cliente-final` para Concepto/Guía,
+  `audiencia: interno` para Funcional; `tipo-contenido:
+  concepto|guia|funcional`, `modulo: <módulo real>`, `estado: borrador`
+  (pasa a `vigente` solo cuando `erp-docs-publish` confirma la
+  publicación), `version-producto: <la que indique el estándar vigente>`.
 - Ubicación: `Concepto -` va en el libro/capítulo de producto del módulo
   (ej. glosario de facturación electrónica); `Guía -` va en el libro/
   capítulo de operación diaria del módulo (ej. el mismo capítulo donde ya
-  viven las guías de ese módulo).
+  viven las guías de ese módulo); `Funcional` va, por defecto, en el
+  mismo libro donde ya viven las páginas `Concepto -`/`Guía -` nuevas de
+  este proyecto (ver "Confirmación de destino" arriba) — no un libro
+  nuevo, salvo pedido explícito del humano.
 
-## Salida requerida — DOS páginas separadas, nunca mezcladas
+## Salida requerida — hasta TRES páginas, nunca mezcladas
 
 **Lista cerrada de secciones — no agregues, quites ni renombres ninguna.**
 El `Concepto` tiene exactamente 4 secciones de contenido (más la tabla de
-metadatos) y la `Guía` exactamente estas 7, ni una más (más la tabla de
-metadatos) — la última SIEMPRE es la 7, "Flujo resumido":
+metadatos), la `Guía` exactamente estas 7 (más la tabla de metadatos) — la
+última SIEMPRE es la 7, "Flujo resumido" — y el `Funcional` exactamente
+las 12 de su plantilla oficial (ver más abajo, sección 3):
 
 ```
 1. Objetivo
@@ -295,11 +356,89 @@ que corresponde, no en una sección nueva).
   de la sección 2, en el mismo orden — nunca inventes ni reordenes
   etapas aquí que no aparecían en el procedimiento detallado.
 
+### 3. `[Módulo] - [Submódulo] - [Tema]` (Funcional)
+
+Documenta una funcionalidad, flujo o submódulo completo para audiencia
+interna (analistas, QA, soporte, desarrollo). Se activa cuando el humano
+pide explícitamente una "ficha funcional", "plantilla funcional" o
+documentación técnica/de negocio de un módulo — no reemplaza a Concepto
+ni a Guía, es un tercer tipo de página independiente.
+
+**Encabezado de metadatos (formato exacto de la plantilla oficial, NO una
+tabla — campos "Campo: valor" en texto plano, uno por línea):**
+
+```
+# [Módulo] - [Submódulo] - [Tema]
+Estado:
+Responsable:
+Área:
+Módulo:
+Submódulo:
+Prioridad:
+Versión:
+Última actualización:
+Fuente:
+```
+
+`Fuente` cita el/los archivo(s) de código de donde salió el contenido
+(ej. `EmitirGuiaRemitente.task.ts`) — es la evidencia de que esto no se
+inventó. Campos que no puedas completar con evidencia real (Responsable,
+Prioridad, Versión) quedan en blanco para que el humano los llene — no
+los inventes.
+
+**Las 12 secciones, en este orden exacto, ni una más ni una menos:**
+
+1. **Objetivo** — para qué existe la funcionalidad y qué necesidad de
+   negocio resuelve. Puede citar BookStack para el "por qué" de negocio,
+   pero el "qué hace" debe poder verificarse en el código.
+2. **Alcance** — Incluye / No incluye, basado en lo que el código
+   realmente cubre (ramas implementadas) vs. lo que NO tiene Task/
+   Interaction que lo respalde.
+3. **Usuarios involucrados** — roles reales mencionados en el código o
+   en BookStack (ej. Cajero, Vendedor); si no hay evidencia, márcalo
+   pendiente en vez de suponer roles genéricos.
+4. **Flujo principal** — igual mecánica que el "Procedimiento paso a
+   paso" de la Guía (ver Regla dura arriba): pasos numerados = secuencia
+   real de `test.step`/Task/Interaction, incluyendo la entrada compartida
+   de Punto de Venta cuando aplique.
+5. **Reglas de negocio** (tabla `Código | Regla | Descripción |
+   Prioridad`) — cada fila anclada a una condición real del código (ver
+   Regla dura arriba). Si BookStack describe una regla que el código
+   contradice, el código gana — anota la discrepancia, no la escondas.
+6. **Validaciones** (tabla `Código | Validación | Mensaje esperado |
+   Tipo`) — mensajes de error/validación reales encontrados en el
+   código, con su texto exacto. `Tipo` = Frontend si es una validación de
+   UI/cliente (la que ve el proyecto de automatización); marca "[por
+   confirmar]" si no puedes saber si también valida en Backend.
+7. **Casos especiales** — ramas condicionales reales del código, no
+   escenarios hipotéticos.
+8. **Dependencias** (tabla `Tipo | Dependencia | Descripción`) — Módulo y
+   Servicio pueden salir del código (imports, endpoints llamados);
+   Configuración y Tabla BD normalmente NO son visibles desde el proyecto
+   de automatización — márcalas "[pendiente de confirmar con el equipo]"
+   en vez de adivinar.
+9. **Planes relacionados** (tabla `Permiso | Descripción`) — solo si hay
+   evidencia real (código o BookStack); si no, la tabla queda con la fila
+   marcada "[pendiente de confirmar con el equipo]", nunca vacía sin
+   explicación ni inventada.
+10. **Entradas y salidas** — Entradas/Salidas reales según los tipos de
+    datos que el Task recibe y devuelve (ej. `DatosEmisionSimple`,
+    `EmisionResult`), no una lista genérica de campos típicos de un ERP.
+11. **Errores frecuentes (Fact)** (tabla `Error | Causa | Solución`) —
+    solo errores con evidencia real en código o BookStack.
+12. **Documentación relacionada (Opcional)** — enlaces a Conceptos,
+    Guías u otras fichas Funcionales relacionadas, si existen.
+
+**Formato**: igual que Concepto/Guía — texto plano y estructurado, sin
+HTML decorativo. Las tablas van en Markdown estándar (no code fences,
+esas se reservan para el Flujo resumido de la Guía).
+
 ## Guardrails de formato (RAG-friendly, obligatorio — ver `SOP001` §7)
 
 - Texto plano y estructurado: un dato por línea, sin HTML decorativo, sin
   cajas de color, sin mezclar estilos dentro de un mismo paso.
-- Una página = una intención (Concepto separado de Guía, nunca fusionados).
+- Una página = una intención (Concepto, Guía y Funcional siempre
+  separados, nunca fusionados en una sola página).
 - Títulos explícitos con las palabras que el cliente realmente buscaría.
 - Sinónimos del negocio cuando ayuden (comprobante/documento,
   aceptado/validado por SUNAT).
@@ -321,12 +460,17 @@ que corresponde, no en una sección nueva).
   artefactos Screenplay), decláralo explícitamente y construye el
   borrador solo con BookStack, señalando el vacío en vez de inventar
   pasos.
-- Si detectas contradicción entre BookStack y el código, no decidas por
-  tu cuenta: documenta la contradicción y escala al humano.
+- Si detectas contradicción entre BookStack y el código en Concepto o
+  Guía, no decidas por tu cuenta: documenta la contradicción y escala al
+  humano. **Excepción para Funcional**: ahí el código es la fuente de
+  verdad (BookStack puede estar desactualizado) — redacta según el
+  código y AÚN ASÍ anota la discrepancia con BookStack para el humano,
+  no la ocultes ni la resuelvas en silencio.
 
 ## Persistencia
 
-- Persiste el borrador (ambas páginas) vía MCP Engram bajo el topic
+- Persiste el/los borrador(es) que hayas producido (Concepto, Guía y/o
+  Funcional, según lo pedido) vía MCP Engram bajo el topic
   `erp-docs/{flow}/draft`, incluyendo la evidencia interna (rutas de
   código, páginas BookStack citadas) que no va en el cuerpo publicado.
 
