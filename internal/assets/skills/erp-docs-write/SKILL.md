@@ -318,36 +318,41 @@ si sobra uno, o si la numeración salta (ej. de "1." a "3."), el borrador
 NO está listo — corrígelo antes de mostrarlo al humano, no lo entregues
 "a ver qué te parece" con la lista incompleta.
 
-**Encabezado de metadatos (formato "Campo: valor" en texto plano, uno por
-línea, no una tabla).** El título (`# [Módulo] - [Submódulo] - [Tema]`)
-va como encabezado Markdown normal, FUERA de la cerca. Los campos
-"Campo: valor" que siguen van SIEMPRE envueltos en una cerca de código
-(tres backticks) — es el mismo bug de colapso del "Flujo resumido" (líneas
-separadas por un solo salto se juntan en un párrafo al renderizar), y este
-bloque tiene exactamente esa forma. Sin la cerca, BookStack ya lo unió en
-un solo renglón corrido más de una vez — no es un caso hipotético.
+**Encabezado de metadatos — tabla `Campo | Valor`, NUNCA una cerca de
+código.** El título (`# [Módulo] - [Submódulo] - [Tema]`) va como
+encabezado Markdown normal. Los campos van en una tabla: una tabla no
+sufre el bug de colapso de líneas (cada fila empieza con `|`, el
+renderizador la respeta sin necesitar blanco ni cerca) y además se ve
+como un cuadro de datos, no como un bloque de código — una cerca de
+código aquí es un error de formato, no la solución (esa sí aplica al
+"Flujo resumido", que es texto plano sin estructura de tabla).
 
 ```
-# [Módulo] - [Submódulo] - [Tema]
-```
-```
-Estado:
-Responsable:
-Área:
-Módulo:
-Submódulo:
-Audiencia: Cliente final
-Plan requerido:
-Última actualización:
-Fuente:
+| Campo | Valor |
+|---|---|
+| Estado | |
+| Responsable | |
+| Área | |
+| Módulo | |
+| Submódulo | |
+| Audiencia | Cliente final |
+| Plan requerido | |
+| Última actualización | |
 ```
 
-`Fuente` cita el/los archivo(s) de código de donde salió el contenido
-(ej. `EmitirGuiaRemitente.task.ts`) — es la evidencia de que esto no se
-inventó. `Plan requerido` cita el plan de suscripción mínimo que incluye
-esta funcionalidad (ej. "Emprendedor o superior") — ver la fuente de
-verdad específica para este campo arriba (matriz de planes, nunca el
-código de automatización).
+**"Fuente" NO va en esta tabla — el cliente final no necesita, ni debe
+ver, nombres de archivos de código de automatización (Tasks, Interactions,
+specs).** Es exactamente el tipo de detalle técnico interno que esta
+skill prohíbe en el cuerpo publicado (ver Activation Contract). La cita de
+archivos de código sigue siendo obligatoria como evidencia de que nada se
+inventó, pero va SOLO en la nota interna que persistís en Engram junto al
+borrador (ver "Persistencia" abajo) — nunca en la tabla de metadatos ni en
+ninguna sección del cuerpo público.
+
+`Plan requerido` cita el plan de suscripción mínimo que incluye esta
+funcionalidad (ej. "Emprendedor o superior") — ver la fuente de verdad
+específica para este campo arriba (matriz de planes, nunca el código de
+automatización).
 
 `Responsable` — NO lo dejes en blanco por decisión propia sin preguntar.
 Por defecto, es la persona que te pide y aprueba la publicación de esta
