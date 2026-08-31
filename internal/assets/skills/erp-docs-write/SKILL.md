@@ -72,18 +72,40 @@ aprobación humana explícita.
   proyecto de automatización NO tiene forma de saber qué plan de
   suscripción (PYME/Emprendedor/Negocio/Empresa/Corporativo) incluye una
   funcionalidad — eso es una decisión comercial, no algo que un test E2E
-  valide. Para el campo "Plan requerido":
-  1. Busca en BookStack una página de referencia con la matriz de planes
-     vigente (ej. "Concepto - Planes de suscripción ERP2" o similar).
-  2. Si no la encuentras, busca en Engram (`mem_search`) un snapshot
-     guardado de la matriz de planes.
-  3. Si tampoco hay nada, pregúntale al humano directamente cuál es el
-     plan mínimo que incluye esta funcionalidad — NUNCA lo adivines ni lo
-     completes con el plan que "suena razonable".
-  Como los precios y el detalle de cada plan cambian con el tiempo, trata
-  cualquier matriz guardada como snapshot con fecha — si es vieja,
-  avísale al humano que puede estar desactualizada en vez de darla por
-  buena en silencio.
+  valide. Para el campo "Plan requerido", usa este orden:
+  1. **Snapshot fijo (fallback rápido, no la fuente que manda)** — matriz
+     vigente al 2026-08-31, cada plan incluye todo lo del anterior más lo
+     que agrega:
+     - **PYME** — S/39/mes: Punto de venta (Facturación Electrónica hasta
+       100 comprobantes), notas de venta y cotizaciones ilimitadas,
+       gestión de clientes, reportes de ventas y contables, productos/
+       servicios/combos, 2 usuarios.
+     - **Emprendedor** — S/49/mes: + Facturación Electrónica ilimitada,
+       gestión de cajas, ingresos y egresos, control de stock, inventarios
+       y kardex, 4 usuarios / 1 caja / 1 almacén.
+     - **Negocio** — S/69/mes: + proveedores/conductores/vendedores,
+       reportes avanzados, compras/pedidos/listas, tienda virtual, cuentas
+       por cobrar y pagar, 10 usuarios / 2 cajas / 2 almacenes / 1
+       sucursal extra.
+     - **Empresa** — S/99/mes: + tienda virtual avanzada, asistente IA por
+       WhatsApp, caja chica financiera, usuarios/cajas/almacenes
+       ilimitados, 2 sucursales extras, asesor exclusivo.
+     - **Corporativo** — S/149/mes: + emisión masiva por Excel,
+       integración API completa, 3 sucursales extras, backup mensual de
+       comprobantes.
+  2. **Fuente que manda** — la página BookStack "Concepto - Planes de
+     suscripción ERP2 SmartClic" (id 3399, libro `erp-cfg-configuracion`,
+     capítulo "CGF_Suscripcion, Planes y Pagos"). Si existe diferencia
+     entre esa página y el snapshot de arriba, la página gana — el
+     snapshot es solo para no depender de una búsqueda en cada ficha.
+  3. Si ni el snapshot ni la página cubren la funcionalidad puntual (plan
+     nuevo, feature no listada), pregúntale al humano directamente cuál es
+     el plan mínimo — NUNCA lo adivines ni lo completes con el plan que
+     "suena razonable".
+  El snapshot de arriba puede quedar desactualizado con el tiempo — si el
+  humano confirma que cambió algún precio/feature, actualízalo tanto en
+  esta skill como en la página BookStack 3399, nunca solo en uno de los
+  dos lugares.
 
 ## Confirmación de destino (MANDATORY — antes de redactar, no después)
 
