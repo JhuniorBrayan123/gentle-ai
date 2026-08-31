@@ -260,8 +260,19 @@ de "verificar que se emitió bien".
 Confirma contra `Estándar - Convención de títulos` y `SOP001` antes de
 titular, pero como referencia base:
 
-- Título: `[Módulo] - [Submódulo] - [Tema]` (ej. "Ventas y Compras - Punto
-  de Venta - Emisión de Guía de Remisión Remitente").
+- Título: `[Módulo] - [Submódulo] - [Tema]`, donde:
+  - **Módulo** = el área grande de negocio dentro del ERP2 (ej. Punto de
+    Venta, Logística, Facturación, Clientes).
+  - **Submódulo** = el grupo dentro de ese módulo al que pertenece el
+    flujo (ej. Ítems especiales, dentro de Punto de Venta).
+  - **Tema** = el caso puntual que documenta esta ficha (ej. "Agregar un
+    combo con validación de stock").
+  Ejemplo completo: "Punto de Venta - Ítems especiales - Agregar un
+  combo con validación de stock". No inviertas el orden ni mezcles
+  Módulo y Submódulo (un módulo grande como "Ventas y Compras" no es el
+  Submódulo de otro módulo como "Punto de Venta" — son módulos
+  distintos; confirmá cuál es cuál contra la jerarquía real de menús del
+  ERP2, no la asumas).
 - Tags (BookStack): `audiencia: cliente-final`, `tipo-contenido: guia`,
   `modulo: <módulo real>`, `estado: borrador` (pasa a `vigente` solo
   cuando `erp-docs-publish` confirma la publicación), `version-producto:
