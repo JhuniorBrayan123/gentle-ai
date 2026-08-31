@@ -285,6 +285,39 @@ Engram, nunca en el cuerpo publicado). **"Plan requerido" NO está
 prohibido** — es un campo del encabezado (no una sección numerada), y sí
 es información de cliente (ver arriba).
 
+**Reincidencia adicional detectada — nombres inventados que reemplazan la
+lista cerrada en vez de sumarse a ella: "Procedimiento paso a paso" (en
+vez de "Flujo principal"), "Confirmación" (sección aparte), "Acciones
+disponibles después", "Consultar esto más adelante".** Estos NO son
+secciones válidas, aunque el contenido sea real y esté bien anclado al
+código — el contenido no desaparece, se reubica:
+- Lo que iba en "Confirmación" (mensaje de éxito, campos garantizados) es
+  el último paso de **"4. Flujo principal"**, o pertenece a **"8. Entradas
+  y salidas"** si describe los campos que el sistema devuelve.
+- Lo que iba en "Acciones disponibles después" (enviar por WhatsApp,
+  descargar PDF, imprimir, etc.) son pasos adicionales de **"4. Flujo
+  principal"** si el código las expone como parte del mismo flujo — no
+  una sección nueva.
+- Lo que iba en "Consultar esto más adelante" (cómo buscar un comprobante
+  ya emitido) es un caso de **"7. Casos especiales"** o, si el código lo
+  trata como un flujo de consulta separado con su propio Task, va en
+  **"2. Alcance"** aclarando que la consulta posterior está fuera o dentro
+  del alcance de esta ficha puntual — nunca una sección numerada nueva.
+
+**Checklist final obligatorio (ejecútalo literalmente antes de entregar,
+no lo saltees):** lista los títulos de sección que escribiste, en orden,
+y compáralos palabra por palabra contra esta lista exacta —
+"1. Objetivo", "2. Alcance", "3. Usuarios involucrados", "4. Flujo
+principal", "5. Reglas de negocio", "6. Validaciones", "7. Casos
+especiales", "8. Entradas y salidas", "9. Errores frecuentes",
+"10. Documentación relacionada", "11. Flujo resumido" — y también que el
+encabezado de metadatos (Estado/Responsable/Área/Módulo/Submódulo/
+Audiencia/Plan requerido/Última actualización/Fuente) esté presente
+completo arriba del todo. Si un solo título no calza exacto, si falta uno,
+si sobra uno, o si la numeración salta (ej. de "1." a "3."), el borrador
+NO está listo — corrígelo antes de mostrarlo al humano, no lo entregues
+"a ver qué te parece" con la lista incompleta.
+
 **Encabezado de metadatos (formato "Campo: valor" en texto plano, uno por
 línea, no una tabla):**
 
