@@ -464,13 +464,12 @@ contenido de documentación en vez de código:
    ```
    1. **Ingresar a Punto de Venta**
 
-      Dirígete al menú superior y selecciona "Ventas y Compras". Haz clic
-      en "Nueva Venta".
+      - Dirígete al menú superior y selecciona "Ventas y Compras".
+      - Haz clic en "Nueva Venta".
 
    2. **Aperturar o continuar con la caja**
 
-      El sistema muestra la pantalla de cajas.
-
+      - El sistema muestra la pantalla de cajas.
       - Si la caja está cerrada, haz clic en "Aperturar caja", luego en
         "Apertura" y confirma con "Sí, aperturar".
       - Si la caja ya está abierta, haz clic en "Continuar vendiendo".
@@ -479,6 +478,13 @@ contenido de documentación en vez de código:
    Mal ejemplo (PROHIBIDO): título e instrucción en líneas seguidas sin
    blanco entre medio, aunque visualmente en el Markdown fuente parezcan
    separadas — sin la línea en blanco, BookStack las junta en un renglón.
+   **Tampoco mezcles dos acciones distintas en una sola oración de
+   prosa** (ej. "Dirígete al menú y selecciona X. Haz clic en Y." como un
+   solo párrafo) — cada acción atómica (cada clic, cada campo a llenar)
+   va en su propia viñeta bajo el título del paso, no todas juntas en un
+   párrafo corrido. Esto es puro formato — no agrega ni quita ningún dato
+   real, solo lo desglosa más granular para que se lea como una
+   instrucción paso a paso.
 5. **Reglas de negocio** (tabla `Regla | Descripción`, en lenguaje de
    cliente — sin códigos de triage tipo "RN-001" ni columna de
    prioridad interna) — ver Regla dura arriba.
