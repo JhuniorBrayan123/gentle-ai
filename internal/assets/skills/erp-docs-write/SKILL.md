@@ -207,6 +207,16 @@ especiales", "Entradas y salidas" y "Errores frecuentes" por igual — el
    de cliente (ej. un campo interno de test), no lo inventes ni lo
    ocultes sin más: pregunta al humano cómo describirlo o dilo
    explícitamente como "[pendiente de confirmar con el equipo]".
+4bis. **No inventes ubicación espacial en pantalla** (menú "lateral",
+   "superior", "header", "sidebar") — los selectores del código
+   (`page.getByText(...).click()`) confirman QUÉ texto se clickea, nunca
+   DÓNDE está ubicado en la interfaz. Si no tenés una captura de pantalla
+   real o una confirmación explícita del humano sobre dónde vive ese
+   menú, describí la acción sin ubicación ("Selecciona 'Ventas y
+   Compras'" en vez de "Dirígete al menú lateral y selecciona..."), o
+   preguntale al humano. Ejemplo real de este error: se redactó "menú
+   lateral" para "Ventas y Compras" cuando en realidad es un menú del
+   header superior — corregido tras verificar contra una captura real.
 5. Antes de entregar el borrador, verifica tú mismo: ¿cada paso escrito
    corresponde a un `test.step` que puedes señalar por nombre de archivo
    y línea? Si no puedes responder eso para algún paso, ese paso está
@@ -454,7 +464,7 @@ contenido de documentación en vez de código:
    ```
    1. **Ingresar a Punto de Venta**
 
-      Dirígete al menú lateral y selecciona "Ventas y Compras". Haz clic
+      Dirígete al menú superior y selecciona "Ventas y Compras". Haz clic
       en "Nueva Venta".
 
    2. **Aperturar o continuar con la caja**
