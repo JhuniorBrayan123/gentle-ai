@@ -261,18 +261,24 @@ Confirma contra `Estándar - Convención de títulos` y `SOP001` antes de
 titular, pero como referencia base:
 
 - Título: `[Módulo] - [Submódulo] - [Tema]`, donde:
-  - **Módulo** = el área grande de negocio dentro del ERP2 (ej. Punto de
-    Venta, Logística, Facturación, Clientes).
-  - **Submódulo** = el grupo dentro de ese módulo al que pertenece el
-    flujo (ej. Ítems especiales, dentro de Punto de Venta).
+  - **Módulo** = el ítem de menú real de más alto nivel que el cliente
+    hace clic en el ERP2 (ej. "Ventas y Compras", Logística, Facturación,
+    Clientes).
+  - **Submódulo** = el área funcional dentro de ese módulo a la que
+    pertenece el flujo (ej. "Punto de Venta", dentro de "Ventas y
+    Compras").
   - **Tema** = el caso puntual que documenta esta ficha (ej. "Agregar un
     combo con validación de stock").
-  Ejemplo completo: "Punto de Venta - Ítems especiales - Agregar un
-  combo con validación de stock". No inviertas el orden ni mezcles
-  Módulo y Submódulo (un módulo grande como "Ventas y Compras" no es el
-  Submódulo de otro módulo como "Punto de Venta" — son módulos
-  distintos; confirmá cuál es cuál contra la jerarquía real de menús del
-  ERP2, no la asumas).
+  **NUNCA asumas esta jerarquía de memoria ni por el nombre de carpeta
+  del proyecto de automatización — verificala contra la navegación real
+  del código** (ej. `page.getByText('Ventas y compras').click()` seguido
+  de `page.getByText('Nueva venta').click()` confirma que "Ventas y
+  Compras" es el módulo real que el cliente clickea, y "Punto de Venta"
+  es el área funcional dentro de él — aunque el proyecto de automatización
+  use `PuntoVenta` como nombre de carpeta interno, eso es una convención
+  de código, no necesariamente el menú que ve el cliente). Ejemplo
+  completo grounded en código: "Ventas y Compras - Punto de Venta -
+  Agregar un combo con validación de stock".
 - Tags (BookStack): `audiencia: cliente-final`, `tipo-contenido: guia`,
   `modulo: <módulo real>`, `estado: borrador` (pasa a `vigente` solo
   cuando `erp-docs-publish` confirma la publicación), `version-producto:
@@ -325,8 +331,8 @@ principal", "5. Reglas de negocio", "6. Validaciones", "7. Casos
 especiales", "8. Entradas y salidas", "9. Planes relacionados",
 "10. Errores frecuentes", "11. Documentación relacionada", "12. Flujo
 resumido" — y también que el encabezado de metadatos (Estado/
-Responsable/Área/Módulo/Submódulo/Prioridad/Versión/Última actualización)
-esté presente completo arriba del todo. Si un solo título no calza exacto,
+Responsable/Área/Módulo/Submódulo/Tema/Prioridad/Versión/Última
+actualización) esté presente completo arriba del todo. Si un solo título no calza exacto,
 si falta uno, si sobra uno, o si la numeración salta (ej. de "1." a "3."),
 el borrador NO está listo — corrígelo antes de mostrarlo al humano, no lo
 entregues "a ver qué te parece" con la lista incompleta.
@@ -353,10 +359,15 @@ nota interna de Engram, nunca en el cuerpo publicado.
 | Área | |
 | Módulo | |
 | Submódulo | |
+| Tema | |
 | Prioridad | |
 | Versión | |
 | Última actualización | |
 ```
+
+`Módulo`, `Submódulo` y `Tema` en la tabla repiten exactamente los mismos
+tres valores del título (`[Módulo] - [Submódulo] - [Tema]`) — no
+redactes una versión distinta en la tabla.
 
 `Responsable` — NO lo dejes en blanco por decisión propia sin preguntar.
 Por defecto, es la persona que te pide y aprueba la publicación de esta
