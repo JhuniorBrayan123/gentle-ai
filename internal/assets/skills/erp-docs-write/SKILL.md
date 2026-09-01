@@ -383,12 +383,18 @@ blanco para que el humano lo llene después — no la inventes.
 `Prioridad` — clasificación cerrada de 3 niveles según qué tan central es
 el flujo para la operación diaria del negocio; no la dejes en blanco sin
 clasificar primero:
-- **Alta** — flujo de operación diaria (ventas, facturación, cobros).
-- **Media** — flujo frecuente pero no diario (configuración, reportes).
-- **Baja** — caso especial o de borde (variante puntual dentro de un
-  flujo más grande, ej. un combo sin stock dentro de Punto de Venta).
-Si la clasificación no es evidente, preguntale al humano en vez de
-adivinar — es una decisión de negocio, igual que "Planes relacionados".
+- **Alta** — flujo de operación diaria (ventas, facturación, cobros), **o
+  cualquier flujo relacionado con stock/inventario** (control de stock,
+  bloqueos por falta de stock, ajustes, kardex) — regla fija del negocio:
+  todo lo que toque stock es Alta, sin importar si el flujo específico es
+  un caso de borde dentro de un flujo más grande.
+- **Media** — flujo frecuente pero no diario (configuración, reportes) y
+  que no toca stock.
+- **Baja** — caso especial o de borde que no toca stock ni operación
+  diaria.
+Si la clasificación no es evidente y no aplica la regla de stock,
+preguntale al humano en vez de adivinar — es una decisión de negocio,
+igual que "Planes relacionados".
 
 `Versión` — semver `X.Y.Z`, mismo patrón que la skill `gitlab-release-tag`
 (léela si necesitás el detalle completo de la mecánica), adaptado a
