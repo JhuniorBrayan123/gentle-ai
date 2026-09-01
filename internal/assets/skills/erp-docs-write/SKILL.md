@@ -375,9 +375,44 @@ ficha en la conversación actual — si te dijo su nombre (como cuando el
 humano dice "el responsable soy yo, [nombre]"), usa ese nombre
 directamente. Si no lo sabés y no te lo dijeron, preguntá explícitamente
 quién es el responsable antes de dejarlo vacío — no asumas que queda
-"pendiente" sin más. `Área`, `Prioridad` y `Versión`, si no tenés
-evidencia real ni el humano te lo confirmó, sí quedan en blanco para que
-el humano los llene después — no los inventes.
+"pendiente" sin más.
+
+`Área` — si no tenés evidencia real ni el humano te lo confirmó, queda en
+blanco para que el humano lo llene después — no la inventes.
+
+`Prioridad` — clasificación cerrada de 3 niveles según qué tan central es
+el flujo para la operación diaria del negocio; no la dejes en blanco sin
+clasificar primero:
+- **Alta** — flujo de operación diaria (ventas, facturación, cobros).
+- **Media** — flujo frecuente pero no diario (configuración, reportes).
+- **Baja** — caso especial o de borde (variante puntual dentro de un
+  flujo más grande, ej. un combo sin stock dentro de Punto de Venta).
+Si la clasificación no es evidente, preguntale al humano en vez de
+adivinar — es una decisión de negocio, igual que "Planes relacionados".
+
+`Versión` — semver `X.Y.Z`, mismo patrón que la skill `gitlab-release-tag`
+(léela si necesitás el detalle completo de la mecánica), adaptado a
+contenido de documentación en vez de código:
+- **Ficha nueva** (destino = crear): siempre arranca en `1.0.0` — nunca
+  otro valor de partida, ni preguntes por uno.
+- **Ficha existente** (destino = actualizar): leé la `Versión` actual de
+  la página que estás actualizando (nunca la inventes ni la calcules de
+  memoria — sacala de la tabla de metadatos de la página real) y
+  clasificá el cambio que estás por publicar:
+  - **PATCH** (`X.Y.Z` → `X.Y.Z+1`) — correcciones que no cambian el
+    comportamiento documentado: errores de tipeo, formato, enlaces
+    rotos, redacción.
+  - **MINOR** (`X.Y.Z` → `X.(Y+1).0`) — contenido nuevo que no invalida
+    lo ya documentado: un caso especial nuevo, una fila nueva en una
+    tabla, un paso con más detalle, un enlace relacionado nuevo.
+  - **MAJOR** (`X.Y.Z` → `(X+1).0.0`) — un cambio de fondo: el
+    procedimiento cambió de orden o de comportamiento, el alcance se
+    redujo o amplió de forma significativa, o una regla/validación se
+    invirtió o se eliminó.
+  Mostrale al humano la versión propuesta y el motivo de la clasificación
+  ANTES de que `erp-docs-publish` escriba nada — igual que
+  `gitlab-release-tag` nunca crea el tag sin confirmación explícita, esta
+  skill nunca bumpea la versión sin que el humano la vea primero.
 
 **Las 12 secciones, en este orden exacto:**
 

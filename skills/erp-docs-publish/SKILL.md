@@ -55,7 +55,18 @@ nueva.
      libro/capítulo no cambiaron de forma que ya no calce) antes de
      tocarla; si algo no cuadra, DETENTE y confirma con el humano en vez
      de actualizar igual.
-4. Ejecuta exactamente el destino confirmado:
+4. **Confirma la versión semver antes de escribir (mismo gate que
+   `gitlab-release-tag` antes de crear un tag — nunca se bumpea sin
+   mostrarla primero).**
+   - Si el destino es **crear**: `Versión` va `1.0.0`, sin excepción.
+   - Si el destino es **actualizar**: leé la `Versión` actual de la
+     página real (`bookstack_bookstack_get_page`, no la del borrador
+     viejo), tomá la clasificación PATCH/MINOR/MAJOR que trae el borrador
+     de `erp-docs-write` (ver esa skill para el criterio), y mostrale al
+     humano la versión actual → propuesta + el motivo. Solo publicá
+     después de que la confirme — si el humano corrige la clasificación,
+     usá la que él diga.
+5. Ejecuta exactamente el destino confirmado:
    - **Crear**: usa `bookstack_create_page` en el libro/capítulo
      confirmado.
    - **Actualizar**: usa `bookstack_update_page` ÚNICAMENTE sobre el ID
@@ -64,13 +75,13 @@ nueva.
      elegiste por similitud. Reemplaza el contenido completo por el del
      borrador aprobado; no mezcles contenido viejo no revisado con el
      nuevo.
-5. Publica EXACTAMENTE el contenido aprobado — ninguna edición no aprobada
+6. Publica EXACTAMENTE el contenido aprobado — ninguna edición no aprobada
    se cuela en la publicación. Nunca agregues de vuelta información
    técnica/interna (dependencias, permisos) que el borrador haya
    descartado a propósito del cuerpo publicado. Aplica los tags
    (`audiencia`, `tipo-contenido`, `modulo`, `version-producto`) y fija
    `estado: vigente`.
-6. Persiste un log vía MCP Engram bajo el topic `erp-docs/{flow}/publish-log`
+7. Persiste un log vía MCP Engram bajo el topic `erp-docs/{flow}/publish-log`
    con: qué se publicó (la ficha), URL/ID de la página, y contexto de
    fecha/hora.
 
@@ -90,6 +101,11 @@ nueva.
   preguntar en vez de reinterpretar la decisión original.
 - Cita siempre la(s) página(s) resultante(s) (creada o actualizada,
   según corresponda) al confirmar la publicación al humano.
+- PROHIBIDO bumpear la `Versión` sin mostrarle antes al humano la versión
+  actual, la propuesta, y el motivo (PATCH/MINOR/MAJOR) — igual que
+  `gitlab-release-tag` nunca crea un tag sin confirmación explícita.
+- PROHIBIDO adivinar la `Versión` actual de memoria o del borrador viejo
+  — siempre leela de la página real justo antes de publicar.
 
 ## Comandos de referencia
 
