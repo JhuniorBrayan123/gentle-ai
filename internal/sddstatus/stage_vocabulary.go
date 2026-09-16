@@ -6,8 +6,17 @@ import "errors"
 var ErrRuntimeStageUnknown = errors.New("runtime stage unknown")
 
 // Stage defines a single logical step in an SDD vocabulary chain.
+//
+// RequiresApproval marks this stage as the ONE gated destination in the
+// chain: advancing INTO this stage requires a recorded ApproveStage grant
+// for the just-completed predecessor stage (see runtime_ledger.go's Begin
+// advancing branch). A stage that does not set this flag is entered by
+// order alone, exactly like the ordinary ordering check. This keeps the
+// approval gate scoped to whichever single transition a vocabulary marks
+// as needing it, instead of every advance in the chain.
 type Stage struct {
-	Label string `json:"label"`
+	Label            string `json:"label"`
+	RequiresApproval bool   `json:"requires_approval,omitempty"`
 }
 
 // StageVocabulary defines an ordered set of valid stages for a chain.

@@ -802,18 +802,22 @@ func (store RuntimeStore) Begin(ctx context.Context, request BeginAttemptRequest
 		if advancing && status.Objective.StageVocabulary != nil && len(status.Objective.StageVocabulary.Stages) > 0 {
 			event.StageVocabulary = status.Objective.StageVocabulary
 			event.StagePosition = status.Objective.StagePosition + 1
-			
-			// Enforce approval for the completed stage before advancing
-			approved := false
-			for _, app := range status.StageApprovals {
-				if app.Stage == status.Objective.WorkUnit && app.ApprovalRevision == status.EvidenceRevision {
-					approved = true
-					event.ApprovalRevision = app.ApprovalRevision
-					break
+
+			// Approval gates ONLY the destination stage the vocabulary marks
+			// with RequiresApproval (design #3281 item (b)); every other
+			// advance in a vocabulary-bound chain proceeds on order alone.
+			if destStage, err := status.Objective.StageVocabulary.At(event.StagePosition); err == nil && destStage.RequiresApproval {
+				approved := false
+				for _, app := range status.StageApprovals {
+					if app.Stage == status.Objective.WorkUnit && app.ApprovalRevision == status.EvidenceRevision {
+						approved = true
+						event.ApprovalRevision = app.ApprovalRevision
+						break
+					}
 				}
-			}
-			if !approved {
-				return runtimeRecord{}, ErrRuntimeStageApprovalRequired
+				if !approved {
+					return runtimeRecord{}, ErrRuntimeStageApprovalRequired
+				}
 			}
 		} else if !advancing && len(store.vocabulary.Stages) > 0 {
 			event.StageVocabulary = &store.vocabulary
@@ -2009,7 +2013,14 @@ func applyRuntimeAdvanceEvent(replay *runtimeReplay, revision string, record run
 	}
 	if event.PreviousObjectiveID != objective.ID || event.PreviousGeneration != objective.Generation ||
 		event.PreviousGeneration != replay.Status.ObjectiveGeneration || event.PreviousWorkUnit != objective.WorkUnit ||
-		event.PreviousEvidenceRevision != replay.Status.EvidenceRevision {
+		// PreviousEvidenceRevision is checked only when the record actually
+		// carries it: a chain written before this field existed (the
+		// vocabulary-less golden shape, #2296) never sets it, and per D5 a
+		// vocabulary-less chain must replay byte-identically forever. Every
+		// live write-time Begin call sets it unconditionally (see the
+		// advancing branch below), so this stays a real equality check for
+		// every chain produced by the current binary.
+		(event.PreviousEvidenceRevision != "" && event.PreviousEvidenceRevision != replay.Status.EvidenceRevision) {
 		return errors.New("objective advance does not match the terminal objective") // refusal:by-design world-action: the predecessor identity was frozen at publication, so a mismatch is a mutated record and the exit is restoring the store
 	}
 	if len(replay.Status.Attempts) == 0 {
