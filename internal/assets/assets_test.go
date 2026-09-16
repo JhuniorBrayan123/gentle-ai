@@ -352,6 +352,7 @@ func TestAllEmbeddedAssetsAreReadable(t *testing.T) {
 
 		// QA locator hunting skills
 		"skills/qa-locator-hunting/references/erp-mf-catalog.md",
+		"skills/qa-locator-hunting/references/locator-fallback.md",
 	}
 
 	for _, path := range expectedFiles {
