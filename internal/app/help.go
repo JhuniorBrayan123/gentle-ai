@@ -26,6 +26,10 @@ COMMANDS
                Run bounded normal orchestration without exposing runtime history
   sdd-verify-validate --input <path|-> --requirements <n> --scenarios <n>
                Validate exact verification-report bytes without persistence
+  qa-validate --input <path|-> --change <name> --stage <label> [--source-revision <rev>]
+               Validate a QA stage artifact against anti-hallucination rules
+  qa-status --change <name> [--cwd <repo>]
+               Read-only QA stage approvals and next action for a change
   review start [--cwd <repo>] [--base-ref <ref>] [--focus <risk|resilience|readability|reliability>]
   review capture-result --lineage <id> --target <id> --lens <lens> --order <n> --input <review.json>
                Admit one reviewer result; every selected lens needs one

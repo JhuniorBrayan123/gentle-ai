@@ -96,6 +96,10 @@ func RunArgs(args []string, stdout io.Writer) error {
 			return cli.RunSDDAttempt(cli.CanonicalizeSDDAttemptRevisionArgs(args[1:]), stdout)
 		case "sdd-verify-validate":
 			return cli.RunSDDVerifyValidate(args[1:], stdout)
+		case "qa-validate":
+			return cli.RunQAValidate(args[1:], stdout)
+		case "qa-status":
+			return cli.RunQAStatus(args[1:], stdout)
 		case "codegraph":
 			return cli.RunCodeGraph(args[1:], stdout)
 		case "review":
