@@ -59,3 +59,4 @@ Carga esta skill cuando debas explorar un cambio QA (automatización de tests, c
 - Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
 - Búsqueda de memoria: MCP Engram (`mem_search`, `mem_context`).
 - Caza de locators faltantes: skill `qa-locator-hunting`.
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

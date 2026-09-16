@@ -44,3 +44,4 @@ Carga esta skill cuando debas revisar adversarially un cambio QA (diff, PR, impl
 
 - Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
 - Búsqueda de memoria: MCP Engram (`mem_search`).
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

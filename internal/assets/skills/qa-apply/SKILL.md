@@ -44,3 +44,4 @@ Carga esta skill cuando vayas a implementar un cambio QA **aprobado** (spec vali
 
 - Tipos: `npx tsc --noEmit`.
 - Ejecución: runner de Playwright del proyecto (spec específico).
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

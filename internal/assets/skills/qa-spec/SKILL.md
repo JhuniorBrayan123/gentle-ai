@@ -50,3 +50,4 @@ Carga esta skill cuando debas diseñar una prueba QA (escenarios, precondiciones
 
 - Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
 - Persistencia: MCP Engram (`mem_save` topic `qa/{change}/spec`).
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
