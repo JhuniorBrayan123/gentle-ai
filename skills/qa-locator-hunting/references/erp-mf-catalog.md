@@ -13,6 +13,26 @@ en el mismo commit — no hay chequeo automático de paridad entre ellas:
 - `skills/qa-locator-hunting/references/erp-mf-catalog.md`
 - `internal/assets/skills/qa-locator-hunting/references/erp-mf-catalog.md`
 
+## Reglas vinculantes del catálogo
+
+- **D1 — GitLab en vivo siempre gana.** Ante cualquier conflicto entre el catálogo y
+  `search_projects`, el resultado en vivo es el autoritativo.
+- **D2 — El catálogo es pista, nunca compuerta.** Fila faltante, ambigua o slug 404 ⇒
+  fallback obligatorio a `search_projects`; nunca abortes la caza por el catálogo.
+- **D3 — El drift se reporta, nunca se absorbe en silencio.** Cuando GitLab contradiga una
+  fila, hacé **las dos cosas**:
+  1. **Nota en la respuesta** (obligatoria, aunque Engram falle), con este formato:
+     `Drift de catálogo: la fila `{slug}` dice `{valor_catalogo}`, GitLab en vivo dice
+     `{valor_vivo}`. Usé el valor en vivo (D1). Corregir la fila en el repo gentle-ai.`
+  2. **Registro durable en Engram** con `mem_save`, `topic_key`
+     `qa/erp-mf-catalog/drift/{slug}`, `type: "discovery"`, `scope: "personal"`,
+     `capture_prompt: false`, y el contenido **What/Why/Where/Learned** descrito en este
+     encabezado.
+  No edites el catálogo vos mismo: la copia instalada vive fuera del repo y hay dos copias
+  que deben cambiar juntas. Reportá y registrá; la corrección la hace un mantenedor.
+- Las filas marcadas `Verificado: unverified` nunca fueron confirmadas en vivo: tratá su
+  slug como hipótesis y confirmalo siempre con `search_projects` cuando el MCP esté.
+
 ## Índice rápido
 
 | Slug                      | En una línea                                                                |
