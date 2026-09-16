@@ -4,7 +4,7 @@ description: "Trigger: automatizar un test, crear o modificar un caso, proponer 
 license: Apache-2.0
 metadata:
   author: JhuniorBrayan123
-  version: "1.0"
+  version: "1.1"
 ---
 
 ## Activation Contract
