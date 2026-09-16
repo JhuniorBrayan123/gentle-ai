@@ -12,13 +12,15 @@ const VocabularyID = "gentle-ai.qa-orchestrator/v2"
 
 // VocabularyV1 returns the standard QA Orchestrator V2 stage vocabulary.
 // It enforces the exact sequence: explore -> spec -> apply -> verify -> docs.
+// Only advancing into "apply" requires a recorded approval (design item b:
+// one Go-enforced gate, spec->apply); the other transitions are order-only.
 func VocabularyV1() sddstatus.StageVocabulary {
 	return sddstatus.StageVocabulary{
 		ID: VocabularyID,
 		Stages: []sddstatus.Stage{
 			{Label: "explore"},
 			{Label: "spec"},
-			{Label: "apply"},
+			{Label: "apply", RequiresApproval: true},
 			{Label: "verify"},
 			{Label: "docs"},
 		},

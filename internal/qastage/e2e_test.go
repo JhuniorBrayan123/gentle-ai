@@ -10,11 +10,11 @@ package qastage_test
 //     would invoke them.
 //
 // Scope (per PR13 task, Phase 11):
-//  1. Full chain explore -> spec -> apply -> verify, with an audited approval
-//     required and recorded before every advance (matches the ACTUAL ledger
-//     behavior implemented in PR3/PR4: every advance in a vocabulary-bound
-//     chain requires approval of its predecessor, not only advance-into-apply
-//     as an earlier design draft assumed -- see runtime_stage_approval_test.go).
+//  1. Full chain explore -> spec -> apply -> verify. Only advancing INTO
+//     "apply" requires a recorded approval of "spec" -- the single Go-enforced
+//     gate design item (b) specifies. explore->spec and apply->verify are
+//     order-only (see the hotfix in runtime_ledger.go that scoped the
+//     approval check to Stage.RequiresApproval instead of every advance).
 //  2. A simulated interruption mid-chain (no Finish call) followed by a
 //     brand-new RuntimeStore handle (as a resumed process would open) proving
 //     resume recovers the in-flight attempt purely from ledger replay -- no
@@ -140,27 +140,13 @@ func TestE2EFullChainApprovalAndResume(t *testing.T) {
 		t.Fatalf("qa-status after explore finish NextAction = %q, want %q", got, sddstatus.RuntimeActionComplete)
 	}
 
-	// Advancing into spec WITHOUT an approval of explore must be refused.
-	if _, err := store.Begin(ctx, sddstatus.BeginAttemptRequest{
-		ExpectedRevision: status.Revision, RequestID: "begin-spec-unapproved", WorkUnit: "spec",
-		EvidenceGoal: "write spec", MaxAttempts: 3, MaxChangedLines: 400,
-	}); err != sddstatus.ErrRuntimeStageApprovalRequired {
-		t.Fatalf("expected ErrRuntimeStageApprovalRequired advancing unapproved explore, got %v", err)
-	}
-
-	// Approve explore, then advance into spec.
-	status, err = store.ApproveStage(ctx, sddstatus.ApproveStageRequest{
-		ExpectedRevision: status.Revision, RequestID: "approve-explore", Stage: "explore",
-	})
-	if err != nil {
-		t.Fatalf("ApproveStage explore: %v", err)
-	}
+	// explore->spec is order-only: no approval of explore is required.
 	status, err = store.Begin(ctx, sddstatus.BeginAttemptRequest{
 		ExpectedRevision: status.Revision, RequestID: "begin-spec", WorkUnit: "spec",
 		EvidenceGoal: "write spec", MaxAttempts: 3, MaxChangedLines: 400,
 	})
 	if err != nil {
-		t.Fatalf("Begin spec (approved): %v", err)
+		t.Fatalf("Begin spec (order-only, no approval needed): %v", err)
 	}
 
 	// --- Simulated interruption mid-spec: no Finish call, "process" ends. ---
@@ -197,8 +183,17 @@ func TestE2EFullChainApprovalAndResume(t *testing.T) {
 		t.Fatalf("Finish spec (resumed): %v", err)
 	}
 
-	// --- Stage 3: apply, gated by approval of spec ---
+	// --- Stage 3: apply, the ONE real gate -- requires a recorded approval of spec ---
 	store = openStore(t)
+
+	// Advancing into apply WITHOUT an approval of spec must be refused.
+	if _, err := store.Begin(ctx, sddstatus.BeginAttemptRequest{
+		ExpectedRevision: status.Revision, RequestID: "begin-apply-unapproved", WorkUnit: "apply",
+		EvidenceGoal: "implement", MaxAttempts: 3, MaxChangedLines: 400,
+	}); err != sddstatus.ErrRuntimeStageApprovalRequired {
+		t.Fatalf("expected ErrRuntimeStageApprovalRequired advancing unapproved spec, got %v", err)
+	}
+
 	status, err = store.ApproveStage(ctx, sddstatus.ApproveStageRequest{
 		ExpectedRevision: status.Revision, RequestID: "approve-spec", Stage: "spec",
 	})
@@ -230,19 +225,13 @@ func TestE2EFullChainApprovalAndResume(t *testing.T) {
 		t.Fatalf("Finish apply: %v", err)
 	}
 
-	// --- Stage 4: verify, gated by approval of apply ---
-	status, err = store.ApproveStage(ctx, sddstatus.ApproveStageRequest{
-		ExpectedRevision: status.Revision, RequestID: "approve-apply", Stage: "apply",
-	})
-	if err != nil {
-		t.Fatalf("ApproveStage apply: %v", err)
-	}
+	// --- Stage 4: verify -- order-only, apply->verify needs no approval ---
 	status, err = store.Begin(ctx, sddstatus.BeginAttemptRequest{
 		ExpectedRevision: status.Revision, RequestID: "begin-verify", WorkUnit: "verify",
 		EvidenceGoal: "verify", MaxAttempts: 3, MaxChangedLines: 400,
 	})
 	if err != nil {
-		t.Fatalf("Begin verify (approved): %v", err)
+		t.Fatalf("Begin verify (order-only, no approval needed): %v", err)
 	}
 	// docs is the opt-in terminal branch (never a required predecessor), so
 	// verify's own artifact still names it as the legal next_stage.
@@ -267,8 +256,8 @@ func TestE2EFullChainApprovalAndResume(t *testing.T) {
 	if !finalStatus.Complete {
 		t.Fatalf("final qa-status Complete = false, want true")
 	}
-	if len(finalStatus.Approvals) != 3 {
-		t.Fatalf("expected 3 recorded stage approvals (explore, spec, apply), got %d: %#v", len(finalStatus.Approvals), finalStatus.Approvals)
+	if len(finalStatus.Approvals) != 1 {
+		t.Fatalf("expected exactly 1 recorded stage approval (spec, the only Go-enforced gate), got %d: %#v", len(finalStatus.Approvals), finalStatus.Approvals)
 	}
 }
 
@@ -297,71 +286,71 @@ func TestE2EBacktrackInvalidatesDownstreamApproval(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Begin explore: %v", err)
 	}
-	originalEvidence := e2eEvidence('1')
 	status, err = store.Finish(ctx, sddstatus.FinishAttemptRequest{
 		ExpectedRevision: status.Revision, RequestID: "finish-explore", Outcome: sddstatus.AttemptPassed,
-		EvidenceRevision: originalEvidence, Diagnosis: "first pass",
+		EvidenceRevision: e2eEvidence('0'), Diagnosis: "first pass",
 		CleanupEvidence: "none", ProcessEvidence: "none", HarnessDisposition: sddstatus.HarnessReused,
 	})
 	if err != nil {
 		t.Fatalf("Finish explore: %v", err)
 	}
-	status, err = store.ApproveStage(ctx, sddstatus.ApproveStageRequest{
-		ExpectedRevision: status.Revision, RequestID: "approve-explore", Stage: "explore",
-	})
-	if err != nil {
-		t.Fatalf("ApproveStage explore: %v", err)
-	}
 	status, err = store.Begin(ctx, sddstatus.BeginAttemptRequest{
 		ExpectedRevision: status.Revision, RequestID: "begin-spec", WorkUnit: "spec", EvidenceGoal: "spec", MaxAttempts: 3, MaxChangedLines: 400,
 	})
 	if err != nil {
-		t.Fatalf("Begin spec (approved): %v", err)
+		t.Fatalf("Begin spec (order-only, no approval needed): %v", err)
 	}
+	originalEvidence := e2eEvidence('1')
 	status, err = store.Finish(ctx, sddstatus.FinishAttemptRequest{
 		ExpectedRevision: status.Revision, RequestID: "finish-spec", Outcome: sddstatus.AttemptPassed,
-		EvidenceRevision: e2eEvidence('2'), Diagnosis: "spec drafted",
+		EvidenceRevision: originalEvidence, Diagnosis: "spec drafted",
 		CleanupEvidence: "none", ProcessEvidence: "none", HarnessDisposition: sddstatus.HarnessReused,
 	})
 	if err != nil {
 		t.Fatalf("Finish spec: %v", err)
 	}
+	status, err = store.ApproveStage(ctx, sddstatus.ApproveStageRequest{
+		ExpectedRevision: status.Revision, RequestID: "approve-spec", Stage: "spec",
+	})
+	if err != nil {
+		t.Fatalf("ApproveStage spec: %v", err)
+	}
 
-	// Requirement change discovered mid-chain: backtrack to explore via the
+	// Requirement change discovered mid-chain: backtrack to spec via the
 	// audited reset primitive (QA-ORCH-10's documented backtrack mechanism).
 	status, err = store.Reset(ctx, sddstatus.ResetObjectiveRequest{
-		ExpectedRevision: status.Revision, RequestID: "reset-to-explore",
+		ExpectedRevision: status.Revision, RequestID: "reset-to-spec",
 		Reason: "requirement changed mid-chain", Actor: "maintainer",
 	})
 	if err != nil {
-		t.Fatalf("Reset to explore: %v", err)
+		t.Fatalf("Reset to spec: %v", err)
 	}
 	status, err = store.Begin(ctx, sddstatus.BeginAttemptRequest{
-		ExpectedRevision: status.Revision, RequestID: "begin-explore-2", WorkUnit: "explore",
-		EvidenceGoal: "re-discover with new requirement", MaxAttempts: 3, MaxChangedLines: 400,
+		ExpectedRevision: status.Revision, RequestID: "begin-spec-2", WorkUnit: "spec",
+		EvidenceGoal: "re-spec with new requirement", MaxAttempts: 3, MaxChangedLines: 400,
 	})
 	if err != nil {
-		t.Fatalf("Begin explore after reset: %v", err)
+		t.Fatalf("Begin spec after reset: %v", err)
 	}
 	newEvidence := e2eEvidence('9')
 	if newEvidence == originalEvidence {
 		t.Fatalf("test setup error: new evidence must differ from original")
 	}
 	status, err = store.Finish(ctx, sddstatus.FinishAttemptRequest{
-		ExpectedRevision: status.Revision, RequestID: "finish-explore-2", Outcome: sddstatus.AttemptPassed,
-		EvidenceRevision: newEvidence, Diagnosis: "re-discovered with new requirement",
+		ExpectedRevision: status.Revision, RequestID: "finish-spec-2", Outcome: sddstatus.AttemptPassed,
+		EvidenceRevision: newEvidence, Diagnosis: "re-drafted with new requirement",
 		CleanupEvidence: "none", ProcessEvidence: "none", HarnessDisposition: sddstatus.HarnessReused,
 	})
 	if err != nil {
-		t.Fatalf("Finish explore (re-run): %v", err)
+		t.Fatalf("Finish spec (re-run): %v", err)
 	}
 
-	// The OLD approval for "explore" was bound to originalEvidence; it no
-	// longer matches the new EvidenceRevision, so advancing into spec again
-	// must be refused even though "explore" was approved once before.
+	// The OLD approval for "spec" was bound to originalEvidence; it no longer
+	// matches the new EvidenceRevision, so advancing into apply again must be
+	// refused even though "spec" was approved once before.
 	if _, err := store.Begin(ctx, sddstatus.BeginAttemptRequest{
-		ExpectedRevision: status.Revision, RequestID: "begin-spec-stale-approval", WorkUnit: "spec",
-		EvidenceGoal: "spec again", MaxAttempts: 3, MaxChangedLines: 400,
+		ExpectedRevision: status.Revision, RequestID: "begin-apply-stale-approval", WorkUnit: "apply",
+		EvidenceGoal: "implement again", MaxAttempts: 3, MaxChangedLines: 400,
 	}); err != sddstatus.ErrRuntimeStageApprovalRequired {
 		t.Fatalf("expected ErrRuntimeStageApprovalRequired for approval invalidated by requirement change, got %v", err)
 	}
@@ -373,16 +362,16 @@ func TestE2EBacktrackInvalidatesDownstreamApproval(t *testing.T) {
 
 	// A fresh approval against the new evidence unblocks the same advance.
 	status, err = store.ApproveStage(ctx, sddstatus.ApproveStageRequest{
-		ExpectedRevision: status.Revision, RequestID: "approve-explore-2", Stage: "explore",
+		ExpectedRevision: status.Revision, RequestID: "approve-spec-2", Stage: "spec",
 	})
 	if err != nil {
-		t.Fatalf("ApproveStage explore (re-approve): %v", err)
+		t.Fatalf("ApproveStage spec (re-approve): %v", err)
 	}
 	if _, err := store.Begin(ctx, sddstatus.BeginAttemptRequest{
-		ExpectedRevision: status.Revision, RequestID: "begin-spec-fresh-approval", WorkUnit: "spec",
-		EvidenceGoal: "spec again", MaxAttempts: 3, MaxChangedLines: 400,
+		ExpectedRevision: status.Revision, RequestID: "begin-apply-fresh-approval", WorkUnit: "apply",
+		EvidenceGoal: "implement again", MaxAttempts: 3, MaxChangedLines: 400,
 	}); err != nil {
-		t.Fatalf("Begin spec after fresh approval of the re-run stage: %v", err)
+		t.Fatalf("Begin apply after fresh approval of the re-run stage: %v", err)
 	}
 }
 
