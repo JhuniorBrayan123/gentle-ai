@@ -31,3 +31,10 @@ Naming convention: `gentle-ai-*` skills are repo-specific workflow skills. Unpre
 | `qa-supervisor` | When supervising any QA automation request before writing code: validates rules G1–G6 using BookStack/GitLab MCPs and only then delegates implementation. | [`skills/qa-supervisor/SKILL.md`](skills/qa-supervisor/SKILL.md) |
 | `qa-locator-hunting` | When hunting or reusing UI locators for SmartClic/erp-mf-* microfront tests: POM first, GitLab hunt via MCP second, never invents selectors. | [`skills/qa-locator-hunting/SKILL.md`](skills/qa-locator-hunting/SKILL.md) |
 | `qa-doc-reference` | When citing BookStack PRD documentation during exploration or on-demand doc search: renders each page as the 13-field ficha (metadata table + Qué contiene) with exact URL and STOP on divergence. | [`skills/qa-doc-reference/SKILL.md`](skills/qa-doc-reference/SKILL.md) |
+| `qa-explore` | Trigger: explorar un cambio QA antes de especificar. Analiza tests, fixtures y docs previas (G2) consultando BookStack y Engram. | [`skills/qa-explore/SKILL.md`](skills/qa-explore/SKILL.md) |
+| `qa-spec` | Trigger: diseñar la prueba QA antes de implementar. Escenarios, datos y riesgos (G3) con la documentación BookStack como base. | [`skills/qa-spec/SKILL.md`](skills/qa-spec/SKILL.md) |
+| `qa-apply` | Trigger: implementar un cambio QA aprobado. Escribe tests con Screenplay+POM (G5) siguiendo el spec y las convenciones del proyecto. | [`skills/qa-apply/SKILL.md`](skills/qa-apply/SKILL.md) |
+| `qa-verify` | Trigger: validar la implementación QA contra el spec. Ejecuta pruebas y produce evidencia reproducible (G6) siguiendo la checklist completa. | [`skills/qa-verify/SKILL.md`](skills/qa-verify/SKILL.md) |
+| `qa-docs` | Trigger: detectar vacíos o contradicciones en la documentación QA. Produce borradores de gap, nunca escribe en BookStack (G1.4). | [`skills/qa-docs/SKILL.md`](skills/qa-docs/SKILL.md) |
+| `qa-review` | Trigger: revisión adversarial de un cambio QA. Evalúa contra BookStack, AGENTS.md y G1-G6 encontrando problemas sin modificar código (G1). | [`skills/qa-review/SKILL.md`](skills/qa-review/SKILL.md) |
+
