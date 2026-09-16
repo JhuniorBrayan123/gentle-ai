@@ -44,3 +44,4 @@ Carga esta skill cuando debas validar una implementación QA contra su spec. Ere
 
 - Tipos: `npx tsc --noEmit`.
 - Ejecución: runner de Playwright del proyecto con reporter/trace habilitados.
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

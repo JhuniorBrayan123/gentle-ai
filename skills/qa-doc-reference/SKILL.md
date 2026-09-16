@@ -72,3 +72,7 @@ Valores ilustrativos de un PRD de Punto de Venta (NO es una cita real):
 - **Fallback honesto**: si un campo no está disponible en la página consultada,
   emite los campos disponibles y marca los faltantes como "no disponible".
   PROHIBIDO inventar valores.
+
+## Comandos de referencia
+
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

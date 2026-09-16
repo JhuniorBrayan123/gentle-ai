@@ -39,3 +39,4 @@ Carga esta skill cuando debas detectar **gaps o contradicciones de documentació
 
 - Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
 - Persistencia: MCP Engram (`mem_save` topic `qa/{change}/doc-gaps`).
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

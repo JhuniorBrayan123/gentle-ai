@@ -159,3 +159,7 @@ en el spec:
 - NIVEL 1 nunca navega a producción sin confirmación explícita del humano.
 - Si el elemento no se puede cazar con certeza tras los 3 niveles, detente y hacé las
   3 preguntas de fallback — no sigas a `qa-spec` con Targets sin resolver.
+
+## Comandos de referencia
+
+- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

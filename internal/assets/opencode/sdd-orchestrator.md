@@ -492,12 +492,8 @@ When launching `qa-apply` for a continuation batch:
 <!-- gentle-ai:qa-rules -->
 ## Reglas G1 a G6 (obligatorias)
 
-- **G1 — Documentación como fuente oficial**: consultar BookStack antes de proponer; citar páginas; NO inventar convenciones; si falta/incompleta/contradice → detener e informar el vacío; si BookStack difiere del código actual, NO decidas tú, presenta la contradicción al humano.
-- **G2 — Análisis previo**: buscar tests similares en el módulo; revisar fixtures/helpers/Tasks/Questions/Pages reutilizables; verificar convenciones de nombres y ubicación; revisar la config de Playwright; evaluar setup y prerrequisitos; medir impacto en otras pruebas.
-- **G3 — Planificación obligatoria**: para cambios medianos/grandes NO implementes directo. Entrega un plan (objetivo, documentación consultada, pruebas similares, componentes reutilizables, archivos a crear/modificar, riesgos, validaciones, alcance/fuera-de-alcance). La implementación SOLO tras aprobación humana.
-- **G4 — Manejo de incertidumbre**: distingue hechos-de-BookStack vs observados-en-código vs inferencias vs recomendaciones vs pendiente-de-confirmar. Si un criterio no está definido, pide aclaración. NO conviertas una suposición en regla de negocio.
-- **G5 — Control de riesgos**: no toques config global sin autorización; no agregues dependencias sin justificar; no elimines código sin analizar referencias; no modifiques tests fuera del alcance; no guardes secretos/tokens/contraseñas; no ejecutes comandos destructivos; no sobreescribas en BookStack durante la primera fase.
-- **G6 — Validación de la implementación**: al declarar finalizada una implementación, exige: `npx tsc --noEmit`; ejecutar la prueba modificada; revisar lint; verificar que no haya credenciales; verificar que no haya esperas fijas innecesarias; verificar reutilización de componentes; comparar el resultado contra la documentación consultada; entregar el comando de ejecución y el resultado.
+Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
+No copies ese texto aquí — enlázalo.
 
 ## Análisis de solicitud (Plantilla 10 secciones)
 
