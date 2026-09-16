@@ -17,7 +17,14 @@ Carga esta skill cuando debas validar una implementación QA contra su spec. Ere
 
 - **Spec** (`qa/{change}/spec`) = contrato de validación.
 - **BookStack = fuente de la verdad**: el resultado debe compararse contra la documentación consultada; cita las páginas usadas (G1).
-- **Engram = memoria persistente**: guarda el reporte en `qa/{change}/verify-report` y evidencia asociada.
+- **Engram = memoria persistente**: registra el progreso en `qa/{change}/verify-report`.
+- **Ledger nativo = el gate real**: `verify` no requiere aprobación manual (el humano ya aprobó en spec), pero el ledger DEBE cerrarse para que la cadena avance a `complete`.
+
+## Entrada (obligatorio, antes de validar)
+
+1. Ejecuta `gentle-ai qa-begin --change {change} --stage verify --cwd <repo> --request-id <id-idempotente> --evidence-goal <objetivo de esta validación>`.
+2. Si el comando se rechaza, **DETENTE** y devuelve el rechazo tal cual al orquestador/supervisor.
+3. Solo si `qa-begin` responde con éxito continúa con la validación de abajo.
 
 ## Checklist G6 (obligatoria, TODA)
 
@@ -34,6 +41,13 @@ Carga esta skill cuando debas validar una implementación QA contra su spec. Ere
 
 - Captura **screenshots**, **traces** (en fallo), **videos** o salida de **reporter** de Playwright.
 - Registra artefactos con rutas y comandos exactos de reproducción.
+
+## Salida (obligatorio, cierre de la etapa)
+
+1. **Cuerpo del reporte en Engram**: `mem_save` con `topic_key: "qa/{change}/verify-report"` — hallazgos, comandos ejecutados y resultados de la validación.
+2. **Admisión anti-alucinación**: arma el envelope `gentle-ai.qa-stage-artifact/v1` (ver `internal/qastage/artifact.go`) y pásalo por `gentle-ai qa-validate --input - --change {change} --stage verify --source-revision <artifact_revision_del_apply>`.
+3. **Cierre del ledger**: con el `artifact_revision` admitido, ejecuta `gentle-ai qa-finish --change {change} --cwd <repo> --request-id <id-idempotente> --outcome passed --evidence-revision <artifact_revision> --diagnosis <resumen> --harness-disposition <reused|invalidated> --cleanup-evidence <texto> --process-evidence <texto>`. Si hay hallazgos graves o la prueba falla, usa `--outcome failed`.
+4. Solo tras un `qa-finish` exitoso reportas la etapa `verify` como cerrada al orquestador/supervisor.
 
 ## Guardrails
 
