@@ -30,6 +30,12 @@ COMMANDS
                Validate a QA stage artifact against anti-hallucination rules
   qa-status --change <name> [--cwd <repo>]
                Read-only QA stage approvals and next action for a change
+  qa-begin --change <name> --stage <label> [--cwd <repo>] --request-id <id> --evidence-goal <text>
+               Open or advance the QA ledger for a change into a stage
+  qa-finish --change <name> [--cwd <repo>] --request-id <id> --outcome <outcome> --evidence-revision <rev>
+               Complete the active QA ledger attempt for a change
+  qa-approve --change <name> [--cwd <repo>] --stage <label> --evidence-revision <rev> --actor <name> --reason <text>
+               Record an audited approval for a QA stage
   review start [--cwd <repo>] [--base-ref <ref>] [--focus <risk|resilience|readability|reliability>]
   review capture-result --lineage <id> --target <id> --lens <lens> --order <n> --input <review.json>
                Admit one reviewer result; every selected lens needs one

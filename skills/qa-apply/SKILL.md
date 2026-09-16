@@ -18,6 +18,13 @@ Carga esta skill cuando vayas a implementar un cambio QA **aprobado** (spec vali
 - **Spec aprobado** (`qa/{change}/spec`) = contrato de lo que se implementa.
 - **BookStack = fuente de la verdad**: ante cualquier duda de convención o criterio, vuelve a `bookstack_bookstack_search` y cita la página; NO decidas divergencias tú (G1).
 - **Engram = memoria persistente**: registra el progreso en `qa/{change}/apply-progress`.
+- **Ledger nativo = el gate real**: `apply` es la ÚNICA etapa de la cadena QA que exige una aprobación registrada de `spec`; el ledger, no este documento, es quien la hace cumplir.
+
+## Entrada (obligatorio, antes de escribir cualquier test)
+
+1. Ejecuta `gentle-ai qa-begin --change {change} --stage apply --cwd <repo> --request-id <id-idempotente> --evidence-goal <objetivo de esta implementación>`.
+2. Si el comando se rechaza (p. ej. `ErrRuntimeStageApprovalRequired` porque `spec` todavía no tiene una aprobación registrada, o `ErrRuntimeStageOutOfOrder`), **DETENTE** — no implementes nada — y devuelve el rechazo tal cual al orquestador/supervisor. Nunca reintentes con otra etapa ni asumas una aprobación implícita.
+3. Solo si `qa-begin` responde con éxito continúa con las reglas de implementación (G5) de abajo.
 
 ## Reglas de implementación (G5)
 
@@ -35,6 +42,13 @@ Carga esta skill cuando vayas a implementar un cambio QA **aprobado** (spec vali
 - `npx tsc --noEmit` sin errores.
 - Ejecuta la prueba modificada/creada y verifica que pase.
 - Revisa que reutilices componentes existentes donde aplique.
+
+## Salida (obligatorio, cierre de la etapa)
+
+1. **Cuerpo del reporte en Engram (sigue siendo la fuente de verdad del contenido)**: `mem_save` con `topic_key: "qa/{change}/apply-progress"` — arquitectura implementada, archivos creados/modificados, resultado de `npx tsc --noEmit` y de la ejecución del spec, y cualquier requisito nuevo marcado como pendiente de aprobación (nunca implementado sin luz verde).
+2. **Admisión anti-alucinación**: arma el envelope `gentle-ai.qa-stage-artifact/v1` (ver `internal/qastage/artifact.go` para los campos exactos: `schema`, `change`, `stage`, `status`, `created_at`, `source_artifact_revision`, `artifact_revision`, `next_stage`, más el cuerpo JSON con `facts`/`observations`/`inferences`/`recommendations`/`pending_questions`/`risks`/`scope`/`decision`) y pásalo por `gentle-ai qa-validate --input - --change {change} --stage apply --source-revision <artifact_revision del spec aprobado>`. Si `valid` es `false`, corrige el envelope antes de continuar — nunca fuerces el cierre de la etapa con un artefacto rechazado.
+3. **Cierre del ledger**: con el `artifact_revision` que `qa-validate` acaba de admitir, ejecuta `gentle-ai qa-finish --change {change} --cwd <repo> --request-id <id-idempotente> --outcome passed --evidence-revision <artifact_revision> --diagnosis <resumen de una línea> --harness-disposition <reused|invalidated> --cleanup-evidence <texto> --process-evidence <texto>`. Si `npx tsc --noEmit` o la ejecución del spec fallaron, usa `--outcome failed` en su lugar y no marques la etapa como completada ante el humano.
+4. Solo tras un `qa-finish` exitoso reportas la etapa `apply` como cerrada al orquestador/supervisor.
 
 ## Guardrails
 

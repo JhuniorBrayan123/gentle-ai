@@ -22,6 +22,7 @@ Carga esta skill cuando debas explorar un cambio QA (automatización de tests, c
 
 ## Flujo de exploración (G2)
 
+0. **Apertura del ledger (obligatorio, antes de investigar)**: ejecuta `gentle-ai qa-begin --change {change} --stage explore --cwd <repo> --request-id <id-idempotente> --evidence-goal <objetivo de esta exploración>`. Si se rechaza (etapa fuera de orden, etc.), DETENTE y devuelve el rechazo al orquestador/supervisor sin investigar nada.
 1. **Contexto en memoria**: `mem_search`/`mem_get_observation` sobre `qa/{change}/supervisor-handoff` para recuperar el requerimiento interpretado y las citas de BookStack que ya hizo `qa-supervisor`, más cualquier decisión/exploración previa del mismo `{change}`.
 2. **Documentación oficial (solo lo que falte)**: si el handoff no cubre algo que necesitas para el análisis técnico (G2), amplía con `bookstack_bookstack_search`; cita las páginas nuevas usadas.
 3. **Tests similares y arquitectura Screenplay+POM**: localiza tests existentes del módulo, fixtures, helpers, config de Playwright y convenciones de nombres/ubicación. Determina explícitamente si el proyecto ya implementa Screenplay+POM y con qué convenciones propias (no asumas las de otro proyecto):
@@ -42,7 +43,10 @@ Carga esta skill cuando debas explorar un cambio QA (automatización de tests, c
    fallback sin obtener respuesta, repórtalo explícitamente como información pendiente en
    la salida (paso 7) — nunca inventes el Target para no bloquear el reporte.
 6. **Impacto**: evalúa setup, prerrequisitos e impacto en otras pruebas.
-7. **Salida**: reporte de exploración con componentes, convenciones, candidatos de reuso, estado de la arquitectura Screenplay+POM (existente con convenciones detectadas, o inexistente), fixtures/storageState reutilizables del paso 4, locators cazados en el paso 5 (o pendientes de respuesta humana) e impacto — en `qa/{change}/explore`.
+7. **Salida**:
+   1. **Cuerpo del reporte en Engram**: `mem_save` con `topic_key: "qa/{change}/explore"` — componentes, convenciones, candidatos de reuso, estado de la arquitectura Screenplay+POM (existente con convenciones detectadas, o inexistente), fixtures/storageState reutilizables del paso 4, locators cazados en el paso 5 (o pendientes de respuesta humana) e impacto.
+   2. **Admisión anti-alucinación**: arma el envelope `gentle-ai.qa-stage-artifact/v1` (campos exactos en `internal/qastage/artifact.go`) reflejando el mismo contenido del reporte y pásalo por `gentle-ai qa-validate --input - --change {change} --stage explore`. Si `valid` es `false`, corrige el envelope antes de continuar.
+   3. **Cierre del ledger**: con el `artifact_revision` que `qa-validate` admitió, ejecuta `gentle-ai qa-finish --change {change} --cwd <repo> --request-id <id-idempotente> --outcome passed --evidence-revision <artifact_revision> --diagnosis <resumen de una línea> --harness-disposition reused --cleanup-evidence none --process-evidence none`. Usa `--outcome failed` si la exploración quedó bloqueada por un vacío de documentación (G1 STOP) en vez de completa.
 
 ## Guardrails
 
