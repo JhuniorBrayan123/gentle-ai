@@ -1,47 +1,34 @@
 ---
 name: qa-review
-description: "Trigger: revisión adversarial de un cambio QA. Evalúa contra BookStack, AGENTS.md y G1-G6 encontrando problemas sin modificar código (G1)."
+description: "Trigger: revisar adversarialmente un cambio QA. Delega al motor de review nativo de gentle-ai; no reimplementa la revisión."
 license: Apache-2.0
 metadata:
   author: JhuniorBrayan123
-  version: "1.0"
+  version: "2.0"
 disable-model-invocation: true
 user-invocable: false
 ---
 
 ## Activation Contract
 
-Carga esta skill cuando debas revisar adversarially un cambio QA (diff, PR, implementación). Eres el sub-agente de **revisión de estándares (G1)** del orquestador QA: **SOLO encuentras problemas, NO modificas código**.
+Carga esta skill SOLO para enrutar una revisión QA al motor nativo. No es un stage del flujo qa-*.
 
-## Fuentes de verdad (MANDATORY)
+## Hard Rules
 
-- **BookStack = fuente de la verdad**: revisa contra las páginas oficiales (PRD, reglas del Agente QA, plantillas) con `bookstack_bookstack_search`; **cita cada página** en tus hallazgos.
-- **AGENTS.md y convenciones del proyecto** como referencia técnica.
-- **Reglas G1-G6** como checklist de cumplimiento.
-- **Engram = memoria persistente**: guarda el reporte en `qa/{change}/review-report`.
+- NUNCA ejecutes una revisión adversarial propia: el motor nativo es la única autoridad de review en este repo.
+- NUNCA emitas un veredicto PASS/allow por tu cuenta ni inventes un recibo.
+- Las reglas G1-G6 no se revisan aquí; su checklist de evidencia vive en `qa-verify`.
 
-## Qué revisar (G1)
+## Execution Steps
 
-1. Cumplimiento de **G1**: ¿se consultó BookStack? ¿se citan páginas? ¿hay convenciones inventadas?
-2. Cumplimiento de **G2**: ¿análisis previo de tests similares y reuso de componentes?
-3. Cumplimiento de **G3**: ¿hubo plan aprobado antes de implementar?
-4. Cumplimiento de **G4**: ¿se distinguen hechos de inferencias? ¿hay supuestos promovidos a regla?
-5. Cumplimiento de **G5**: ¿cambios fuera de alcance, deps sin justificar, config global, secretos, esperas fijas? ¿el test usa `actor.realiza`/`actor.pregunta` en vez de locators crudos? ¿coincide la implementación con el diseño Screenplay+POM aprobado en el spec (reuso o creación declarada)? ¿los componentes nuevos creados respetan SOLID (una responsabilidad por Interaction/Question/Target, sin acoplar Tasks a detalles de Playwright)?
-6. Cumplimiento de **G6**: ¿validación tsc + ejecución + evidencia completa?
+1. Ejecuta `gentle-ai review status --cwd <repo> --contract gentle-ai.review-integration/v2 --agent {{GENTLE_AI_RUNTIME_AGENT_ID}} --next-transition`.
+2. Enruta ÚNICAMENTE desde el `next_transition` devuelto (`execute` / `collect` / `stop`). Nunca desde la prosa del status.
+3. En `stop`, entrega el `reason_code` y su continuación documentada; detente.
 
-## Reporte
+## Output Contract
 
-- Entrega hallazgos con severidad (CRITICAL / WARNING / SUGGESTION) y referencia a la página BookStack que sustenta cada uno.
-- Si BookStack difiere del código, NO decidas: expón la contradicción (G1/G4).
-- Tu reporte es insumo para `qa-apply`/`qa-docs`, no para auto-corregir.
+Devuelve el `next_transition` textual y el resultado de la operación ejecutada. Nada más.
 
-## Guardrails
+## References
 
-- Sin write/edit/task sobre código: solo lectura y análisis.
-- Nunca promuevas una suposición como regla de negocio (G4).
-
-## Comandos de referencia
-
-- Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
-- Búsqueda de memoria: MCP Engram (`mem_search`).
-- Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
+- `skills/_shared/qa-gate-policy.md` — reglas G1-G6 (fuente única in-repo).
