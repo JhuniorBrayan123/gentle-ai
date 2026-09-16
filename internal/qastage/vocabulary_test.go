@@ -1,6 +1,8 @@
 package qastage_test
 
 import (
+	"context"
+	"os/exec"
 	"testing"
 
 	"github.com/gentleman-programming/gentle-ai/v2/internal/qastage"
@@ -34,8 +36,8 @@ func TestLedgerChangeName(t *testing.T) {
 	}{
 		{"empty", "", ""},
 		{"whitespace", "   ", ""},
-		{"valid", "foo-bar", "qa--foo-bar"},
-		{"with spaces", "foo bar", "qa--foo bar"},
+		{"valid", "foo-bar", "qa_foo-bar"},
+		{"with spaces", "foo bar", "qa_foo bar"},
 	}
 
 	for _, tc := range tests {
@@ -50,5 +52,32 @@ func TestLedgerChangeName(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestLedgerChangeNamePassesRealRuntimeStoreValidation pins a regression
+// found by the PR13 E2E test: an earlier "qa--" (double-hyphen) prefix
+// passed the lenient ValidateRuntimeText check above but was refused outright
+// by OpenRuntimeStore's actual change-name validator, which rejects
+// consecutive separators. This test opens a REAL RuntimeStore against the
+// prefixed name for an ordinary hyphenated change, the exact codepath every
+// qa-status/qa-validate invocation exercises.
+func TestLedgerChangeNamePassesRealRuntimeStoreValidation(t *testing.T) {
+	repo := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	run("init", "-q", "--initial-branch=main")
+	run("config", "user.name", "Test")
+	run("config", "user.email", "test@example.com")
+	run("commit", "-q", "--allow-empty", "-m", "init")
+
+	ledgerChange := qastage.LedgerChangeName("my-feature-name")
+	if _, err := sddstatus.OpenRuntimeStore(context.Background(), repo, ledgerChange); err != nil {
+		t.Fatalf("OpenRuntimeStore(%q) rejected a LedgerChangeName-produced identity: %v", ledgerChange, err)
 	}
 }
