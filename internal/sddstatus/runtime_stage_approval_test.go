@@ -11,7 +11,7 @@ func TestRuntimeLedgerStageApproval(t *testing.T) {
 		ID: "test-vocab-approve",
 		Stages: []Stage{
 			{Label: "explore"},
-			{Label: "spec"},
+			{Label: "spec", RequiresApproval: true},
 			{Label: "apply"},
 		},
 	}
@@ -120,6 +120,7 @@ func TestRuntimeLedgerStageApproval(t *testing.T) {
 		ExpectedRevision: status.Revision,
 		RequestID:        "req-reset-explore",
 		Reason:           "resetting to test invalidation",
+		Actor:            "maintainer",
 	})
 	if err != nil {
 		t.Fatalf("Reset to explore failed: %v", err)
