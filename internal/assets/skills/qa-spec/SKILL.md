@@ -19,6 +19,10 @@ Carga esta skill cuando debas diseñar una prueba QA (escenarios, precondiciones
 - **Engram = memoria persistente**: guarda el spec en `qa/{change}/spec` y recupera la exploración previa (`qa/{change}/explore`) como insumo.
 - El plan se presenta al humano; la implementación SOLO tras aprobación (G3).
 
+## Entrada (obligatorio, antes de diseñar)
+
+0. Ejecuta `gentle-ai qa-begin --change {change} --stage spec --cwd <repo> --request-id <id-idempotente> --evidence-goal <objetivo de este diseño>`. Si se rechaza, DETENTE y devuelve el rechazo al orquestador/supervisor sin diseñar nada.
+
 ## Contenido del spec (G3)
 
 1. **Objetivo** y alcance del test.
@@ -37,6 +41,13 @@ Carga esta skill cuando debas diseñar una prueba QA (escenarios, precondiciones
    - Si G2 reportó "sin fixture/storageState previo aplicable", diseña aquí el mínimo necesario, con la misma justificación que el diseño Screenplay+POM del punto anterior.
 9. **Riesgos** e impacto en otras pruebas.
 10. **Validaciones previstas** (tsc, ejecución, evidencia).
+
+## Salida (obligatorio, cierre de la etapa; requiere aprobación humana antes de `apply`)
+
+1. **Cuerpo del spec en Engram**: `mem_save` con `topic_key: "qa/{change}/spec"` — las 10 secciones anteriores.
+2. **Admisión anti-alucinación**: arma el envelope `gentle-ai.qa-stage-artifact/v1` (campos exactos en `internal/qastage/artifact.go`) y pásalo por `gentle-ai qa-validate --input - --change {change} --stage spec --source-revision <artifact_revision de explore>`. Si `valid` es `false`, corrige el envelope antes de continuar.
+3. **Cierre del ledger**: con el `artifact_revision` que `qa-validate` admitió, ejecuta `gentle-ai qa-finish --change {change} --cwd <repo> --request-id <id-idempotente> --outcome passed --evidence-revision <artifact_revision> --diagnosis <resumen de una línea> --harness-disposition reused --cleanup-evidence none --process-evidence none`.
+4. **No apruebes tu propio spec**: `qa-finish` solo cierra la etapa; `apply` sigue bloqueada hasta que el humano apruebe explícitamente y `qa-supervisor` registre esa aprobación con `gentle-ai qa-approve` (ver `skills/qa-supervisor/SKILL.md`).
 
 ## Guardrails
 
