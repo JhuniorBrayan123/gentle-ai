@@ -19,6 +19,15 @@ consultada como una **ficha de documentación PRD**: tabla de metadatos
 
 Cada página de BookStack citada se renderiza SIEMPRE con esta estructura.
 
+### 0. Resolución de Libro/Capítulo (obligatorio antes de armar la ficha)
+
+`bookstack_search`/`bookstack_get_page` devuelven únicamente `book_id`/
+`chapter_id` numéricos — nunca el nombre del libro o capítulo. Para llenar
+"Libro"/"Capítulo" de la tabla, resuelve el nombre real con una llamada
+adicional por cita: `bookstack_get_book(book_id)` y, si `chapter_id` no es 0,
+`bookstack_get_chapter(chapter_id)`. No inventes ni abrevies el nombre a
+partir del slug de la página.
+
 ### 1. Tabla de metadatos (13 campos, arriba)
 
 | Campo | Valor |
@@ -71,7 +80,12 @@ Valores ilustrativos de un PRD de Punto de Venta (NO es una cita real):
   DETENTE y presenta la contradicción al humano; nunca decidas por tu cuenta.
 - **Fallback honesto**: si un campo no está disponible en la página consultada,
   emite los campos disponibles y marca los faltantes como "no disponible".
-  PROHIBIDO inventar valores.
+  PROHIBIDO inventar valores. La API real de BookStack no expone
+  "Responsables"/"Ticket Redmine"/"Versión del documento" como campos
+  estructurados (solo `tags` libres y `revision_count`) — repórtalos como
+  "no disponible" salvo que la página misma los declare explícitamente en su
+  texto (p. ej. una línea "Responsable: ..."); nunca los infieras de otro
+  lugar.
 
 ## Comandos de referencia
 

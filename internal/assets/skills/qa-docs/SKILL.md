@@ -79,13 +79,12 @@ solo `apply` la exige.
   `gentle-ai qa-finish` (ver `docs/migration/qa-orchestrator-v3-design.md`
   para el flujo completo y la disposición de flags).
 
-## Nota de migración (2026-09-23)
+## Nota de migración (2026-09-23, actualizada en 3C.1)
 
 Esta skill es nueva en v3 (contrato pendiente #2 del diseño, cerrado en la
 sección 1.1: "`docs` tendrá un executor explícito; `qa-supervisor` solo
 enruta"). Las skills `qa-supervisor`, `qa-explore`, `qa-spec`, `qa-apply` y
-`qa-verify` de v2 **todavía no existen en esta rama** — Fase 3A se acotó al
-núcleo Go (`QAStateMachine`/`QAArtifactValidator`/CLI), no a portar las
-skills. Portarlas (adaptando su schema de artefacto y flags a lo cerrado en
-la sección 1.1 del documento de diseño) queda como trabajo posterior, fuera
-de "Core QA".
+`qa-verify` de v2 ya existen en esta rama (portadas en Fase 3B, registradas
+en el catálogo de skills desde el commit `5a730728`) y funcionan sobre el
+mismo Core Go (`QAStateMachine`/`QAArtifactValidator`/CLI) que introdujo
+Fase 3A.

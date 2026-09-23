@@ -48,7 +48,7 @@ Clasifica CADA dato que el caso necesita con exactamente una etiqueta:
 **Orden de consulta obligatorio — no saltes un nivel sin agotarlo**:
 1. Artefactos previos del `{change}` (`mem_search` sobre `qa/{change}/...`)
 2. Repo / config del proyecto de automatización
-3. BookStack (`bookstack_bookstack_search`)
+3. BookStack (`bookstack_search`)
 4. GitLab (MCP)
 5. Humano — SOLO para lo que quedó MISSING
 
@@ -65,7 +65,7 @@ responden.
 
 ### 2. Filtro obligatorio (documentación)
 
-`bookstack_bookstack_search` con términos del módulo/PRD relevante; cita las páginas usadas (nombre + URL). El PRD y las reglas G1–G6 y la plantilla priman sobre cualquier regla técnica.
+`bookstack_search` con términos del módulo/PRD relevante; cita las páginas usadas (nombre + URL). El PRD y las reglas G1–G6 y la plantilla priman sobre cualquier regla técnica.
 
 ### 3. Reglas G1 a G6
 

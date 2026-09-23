@@ -16,7 +16,7 @@ Carga esta skill cuando `qa-supervisor` te delegue una exploración (nunca te in
 ## Fuentes de verdad (MANDATORY)
 
 - **Handoff de qa-supervisor = punto de partida, no BookStack desde cero**: `qa-supervisor` ya hizo la Regla Cero antes de delegarte esta tarea. Su handoff (en el mensaje de la tarea, y persistido en `mem_search`/`mem_get_observation` bajo `qa/{change}/supervisor-handoff`) trae el requerimiento interpretado y las páginas de BookStack ya citadas. Úsalo como base — no repitas esa misma búsqueda.
-- **BookStack = fuente de la verdad**: consulta `bookstack_bookstack_search` SOLO para ampliar lo que el handoff no cubre (detalle técnico de Screenplay+POM, fixtures, convenciones que la Regla Cero no necesitaba). Cita cada página nueva usada (nombre + URL).
+- **BookStack = fuente de la verdad**: consulta `bookstack_search` SOLO para ampliar lo que el handoff no cubre (detalle técnico de Screenplay+POM, fixtures, convenciones que la Regla Cero no necesitaba). Cita cada página nueva usada (nombre + URL).
 - **Engram = memoria persistente**: recupera el handoff con `mem_search`/`mem_get_observation` (`qa/{change}/supervisor-handoff`) antes de explorar. Si no hay `{change}` o no aparece el handoff, trátalo como vacío y repórtalo — no inventes uno. Engram es memoria de contexto, nunca autoridad: si algo en Engram contradice al ledger real (`gentle-ai qa-status`), gana el ledger.
 - Si BookStack difiere del código actual, NO decidas tú: preséntalo como contradicción para el humano (G1/G4, ver `skills/_shared/qa-gate-policy.md`).
 
@@ -24,7 +24,15 @@ Carga esta skill cuando `qa-supervisor` te delegue una exploración (nunca te in
 
 0. **Apertura del ledger (obligatorio, antes de investigar)**: ejecuta `gentle-ai qa-begin --change {change} --stage explore --cwd <repo> --request-id <id-idempotente>`. Si se rechaza, DETENTE y devuelve el rechazo al orquestador/supervisor sin investigar nada — el rechazo es real (`QAStateMachine` lo hace cumplir), no lo reintentes ni asumas que fue un error transitorio.
 1. **Contexto en memoria**: `mem_search`/`mem_get_observation` sobre `qa/{change}/supervisor-handoff` para recuperar el requerimiento interpretado y las citas de BookStack que ya hizo `qa-supervisor`, más cualquier decisión/exploración previa del mismo `{change}`.
-2. **Documentación oficial (solo lo que falte)**: si el handoff no cubre algo que necesitas para el análisis técnico (G2), amplía con `bookstack_bookstack_search`; cita las páginas nuevas usadas.
+2. **Documentación oficial (solo lo que falte)**: si el handoff no cubre algo que necesitas para el análisis técnico (G2), amplía con `bookstack_search`; cita las páginas nuevas usadas.
+
+**Fallback opcional — captura Codegen cuando código y BookStack no bastan**: aplica SOLO cuando, tras los pasos 1-2, ni la documentación ni el código explican el comportamiento real de UI de una funcionalidad *existente* (rutas, elementos, flujo en runtime) — es la continuación técnica de la regla G1 4A ("consultar la implementación actual"), no un reemplazo de los pasos 3-6 de abajo, que siguen aplicando igual una vez resuelto este fallback.
+
+1. Pide al humano una captura Codegen **acotada y explícita**: una lista corta y literal de pasos a ejecutar (nunca "explora la funcionalidad libremente").
+2. Arma un envelope canónico con `scope.status: "blocked"`, `blocked_reason` describiendo exactamente la captura pedida, y (si aplica) un `finding` `MISSING` con su `pending_question`. Pásalo por `gentle-ai qa-validate --input - --change {change} --stage explore` como en el paso 7.2 — el `artifact_revision` sigue siendo siempre el que devuelve `qa-validate`, nunca uno que asumas.
+3. Cierra el intento como **interrumpido**, no fallido ni completo: `gentle-ai qa-finish --change {change} --cwd <repo> --request-id <id-idempotente> --outcome interrupted --evidence-revision <artifact_revision del paso anterior>`.
+4. Cuando el humano entregue el código generado (en un `qa-begin --stage explore` nuevo del mismo `{change}`): NO lo repares, refactorices ni lo copies a `findings[]`. Extrae solo hechos observables al cuerpo de Engram (paso 7.1) bajo una sección explícita **"OBSERVED (Codegen)"**: ruta, elementos/acciones existentes, locators tal como aparecen. Una corrección humana explícita sobre un locator ("ese selector no sirve, usa...") se anota como texto dentro de esa misma sección — nunca crees una clasificación nueva para esto.
+
 3. **Tests similares y arquitectura Screenplay+POM**: localiza tests existentes del módulo, fixtures, helpers, config de Playwright y convenciones de nombres/ubicación. Determina explícitamente si el proyecto ya implementa Screenplay+POM y con qué convenciones propias (no asumas las de otro proyecto):
    - Revisa `tsconfig.json`/`jsconfig.json`/config del bundler para los path aliases reales del proyecto (Actors, Tasks, Interactions, Questions, Targets/Pages, Abilities), sea cual sea su nombre.
    - Si existen: inventaría Actors, Interactions, Questions, Targets, Tasks reutilizables por módulo, con ruta y alias real.
@@ -61,7 +69,7 @@ Carga esta skill cuando `qa-supervisor` te delegue una exploración (nunca te in
 
 ## Comandos de referencia
 
-- Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
+- Búsqueda de docs: MCP BookStack (`bookstack_search`).
 - Búsqueda de memoria: MCP Engram (`mem_search`, `mem_context`).
 - Caza de locators faltantes: skill `qa-locator-hunting`.
 - Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).

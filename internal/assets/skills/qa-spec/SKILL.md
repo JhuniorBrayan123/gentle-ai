@@ -15,8 +15,9 @@ Carga esta skill cuando `qa-supervisor` te delegue el diseño de una prueba QA (
 
 ## Fuentes de verdad (MANDATORY)
 
-- **BookStack = fuente de la verdad**: los criterios de aceptación viven en la documentación oficial (PRD, páginas del Agente QA). Consúltalos con `bookstack_bookstack_search` y cita cada página.
+- **BookStack = fuente de la verdad**: los criterios de aceptación viven en la documentación oficial (PRD, páginas del Agente QA). Consúltalos con `bookstack_search` y cita cada página.
 - **Engram = memoria persistente**: guarda el spec en `qa/{change}/spec` y recupera la exploración previa (`qa/{change}/explore`) como insumo. Engram es memoria de contexto, nunca autoridad: la aprobación real de este spec vive en el ledger (`gentle-ai qa-approve`), no en lo que Engram recuerde.
+- **Evidencia OBSERVED (Codegen), si existe**: si `qa/{change}/explore` trae una sección "OBSERVED (Codegen)" (fallback opcional de `qa-explore` cuando docs+código no bastan), trátala como evidencia de qué existe hoy, nunca como diseño — valida cada locator observado contra el POM real del proyecto (reutilízalo si coincide, decláralo como Target nuevo si no) antes de incorporarlo al punto 7 de abajo.
 - El plan se presenta al humano; la implementación SOLO tras aprobación real registrada (G3) — ver sección "Salida" abajo.
 
 ## Entrada (obligatorio, antes de diseñar)
@@ -60,7 +61,7 @@ Ejecuta `gentle-ai qa-begin --change {change} --stage spec --cwd <repo> --reques
 
 ## Comandos de referencia
 
-- Búsqueda de docs: MCP BookStack (`bookstack_bookstack_search`).
+- Búsqueda de docs: MCP BookStack (`bookstack_search`).
 - Persistencia: MCP Engram (`mem_save` topic `qa/{change}/spec`).
 - Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
 - Ledger: `gentle-ai qa-begin` / `gentle-ai qa-validate` / `gentle-ai qa-finish` (ver `docs/migration/qa-orchestrator-v3-design.md`).

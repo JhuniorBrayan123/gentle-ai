@@ -2,8 +2,8 @@
 
 > **Provenance**: BookStack es la fuente OFICIAL. Este archivo es la ÚNICA
 > renderización in-repo.
-> Página: "06. Reglas del Agente Orquestador QA" · ID: `TODO-MAINTAINER-FILL-BOOKSTACK-PAGE-ID` ·
-> URL: `TODO-MAINTAINER-FILL-BOOKSTACK-URL` · Recuperado: `2026-09-23`
+> Página: "06. Reglas del Agente Orquestador QA" · ID: `3239` ·
+> URL: `https://bookstack.sreasons.com/books/gestion-interna/page/06-reglas-del-agente-orquestador-qa` · Recuperado: `2026-09-23`
 > Prohibido copiar este texto en otro SKILL.md — refiéranlo por ruta.
 > Ante conflicto con BookStack: gana BookStack; corrige este archivo, no el skill.
 
@@ -21,7 +21,7 @@
 Antes de proponer, escribir una línea de código o delegar una implementación,
 **DEBES**:
 
-1. Usar el MCP de **BookStack** (`bookstack_bookstack_search`) para buscar la
+1. Usar el MCP de **BookStack** (`bookstack_search`) para buscar la
    documentación oficial que sustenta la solicitud (PRD del módulo, criterios
    de aceptación reales del negocio, páginas oficiales del Agente QA) y
    **citar** las páginas/capítulos/secciones usadas.

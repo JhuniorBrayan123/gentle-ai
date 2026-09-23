@@ -16,7 +16,7 @@ Carga esta skill cuando `qa-supervisor` te delegue implementar un cambio QA **ap
 ## Fuentes de verdad (MANDATORY)
 
 - **Spec aprobado** (`qa/{change}/spec`) = contrato de lo que se implementa.
-- **BookStack = fuente de la verdad**: ante cualquier duda de convención o criterio, vuelve a `bookstack_bookstack_search` y cita la página; NO decidas divergencias tú (G1).
+- **BookStack = fuente de la verdad**: ante cualquier duda de convención o criterio, vuelve a `bookstack_search` y cita la página; NO decidas divergencias tú (G1).
 - **Engram = memoria persistente**: registra el progreso en `qa/{change}/apply-progress`.
 - **Ledger nativo = el gate real, no una promesa de prompt**: `apply` es la ÚNICA etapa de la cadena QA que exige una aprobación registrada de `spec`, y `gentle-ai qa-begin` la hace cumplir de verdad — `QAStateMachine` rechaza el intento en código si la aprobación no está o no corresponde a la revisión actual del spec (diseño 1.1 / 3A.5 / 3A.8). Esta skill nunca "confía" en que ya se aprobó porque alguien lo dijo en el chat: si `qa-begin` rechaza, el rechazo es la verdad.
 
@@ -54,6 +54,7 @@ Carga esta skill cuando `qa-supervisor` te delegue implementar un cambio QA **ap
 
 - Implementas solo el spec aprobado; si descubres un requisito nuevo, márcalo como pendiente de aprobación y NO lo implementes (G3/G5).
 - No inventes ni asumas un `artifact_revision` — es siempre el que devuelve `qa-validate`.
+- Si el spec aprobado referencia evidencia de Codegen ("OBSERVED (Codegen)" de la exploración), implementa exactamente lo que `qa-spec` diseñó a partir de ella — nunca copies selectores o código crudo de Codegen directamente al archivo de test final.
 
 ## Comandos de referencia
 
