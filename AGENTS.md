@@ -26,3 +26,5 @@ Naming convention: `gentle-ai-*` skills are repo-specific workflow skills. Unpre
 | `issue-root-resolution` | When auditing backlog roots, proposing cluster fixes, or closing resolved/outdated issues. | [`skills/issue-root-resolution/SKILL.md`](skills/issue-root-resolution/SKILL.md) |
 | `systemic-issue-triage` | When triaging issues, bugs, backlogs, root causes, dead ends, or blocked users. | [`skills/systemic-issue-triage/SKILL.md`](skills/systemic-issue-triage/SKILL.md) |
 | `gentle-ai-bench` | When touching `bench/`, journeys, driven mode, the journey corpus, or bench axes. | [`skills/gentle-ai-bench/SKILL.md`](skills/gentle-ai-bench/SKILL.md) |
+| `qa-supervisor` | When supervising any QA automation request before writing code: validates rules G1-G6 and routes exclusively by `gentle-ai qa-status` before delegating implementation. | [`skills/qa-supervisor/SKILL.md`](skills/qa-supervisor/SKILL.md) |
+| `qa-docs` | When closing a QA cycle with documentation of the implemented case — explicit executor for the `docs` stage; `qa-supervisor` only routes to it, never decides its content. | [`skills/qa-docs/SKILL.md`](skills/qa-docs/SKILL.md) |
