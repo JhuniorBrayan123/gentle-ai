@@ -14,15 +14,21 @@ import (
 type AttemptOutcome string
 
 const (
-	OutcomeRunning AttemptOutcome = "running"
-	OutcomePassed  AttemptOutcome = "passed"
+	OutcomeRunning     AttemptOutcome = "running"
+	OutcomePassed      AttemptOutcome = "passed"
+	OutcomeFailed      AttemptOutcome = "failed"
+	OutcomeInterrupted AttemptOutcome = "interrupted"
 )
 
-// Attempt is one begin/finish cycle for a single QA stage.
+// Attempt is one begin/finish cycle for a single QA stage. ResetBy/ResetReason
+// are populated only when the attempt was closed via Reset (an audited manual
+// recovery), not via an ordinary Finish call.
 type Attempt struct {
-	Ordinal int            `json:"ordinal"`
-	Stage   string         `json:"stage"`
-	Outcome AttemptOutcome `json:"outcome"`
+	Ordinal     int            `json:"ordinal"`
+	Stage       string         `json:"stage"`
+	Outcome     AttemptOutcome `json:"outcome"`
+	ResetBy     string         `json:"reset_by,omitempty"`
+	ResetReason string         `json:"reset_reason,omitempty"`
 }
 
 // ledgerState is the JSON persisted in a QAStateStore Record for a change.
@@ -36,9 +42,11 @@ type ledgerState struct {
 // v3-native vocabulary (design decision 1.1: the semantics are preserved,
 // the exact v2 names are not).
 var (
-	ErrStageOutOfOrder      = errors.New("qastage: stage is not the vocabulary's first stage or the immediate successor of the last completed stage")
-	ErrAttemptAlreadyActive = errors.New("qastage: change already has an active (unfinished) attempt")
-	ErrNoActiveAttempt      = errors.New("qastage: change has no active attempt to finish")
+	ErrStageOutOfOrder        = errors.New("qastage: stage is not the vocabulary's first stage or the immediate successor of the last completed stage")
+	ErrAttemptAlreadyActive   = errors.New("qastage: change already has an active (unfinished) attempt")
+	ErrNoActiveAttempt        = errors.New("qastage: change has no active attempt to finish")
+	ErrInvalidOutcome         = errors.New("qastage: outcome must be passed, failed, or interrupted")
+	ErrNoActiveAttemptToReset = errors.New("qastage: change has no active attempt to reset")
 )
 
 // QAStateMachine implements the fixed 5-stage QA vocabulary
@@ -131,9 +139,16 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage string) (Attem
 	return attempt, nil
 }
 
-// Finish closes the active attempt as passed, advancing the state machine.
-// Failed/interrupted outcomes and retry semantics are added in 3A.6.
-func (m *QAStateMachine) Finish(ctx context.Context, change string) (Attempt, error) {
+// Finish closes the active attempt with outcome. Only OutcomePassed advances
+// the state machine (lastCompletedStage/nextExpectedStage only look at
+// passed attempts) — failed and interrupted leave the same stage as the next
+// expected one, so a retry opens a brand-new attempt without touching
+// history (design decision 1.1).
+func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome AttemptOutcome) (Attempt, error) {
+	if outcome != OutcomePassed && outcome != OutcomeFailed && outcome != OutcomeInterrupted {
+		return Attempt{}, ErrInvalidOutcome
+	}
+
 	state, head, err := m.readState(ctx, change)
 	if err != nil {
 		return Attempt{}, err
@@ -144,12 +159,47 @@ func (m *QAStateMachine) Finish(ctx context.Context, change string) (Attempt, er
 	}
 
 	idx := len(state.Attempts) - 1
-	state.Attempts[idx].Outcome = OutcomePassed
+	state.Attempts[idx].Outcome = outcome
 
 	if err := m.commit(ctx, change, head.Revision, state); err != nil {
 		return Attempt{}, err
 	}
 	return state.Attempts[idx], nil
+}
+
+// Reset is an audited manual recovery for a stuck active attempt (e.g. an
+// agent process died mid-stage without ever calling Finish). It closes the
+// attempt as interrupted, records who did it and why, and — like every other
+// outcome — never removes it from history.
+func (m *QAStateMachine) Reset(ctx context.Context, change, actor, reason string) (Attempt, error) {
+	state, head, err := m.readState(ctx, change)
+	if err != nil {
+		return Attempt{}, err
+	}
+
+	if len(state.Attempts) == 0 || state.Attempts[len(state.Attempts)-1].Outcome != OutcomeRunning {
+		return Attempt{}, ErrNoActiveAttemptToReset
+	}
+
+	idx := len(state.Attempts) - 1
+	state.Attempts[idx].Outcome = OutcomeInterrupted
+	state.Attempts[idx].ResetBy = actor
+	state.Attempts[idx].ResetReason = reason
+
+	if err := m.commit(ctx, change, head.Revision, state); err != nil {
+		return Attempt{}, err
+	}
+	return state.Attempts[idx], nil
+}
+
+// Attempts returns the full, ordered attempt history for change — nothing is
+// ever deleted or rewritten by Finish or Reset.
+func (m *QAStateMachine) Attempts(ctx context.Context, change string) ([]Attempt, error) {
+	state, _, err := m.readState(ctx, change)
+	if err != nil {
+		return nil, err
+	}
+	return state.Attempts, nil
 }
 
 func (m *QAStateMachine) commit(ctx context.Context, change, expectedRevision string, state ledgerState) error {

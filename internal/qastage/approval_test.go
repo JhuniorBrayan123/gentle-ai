@@ -13,13 +13,13 @@ func TestBegin_ApplyRequiresPriorApprovalOfSpec(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-h", "explore"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-h"); err != nil {
+	if _, err := machine.Finish(ctx, "change-h", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, err := machine.Begin(ctx, "change-h", "spec"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-h"); err != nil {
+	if _, err := machine.Finish(ctx, "change-h", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -39,13 +39,13 @@ func TestBegin_ApplySucceedsAfterSpecIsApproved(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-i", "explore"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-i"); err != nil {
+	if _, err := machine.Finish(ctx, "change-i", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, err := machine.Begin(ctx, "change-i", "spec"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-i"); err != nil {
+	if _, err := machine.Finish(ctx, "change-i", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -82,7 +82,7 @@ func TestBegin_StagesOtherThanApplyNeverRequireApproval(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-k", "explore"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-k"); err != nil {
+	if _, err := machine.Finish(ctx, "change-k", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, err := machine.Begin(ctx, "change-k", "spec"); err != nil {

@@ -58,7 +58,7 @@ func TestBeginFinish_AdvancingBeginAcceptsImmediateSuccessor(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-d", "explore"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-d"); err != nil {
+	if _, err := machine.Finish(ctx, "change-d", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -78,7 +78,7 @@ func TestBeginFinish_AdvancingBeginRejectsSkippedStage(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-e", "explore"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-e"); err != nil {
+	if _, err := machine.Finish(ctx, "change-e", OutcomePassed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -95,7 +95,7 @@ func TestFinish_RejectsWithoutAnActiveAttempt(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	_, err := machine.Finish(ctx, "change-f")
+	_, err := machine.Finish(ctx, "change-f", OutcomePassed)
 	if !errors.Is(err, ErrNoActiveAttempt) {
 		t.Fatalf("expected ErrNoActiveAttempt, got %v", err)
 	}
@@ -114,7 +114,7 @@ func TestBeginFinish_FullVocabularyInOrderSucceeds(t *testing.T) {
 		if _, err := machine.Begin(ctx, "change-g", stage); err != nil {
 			t.Fatalf("begin %q: unexpected error: %v", stage, err)
 		}
-		if _, err := machine.Finish(ctx, "change-g"); err != nil {
+		if _, err := machine.Finish(ctx, "change-g", OutcomePassed); err != nil {
 			t.Fatalf("finish %q: unexpected error: %v", stage, err)
 		}
 	}
