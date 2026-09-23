@@ -183,4 +183,88 @@ Implementación incremental del núcleo del ledger (state machine, aprobación, 
 
 **Fuera de alcance de Fase 3A** (validaciones diferidas, no bloquean el core): NIVEL 0/1 de `qa-locator-hunting` (5a, 5b-nivel1) y creación real de MR en GitLab (Escenario 7) — se validan cuando haya repo de automatización real, MCP de Playwright, y autorización explícita.
 
-Cada PR de esta lista es candidato a review/RDD individual antes de encadenar el siguiente, siguiendo la política de entrega ya vigente del repo (work-unit commits, tamaño acotado). No se implementa nada de esta tabla todavía — queda pendiente de tu aprobación para empezar 3A.1.
+Cada PR de esta lista es candidato a review/RDD individual antes de encadenar el siguiente, siguiendo la política de entrega ya vigente del repo (work-unit commits, tamaño acotado).
+
+## 8. Fase 3A — cierre
+
+**Estado: 3A.1–3A.11 completos e implementados** (2026-09-23), incluyendo un fix descubierto por el smoke test CLI (`ErrMalformedArtifactRevision`, ver commit `f7788635`) y confirmado con dos reviews RDD acotados aprobados. Validación final: `go build ./...` limpio, `go vet ./...` limpio, suite de `internal/qastage` (35 tests) y suite QA de `internal/cli` (6 tests) 100% verdes, y un smoke test CLI end-to-end real (binario compilado de esta rama) confirmando en vivo: orden desde el primer begin, gate de aprobación, revisiones inválidas (formato y contenido), conflicto de `request-id`, replay idempotente, y `expected-revision`, hasta `complete`.
+
+**Importante — Fase 3A NO es el fin de la migración.** Solo cubre el núcleo Go ("Core QA"): `QAArtifactValidator`, `QAStateMachine`, `PersistentQAStateStore`, `QAStageApproval`, los 5 verbos CLI, y la interfaz `QACodeReviewer` (stub). El hallazgo de 3A.10 confirma que **ninguna skill `qa-*` existe todavía** en `qa-orchestrator-v3` — la experiencia real del QA-Orchestrator (lo que un QA humano invoca) no existe aún sobre v3. Eso es exactamente el alcance de la Fase 3B.
+
+## 9. Fase 3B — Migración de Skills QA (planificación)
+
+Reutiliza `legacy-v2-custom` como fuente **funcional** (qué debe hacer cada skill), no como fuente literal — cada skill se reescribe contra el Core v3 cerrado en la sección 1.1, nunca se copian los archivos `.md` de v2 tal cual.
+
+### Arquitectura del flujo
+
+```
+                   qa-supervisor
+                        │
+                        │ qa-status
+                        ↓
+                   next_action
+                        │
+       ┌────────────────┼────────────────┐
+       ↓                ↓                ↓
+  qa-explore         qa-spec         qa-apply
+       │                │                │
+       └────────────────┼────────────────┘
+                        ↓
+                    qa-verify
+                        ↓
+                     qa-docs
+                        ↓
+                    complete
+
+                  QAStateMachine
+                        ↑
+                        │
+              FUENTE DE VERDAD (única)
+```
+
+Diferencia estructural clave frente a v2: `qa-supervisor` ya no "finge" controlar el flujo con instrucciones de prompt — pregunta al Core (`qa-status.next_action`) qué está permitido y nunca decide el orden por sí mismo. Esto ya estaba confirmado como correcto en el baseline (Escenario 1) y ahora el Core lo garantiza en código, no solo por convención.
+
+### QA Policy compartida (una sola fuente, no seis copias)
+
+Antes de escribir cualquier skill, extraer G1-G6 (Regla Cero incluida) a un recurso compartido único — igual que `skills/_shared/qa-gate-policy.md` funcionaba en v2 — consumido por referencia desde las 6 skills (`qa-supervisor`, `qa-explore`, `qa-spec`, `qa-apply`, `qa-verify`, `qa-docs`), nunca copiado. No necesita ser código Go; sigue siendo un recurso Markdown compartido si esa es la convención correcta de Gentle-AI 3.7 para skills estáticas (confirmar el mecanismo real de shared-resource de este runtime antes de escribir la primera skill).
+
+### Orden de implementación
+
+| Sub-fase | Skill | Debe incluir |
+|---|---|---|
+| **3B.1** | `qa-supervisor` + QA Policy compartida | Recuperar G1-G6 desde la policy compartida; consumir `qa-status.next_action` como única autoridad de ruteo; nunca decidir el orden por sí mismo; contemplar `docs` en el flujo; usar el `{change}` único del nuevo ledger (confirmado en el baseline: mismo string en todas las etapas) |
+| **3B.2** | `qa-explore` | BookStack; Engram `qa/{change}/explore`; locator hunting; nuevo schema canónico (3A.1); ciclo `qa-begin → qa-validate → qa-finish` real |
+| **3B.3** | `qa-spec` | Plan de prueba; `artifact_revision` real (no autodeclarado); cierre de spec; aprobación humana vía `qa-approve` ligada exactamente a esa revisión (3A.8) |
+| **3B.4** | `qa-apply` | Debe depender del gate REAL del Core (rechazo real de `qa-begin`, no una instrucción de prompt que "promete" no avanzar sin aprobación); Screenplay/POM/fixtures; consumir la spec aprobada |
+| **3B.5** | `qa-verify` | Functional QA (Playwright/evidencia/BookStack); schema v3; `qa-validate`; preparar el consumo de `QACodeReviewer` (3A.11) sin acoplarse directamente al CLI interno de RDD — la integración real de RDD queda en Fase 3C |
+| **3B.6** | Skills auxiliares | Inventariar cuáles de `legacy-v2-custom` siguen referenciadas de verdad (`qa-locator-hunting`, `qa-doc-reference`, GitLab, etc.) y portar únicamente las necesarias — no migrar auxiliares sin uso confirmado |
+
+### Reglas comunes a todas las skills de 3B
+
+- Eliminar el envelope legacy (`schema`/`facts`/`observations`/`inferences`/`recommendations`/`risks`/`decision`) — usar únicamente el schema canónico v3 (`findings`/`pending_questions`/`scope`/`predecessor_sha256`, 3A.1).
+- Consumir el `artifact_revision` real que devuelve `qa-validate` (3A.2) — nunca un hash autodeclarado.
+- Eliminar `--max-attempts`, `--max-changed-lines`, `--evidence-goal` de cualquier instrucción de skill (retirados en 3A.9).
+- Conservar `--expected-revision` cuando la skill haga una mutación (`qa-begin`/`qa-finish`/`qa-approve`).
+- Usar únicamente los verbos reales v3: `qa-begin`/`qa-finish`/`qa-approve`/`qa-status`/`qa-validate`.
+- Engram es memoria de contexto/handoffs — nunca autoridad del workflow (decisión 1.1, ya aplicada en `qa-docs`).
+- `qa-status.next_action` es la única autoridad de ruteo — ninguna skill decide el orden por convención propia.
+
+### Verificación antes de cerrar 3B (obligatoria, no opcional)
+
+1. **Búsqueda global de referencias legacy**: grep en todas las skills nuevas por `schema/facts/observations`, `--evidence-goal`, `--max-attempts`, `--max-changed-lines`, y cualquier mención de `ErrRuntimeStage*` — cero resultados antes de cerrar.
+2. **Empaquetado/instalación real**: verificar cómo Gentle-AI 3.7 empaqueta e instala skills (no asumir que basta con crear `skills/qa-*/SKILL.md` en el repo) — confirmar mediante test o una instalación aislada que las skills nuevas son efectivamente descubribles desde OpenCode después de `gentle-ai install`/`gentle-ai sync`.
+3. **Smoke test real desde OpenCode** (no simulado por el agente): `qa-supervisor → qa-explore → qa-spec → aprobación humana → qa-apply → qa-verify → qa-docs → complete`, corrido de verdad en OpenCode, no solo a nivel de ledger/CLI como en el smoke test de 3A.
+
+**No hacer merge a `main` hasta que ese flujo pueda ejecutarse end-to-end desde OpenCode.**
+
+### Fase 3C — Integraciones avanzadas (después de 3B, explícitamente separada)
+
+Se separa deliberadamente de 3B para no bloquear el regreso de las skills funcionales esperando integraciones más grandes:
+
+- Integración real de RDD detrás de `QACodeReviewer`/`RDDAdapter` (hoy stub, 3A.11).
+- Playwright MCP real para NIVEL 1 de `qa-locator-hunting` (diferido en el baseline, Escenario 5b).
+- `qa-locator-hunting` NIVEL 0 contra un repo de automatización real (diferido en el baseline, Escenario 5a).
+- Creación real de MR en GitLab al cerrar el ciclo (diferido en el baseline, Escenario 7).
+- Checklist G6 funcional end-to-end (tsc/lint/Playwright reales, diferido en el baseline, Escenario 6).
+
+No se implementa nada de las secciones 9 y de esta sección todavía — quedan como plan, pendientes de que se autorice empezar 3B.1.
