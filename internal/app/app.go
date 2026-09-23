@@ -133,6 +133,14 @@ func RunArgs(args []string, stdout io.Writer) error {
 			return cli.RunSDDPreflightHook(args[1:], stdout)
 		case "qa-validate":
 			return cli.RunQAValidate(args[1:], stdout)
+		case "qa-begin":
+			return cli.RunQABegin(args[1:], stdout)
+		case "qa-finish":
+			return cli.RunQAFinish(args[1:], stdout)
+		case "qa-approve":
+			return cli.RunQAApprove(args[1:], stdout)
+		case "qa-status":
+			return cli.RunQAStatus(args[1:], stdout)
 		case "codegraph":
 			return cli.RunCodeGraph(args[1:], stdout)
 		case "telemetry":
