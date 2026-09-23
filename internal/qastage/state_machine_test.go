@@ -106,6 +106,11 @@ func TestBeginFinish_FullVocabularyInOrderSucceeds(t *testing.T) {
 	ctx := context.Background()
 
 	for _, stage := range QAStageVocabulary() {
+		if stage == "apply" {
+			if _, err := machine.Approve(ctx, "change-g", "spec", "qa-lead", "approved for this test"); err != nil {
+				t.Fatalf("approve spec: unexpected error: %v", err)
+			}
+		}
 		if _, err := machine.Begin(ctx, "change-g", stage); err != nil {
 			t.Fatalf("begin %q: unexpected error: %v", stage, err)
 		}

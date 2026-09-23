@@ -27,7 +27,8 @@ type Attempt struct {
 
 // ledgerState is the JSON persisted in a QAStateStore Record for a change.
 type ledgerState struct {
-	Attempts []Attempt `json:"attempts"`
+	Attempts  []Attempt  `json:"attempts"`
+	Approvals []Approval `json:"approvals,omitempty"`
 }
 
 // Errors returned by QAStateMachine. These replace v2's
@@ -115,6 +116,10 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage string) (Attem
 
 	if stage != nextExpectedStage(state) {
 		return Attempt{}, ErrStageOutOfOrder
+	}
+
+	if stage == stageRequiringApproval && !isApproved(state, approvedPredecessorStage) {
+		return Attempt{}, ErrApprovalRequired
 	}
 
 	attempt := Attempt{Ordinal: len(state.Attempts) + 1, Stage: stage, Outcome: OutcomeRunning}
