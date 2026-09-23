@@ -100,9 +100,16 @@ go build -o gga .
 
 ### Run Locally
 
+To test standard changes:
 ```bash
 ./gga
 ```
+
+To test changes to embedded assets (like `.md` skills in `internal/assets`):
+```bash
+./gga sync
+```
+*(This unpacks the skills embedded in your built binary to your local config folder so agents can see them).*
 
 ---
 
