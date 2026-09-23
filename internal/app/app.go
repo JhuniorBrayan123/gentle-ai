@@ -131,6 +131,8 @@ func RunArgs(args []string, stdout io.Writer) error {
 			return cli.RunSDDTaskResult(args[1:], stdout)
 		case "sdd-preflight-hook":
 			return cli.RunSDDPreflightHook(args[1:], stdout)
+		case "qa-validate":
+			return cli.RunQAValidate(args[1:], stdout)
 		case "codegraph":
 			return cli.RunCodeGraph(args[1:], stdout)
 		case "telemetry":
