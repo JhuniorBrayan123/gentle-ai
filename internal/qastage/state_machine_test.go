@@ -127,3 +127,34 @@ func TestBeginFinish_FullVocabularyInOrderSucceeds(t *testing.T) {
 		t.Fatalf("expected ErrStageOutOfOrder once the vocabulary is exhausted, got %v", err)
 	}
 }
+
+func TestFinish_RejectsMalformedArtifactRevision(t *testing.T) {
+	machine := newTestMachine(t)
+	ctx := context.Background()
+
+	if _, err := machine.Begin(ctx, "change-badhash", "explore", "b1"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	_, err := machine.Finish(ctx, "change-badhash", OutcomePassed, "not-a-real-hash", "f1")
+	if !errors.Is(err, ErrMalformedArtifactRevision) {
+		t.Fatalf("expected ErrMalformedArtifactRevision, got %v", err)
+	}
+}
+
+func TestFinish_AcceptsWellFormedArtifactRevision(t *testing.T) {
+	machine := newTestMachine(t)
+	ctx := context.Background()
+
+	if _, err := machine.Begin(ctx, "change-goodhash", "explore", "b1"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	attempt, err := machine.Finish(ctx, "change-goodhash", OutcomePassed, anyRevision, "f1")
+	if err != nil {
+		t.Fatalf("expected a well-formed sha256:<64 lowercase hex> revision to be accepted, got %v", err)
+	}
+	if attempt.ArtifactRevision != anyRevision {
+		t.Fatalf("expected the revision to round-trip, got %q", attempt.ArtifactRevision)
+	}
+}

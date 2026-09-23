@@ -78,11 +78,12 @@ func findRequest(state ledgerState, operation, requestID string) (requestRecord,
 // v3-native vocabulary (design decision 1.1: the semantics are preserved,
 // the exact v2 names are not).
 var (
-	ErrStageOutOfOrder        = errors.New("qastage: stage is not the vocabulary's first stage or the immediate successor of the last completed stage")
-	ErrAttemptAlreadyActive   = errors.New("qastage: change already has an active (unfinished) attempt")
-	ErrNoActiveAttempt        = errors.New("qastage: change has no active attempt to finish")
-	ErrInvalidOutcome         = errors.New("qastage: outcome must be passed, failed, or interrupted")
-	ErrNoActiveAttemptToReset = errors.New("qastage: change has no active attempt to reset")
+	ErrStageOutOfOrder           = errors.New("qastage: stage is not the vocabulary's first stage or the immediate successor of the last completed stage")
+	ErrAttemptAlreadyActive      = errors.New("qastage: change already has an active (unfinished) attempt")
+	ErrNoActiveAttempt           = errors.New("qastage: change has no active attempt to finish")
+	ErrInvalidOutcome            = errors.New("qastage: outcome must be passed, failed, or interrupted")
+	ErrNoActiveAttemptToReset    = errors.New("qastage: change has no active attempt to reset")
+	ErrMalformedArtifactRevision = errors.New("qastage: artifact_revision must be sha256:<64 lowercase hex>")
 )
 
 // QAStateMachine implements the fixed 5-stage QA vocabulary
@@ -234,6 +235,9 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage, requestID str
 func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome AttemptOutcome, artifactRevision, requestID string) (Attempt, error) {
 	if outcome != OutcomePassed && outcome != OutcomeFailed && outcome != OutcomeInterrupted {
 		return Attempt{}, ErrInvalidOutcome
+	}
+	if !sha256Pattern.MatchString(artifactRevision) {
+		return Attempt{}, ErrMalformedArtifactRevision
 	}
 
 	state, head, err := m.readState(ctx, change)
