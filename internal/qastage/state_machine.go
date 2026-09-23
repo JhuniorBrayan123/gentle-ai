@@ -27,11 +27,12 @@ const (
 // are populated only when the attempt was closed via Reset (an audited manual
 // recovery), not via an ordinary Finish call.
 type Attempt struct {
-	Ordinal     int            `json:"ordinal"`
-	Stage       string         `json:"stage"`
-	Outcome     AttemptOutcome `json:"outcome"`
-	ResetBy     string         `json:"reset_by,omitempty"`
-	ResetReason string         `json:"reset_reason,omitempty"`
+	Ordinal          int            `json:"ordinal"`
+	Stage            string         `json:"stage"`
+	Outcome          AttemptOutcome `json:"outcome"`
+	ArtifactRevision string         `json:"artifact_revision,omitempty"`
+	ResetBy          string         `json:"reset_by,omitempty"`
+	ResetReason      string         `json:"reset_reason,omitempty"`
 }
 
 // ledgerState is the JSON persisted in a QAStateStore Record for a change.
@@ -141,6 +142,45 @@ func nextExpectedStage(state ledgerState) string {
 	return ""
 }
 
+// hasAnyAttempt reports whether stage was ever begun for change, regardless
+// of outcome.
+func hasAnyAttempt(state ledgerState, stage string) bool {
+	for _, attempt := range state.Attempts {
+		if attempt.Stage == stage {
+			return true
+		}
+	}
+	return false
+}
+
+// reopenableStage returns the last completed stage when it may still be
+// amended: only before its successor has ever been attempted. This is what
+// lets a spec be corrected after approval (producing a new artifact_revision
+// that invalidates the old approval, 3A.8) without allowing it to be
+// rewritten retroactively once apply is already underway.
+func reopenableStage(state ledgerState) string {
+	last := lastCompletedStage(state)
+	if last == "" {
+		return ""
+	}
+	successor := nextExpectedStage(state)
+	if successor == "" || hasAnyAttempt(state, successor) {
+		return ""
+	}
+	return last
+}
+
+// currentRevisionOf returns the artifact_revision of the most recent passed
+// attempt for stage, or "" if it never passed.
+func currentRevisionOf(state ledgerState, stage string) string {
+	for i := len(state.Attempts) - 1; i >= 0; i-- {
+		if state.Attempts[i].Stage == stage && state.Attempts[i].Outcome == OutcomePassed {
+			return state.Attempts[i].ArtifactRevision
+		}
+	}
+	return ""
+}
+
 // Begin opens a new attempt for stage. It is rejected when: an attempt is
 // already active for change, or stage is not the vocabulary's first stage
 // (for a change with no completed attempts) or the immediate successor of
@@ -165,12 +205,15 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage, requestID str
 		return Attempt{}, ErrAttemptAlreadyActive
 	}
 
-	if stage != nextExpectedStage(state) {
+	if stage != nextExpectedStage(state) && stage != reopenableStage(state) {
 		return Attempt{}, ErrStageOutOfOrder
 	}
 
-	if stage == stageRequiringApproval && !isApproved(state, approvedPredecessorStage) {
-		return Attempt{}, ErrApprovalRequired
+	if stage == stageRequiringApproval {
+		currentSpecRevision := currentRevisionOf(state, approvedPredecessorStage)
+		if !isApprovedForRevision(state, approvedPredecessorStage, currentSpecRevision) {
+			return Attempt{}, ErrApprovalRequired
+		}
 	}
 
 	attempt := Attempt{Ordinal: len(state.Attempts) + 1, Stage: stage, Outcome: OutcomeRunning}
@@ -188,7 +231,7 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage, requestID str
 // passed attempts) — failed and interrupted leave the same stage as the next
 // expected one, so a retry opens a brand-new attempt without touching
 // history (design decision 1.1).
-func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome AttemptOutcome, requestID string) (Attempt, error) {
+func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome AttemptOutcome, artifactRevision, requestID string) (Attempt, error) {
 	if outcome != OutcomePassed && outcome != OutcomeFailed && outcome != OutcomeInterrupted {
 		return Attempt{}, ErrInvalidOutcome
 	}
@@ -198,7 +241,7 @@ func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome Atte
 		return Attempt{}, err
 	}
 
-	fingerprint := fingerprintParts(string(outcome))
+	fingerprint := fingerprintParts(string(outcome), artifactRevision)
 	if existing, ok := findRequest(state, "finish", requestID); ok {
 		if existing.Fingerprint != fingerprint {
 			return Attempt{}, ErrRequestConflict
@@ -212,6 +255,7 @@ func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome Atte
 
 	idx := len(state.Attempts) - 1
 	state.Attempts[idx].Outcome = outcome
+	state.Attempts[idx].ArtifactRevision = artifactRevision
 	state.RequestLog = append(state.RequestLog, requestRecord{Operation: "finish", RequestID: requestID, Fingerprint: fingerprint, ResultIndex: state.Attempts[idx].Ordinal})
 
 	if err := m.commit(ctx, change, head.Revision, state); err != nil {

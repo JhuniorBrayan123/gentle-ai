@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+const anyRevision = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+
 func newTestMachine(t *testing.T) *QAStateMachine {
 	t.Helper()
 	return NewQAStateMachine(NewPersistentQAStateStore(t.TempDir()))
@@ -58,7 +60,7 @@ func TestBeginFinish_AdvancingBeginAcceptsImmediateSuccessor(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-d", "explore", "req-begin-5"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-d", OutcomePassed, "req-finish-1"); err != nil {
+	if _, err := machine.Finish(ctx, "change-d", OutcomePassed, anyRevision, "req-finish-1"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -78,7 +80,7 @@ func TestBeginFinish_AdvancingBeginRejectsSkippedStage(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-e", "explore", "req-begin-7"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-e", OutcomePassed, "req-finish-2"); err != nil {
+	if _, err := machine.Finish(ctx, "change-e", OutcomePassed, anyRevision, "req-finish-2"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -95,7 +97,7 @@ func TestFinish_RejectsWithoutAnActiveAttempt(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	_, err := machine.Finish(ctx, "change-f", OutcomePassed, "req-finish-3")
+	_, err := machine.Finish(ctx, "change-f", OutcomePassed, anyRevision, "req-finish-3")
 	if !errors.Is(err, ErrNoActiveAttempt) {
 		t.Fatalf("expected ErrNoActiveAttempt, got %v", err)
 	}
@@ -107,14 +109,14 @@ func TestBeginFinish_FullVocabularyInOrderSucceeds(t *testing.T) {
 
 	for _, stage := range QAStageVocabulary() {
 		if stage == "apply" {
-			if _, err := machine.Approve(ctx, "change-g", "spec", "qa-lead", "approved for this test", "req-approve-1"); err != nil {
+			if _, err := machine.Approve(ctx, "change-g", "spec", anyRevision, "qa-lead", "approved for this test", "req-approve-1"); err != nil {
 				t.Fatalf("approve spec: unexpected error: %v", err)
 			}
 		}
 		if _, err := machine.Begin(ctx, "change-g", stage, "req-begin-full-"+stage); err != nil {
 			t.Fatalf("begin %q: unexpected error: %v", stage, err)
 		}
-		if _, err := machine.Finish(ctx, "change-g", OutcomePassed, "req-finish-full-"+stage); err != nil {
+		if _, err := machine.Finish(ctx, "change-g", OutcomePassed, anyRevision, "req-finish-full-"+stage); err != nil {
 			t.Fatalf("finish %q: unexpected error: %v", stage, err)
 		}
 	}

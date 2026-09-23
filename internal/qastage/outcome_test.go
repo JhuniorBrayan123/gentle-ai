@@ -13,7 +13,7 @@ func TestFinish_FailedDoesNotAdvance_AllowsRetryOfSameStage(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-l", "explore", "req-begin-1"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-l", OutcomeFailed, "req-finish-1"); err != nil {
+	if _, err := machine.Finish(ctx, "change-l", OutcomeFailed, anyRevision, "req-finish-1"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -35,7 +35,7 @@ func TestFinish_InterruptedDoesNotAdvance_AllowsRetryOfSameStage(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-m", "explore", "req-begin-3"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-m", OutcomeInterrupted, "req-finish-2"); err != nil {
+	if _, err := machine.Finish(ctx, "change-m", OutcomeInterrupted, anyRevision, "req-finish-2"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -52,7 +52,7 @@ func TestFinish_RejectsInvalidOutcome(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	_, err := machine.Finish(ctx, "change-n", AttemptOutcome("bogus"), "req-finish-bogus")
+	_, err := machine.Finish(ctx, "change-n", AttemptOutcome("bogus"), anyRevision, "req-finish-bogus")
 	if !errors.Is(err, ErrInvalidOutcome) {
 		t.Fatalf("expected ErrInvalidOutcome, got %v", err)
 	}
@@ -65,13 +65,13 @@ func TestRetryHistory_PreservesEveryPastAttempt(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-o", "explore", "req-begin-6"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-o", OutcomeFailed, "req-finish-3"); err != nil {
+	if _, err := machine.Finish(ctx, "change-o", OutcomeFailed, anyRevision, "req-finish-3"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, err := machine.Begin(ctx, "change-o", "explore", "req-begin-7"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-o", OutcomePassed, "req-finish-4"); err != nil {
+	if _, err := machine.Finish(ctx, "change-o", OutcomePassed, anyRevision, "req-finish-4"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 

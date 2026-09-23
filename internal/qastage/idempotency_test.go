@@ -56,12 +56,12 @@ func TestFinish_ReplayWithSameRequestIDAndOutcomeReturnsSameAttempt(t *testing.T
 	if _, err := machine.Begin(ctx, "change-t", "explore", "req-3"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	first, err := machine.Finish(ctx, "change-t", OutcomePassed, "fin-1")
+	first, err := machine.Finish(ctx, "change-t", OutcomePassed, anyRevision, "fin-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	replay, err := machine.Finish(ctx, "change-t", OutcomePassed, "fin-1")
+	replay, err := machine.Finish(ctx, "change-t", OutcomePassed, anyRevision, "fin-1")
 	if err != nil {
 		t.Fatalf("expected a replay with the same request-id and outcome to succeed, got %v", err)
 	}
@@ -77,11 +77,11 @@ func TestFinish_SameRequestIDDifferentOutcomeIsConflict(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-u", "explore", "req-4"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-u", OutcomePassed, "fin-2"); err != nil {
+	if _, err := machine.Finish(ctx, "change-u", OutcomePassed, anyRevision, "fin-2"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	_, err := machine.Finish(ctx, "change-u", OutcomeFailed, "fin-2")
+	_, err := machine.Finish(ctx, "change-u", OutcomeFailed, anyRevision, "fin-2")
 	if !errors.Is(err, ErrRequestConflict) {
 		t.Fatalf("expected ErrRequestConflict, got %v", err)
 	}
@@ -94,21 +94,21 @@ func TestApprove_ReplayWithSameRequestIDReturnsSameApproval(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-v", "explore", "req-5"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-v", OutcomePassed, "fin-3"); err != nil {
+	if _, err := machine.Finish(ctx, "change-v", OutcomePassed, anyRevision, "fin-3"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, err := machine.Begin(ctx, "change-v", "spec", "req-6"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-v", OutcomePassed, "fin-4"); err != nil {
+	if _, err := machine.Finish(ctx, "change-v", OutcomePassed, anyRevision, "fin-4"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	first, err := machine.Approve(ctx, "change-v", "spec", "qa-lead", "ok", "app-1")
+	first, err := machine.Approve(ctx, "change-v", "spec", anyRevision, "qa-lead", "ok", "app-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	replay, err := machine.Approve(ctx, "change-v", "spec", "qa-lead", "ok", "app-1")
+	replay, err := machine.Approve(ctx, "change-v", "spec", anyRevision, "qa-lead", "ok", "app-1")
 	if err != nil {
 		t.Fatalf("expected a replay with the same request-id to succeed, got %v", err)
 	}
@@ -130,21 +130,21 @@ func TestApprove_SameRequestIDDifferentPayloadIsConflict(t *testing.T) {
 	if _, err := machine.Begin(ctx, "change-w", "explore", "req-7"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-w", OutcomePassed, "fin-5"); err != nil {
+	if _, err := machine.Finish(ctx, "change-w", OutcomePassed, anyRevision, "fin-5"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, err := machine.Begin(ctx, "change-w", "spec", "req-8"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-w", OutcomePassed, "fin-6"); err != nil {
+	if _, err := machine.Finish(ctx, "change-w", OutcomePassed, anyRevision, "fin-6"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if _, err := machine.Approve(ctx, "change-w", "spec", "qa-lead", "ok", "app-2"); err != nil {
+	if _, err := machine.Approve(ctx, "change-w", "spec", anyRevision, "qa-lead", "ok", "app-2"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	_, err := machine.Approve(ctx, "change-w", "spec", "someone-else", "different reason", "app-2")
+	_, err := machine.Approve(ctx, "change-w", "spec", anyRevision, "someone-else", "different reason", "app-2")
 	if !errors.Is(err, ErrRequestConflict) {
 		t.Fatalf("expected ErrRequestConflict, got %v", err)
 	}
