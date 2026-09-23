@@ -118,10 +118,18 @@ gate-policy + doc-reference + docs stale note + fallback Codegen).
   consumidor, no tiene `src/pages/**`) — correctamente diferido a 3C.6.
 - [x] Re-confirmar paridad de mirror entre `skills/qa-locator-hunting/**` e
   `internal/assets/skills/qa-locator-hunting/**` (`diff -q`, idénticos).
-- [ ] Preguntar al usuario si conectar Playwright MCP y autorizar navegación
-  a un entorno real de dev/staging ahora, o diferir NIVEL 1 (y por lo tanto
-  el cierre completo de 3C.2) para más adelante. **PENDIENTE — punto de
-  autorización real, se pregunta explícitamente.**
+- [x] Preguntado y conectado: `claude mcp add playwright -s local -- npx -y
+  @playwright/mcp@latest` (scope local, no comiteado). Verificado con un
+  proceso `claude mcp list` aparte que conecta de verdad. **Limitación
+  real**: esta sesión arrancó antes de agregarlo — `session_connectors_status`
+  confirma que no lo ve todavía; un servidor agregado a mitad de sesión no
+  se conecta en caliente, requiere sesión nueva. El usuario eligió seguir
+  con 3C.3 y retomar NIVEL 1 en la próxima sesión (ya lo verá solo).
+- [ ] **PENDIENTE (próxima sesión)**: confirmar que Playwright MCP aparece
+  conectado, y pedir la autorización explícita del humano para navegar a un
+  entorno real de dev/staging específico antes de ejercitar NIVEL 1 de
+  verdad (la skill lo exige, es un requisito aparte de "el servidor está
+  conectado").
 - [x] No tratar GitLab/NIVEL 2 como sustituto de NIVEL 1 — las Hard Rules de
   la skill prohíben saltar niveles (confirmado, sin cambios necesarios).
 
