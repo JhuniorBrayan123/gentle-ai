@@ -288,6 +288,42 @@ Sin referencia entrante desde ninguna skill portada (NO se portan):
 
 **Conclusión**: 8 skills con referencia real y confirmada (`qa-supervisor`, `qa-explore`, `qa-spec`, `qa-apply`, `qa-verify`, `qa-docs`, `qa-locator-hunting`, `qa-doc-reference`, `qa-doc-access` — 9 en total), 2 sin ninguna referencia entrante (`qa-evidence`, `qa-review`) y por lo tanto no portadas en 3B. Si en el futuro alguna skill nueva necesita evidencia con capturas específicas o revisión adversarial de un cambio QA, se re-evalúa entonces — no se anticipa sin uso confirmado.
 
+### 3B.7 — Empaquetado/instalación real (completado, 2026-09-23)
+
+Confirmado mediante instalación real y aislada (no simulada): las 9 skills QA se registraron en `internal/model/types.go`, se añadieron a `selectableFoundationSkills` (`internal/components/skills/presets.go`), se embebieron en `internal/assets/skills/qa-*` (`//go:embed`), y `TestInjectQASkillsAreRealInstallableAndDiscoverable` verificó instalación real + descubrimiento real desde OpenCode y Claude Code. Gap encontrado y **no resuelto todavía**: `internal/catalog/skills.go` (`MVPSkills()`) es un tercer registro, separado de `model.SkillID` y de `presets.go`, que gatea la flag explícita `--skill` del CLI de instalación — no fue actualizado con las 9 skills QA, así que `gentle-ai install --skill qa-supervisor,...` falla con `"unsupported skill \"qa-supervisor\""`. La instalación real de 3B.7/3B.8 se hizo con `--preset full-gentleman` como bypass válido (los skills sí quedan instalados y descubribles), pero la selección explícita por nombre sigue rota. Pendiente de decisión: arreglar `MVPSkills()` ahora (cambio pequeño y aislado) o diferirlo.
+
+### 3B.8 — Smoke test real end-to-end desde OpenCode (completado, 2026-09-23)
+
+Ejecutado en un perfil de OpenCode **aislado** (no en `~/.config/opencode/` real): variables `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`XDG_CACHE_HOME`/`XDG_STATE_HOME` apuntando a un directorio temporal, más `USERPROFILE` (Windows) sobrescrito — necesario porque `internal/agents/opencode/paths.go` (`ConfigPath`) solo respeta `XDG_CONFIG_HOME` cuando `homeDir == os.UserHomeDir()` exactamente, y `os.UserHomeDir()` en Windows lee `USERPROFILE`. Verificado tras la limpieza: **cero** carpetas `qa-*` en el `~/.config/opencode/skills/` real — el aislamiento se sostuvo.
+
+Corrida real, no simulada: `opencode run "Automatiza un caso QA de prueba: change smoke-opencode-e2e..." --dir <test-project> --format json --auto`, empezando desde `qa-supervisor` (nunca enrutado manualmente por mí). El mismo `{change}` = `smoke-opencode-e2e` se usó en el 100% de los comandos, en las dos corridas (`run1.jsonl`: explore→spec; `run2.jsonl`, continuación tras aprobación humana: apply→verify→docs→complete) — confirmado por escaneo de regex sobre los dos archivos completos, no solo muestreo.
+
+**Resultado real del ciclo** (revisiones reales devueltas por `qa-validate`, no autodeclaradas):
+
+| Etapa | `artifact_revision` | Evidencia |
+|---|---|---|
+| `explore` | `sha256:bba9c146...` | repo virgen, sin fixtures previos |
+| `spec` | `sha256:38388760...` | aprobado por humano vía `qa-approve` real (gate G3) antes de delegar a `qa-apply` |
+| `apply` | `sha256:1ddaaa01...` | commit real `651d75a`, scaffold Screenplay+POM, `tsc --noEmit` y test pasan |
+| `verify` | `sha256:25580d2c...` | `passed`; checklist G6 ejecutada (gap anotado: E2/E3 negativos no cubiertos como prueba explícita) |
+| `docs` | `sha256:ba94bdff...` | commit real `af45658`, `docs/qa/smoke-opencode-e2e.md` |
+
+`qa-status` final: `{"next_action":"complete","complete":true}` — **el ciclo llegó a completar de verdad**, sin fabricar ningún resultado.
+
+**Confirmaciones del contrato pedido**:
+- `qa-status`/`QAStateMachine` fue la única autoridad de ruteo en las 5 transiciones: el propio texto de `qa-supervisor` cita literalmente "el ledger rutea a X" en cada paso, nunca decide el orden por sí mismo.
+- Se disparó un rechazo real del Core (`qa-validate`: `"reason":"illegal stage successor"` por usar `"next_stage":"complete"` en el `scope` del envelope) — el agente lo corrigió y reintentó. Es evidencia de enforcement real del schema canónico v3, no de un mecanismo simulado.
+- `qa-apply` no se disparó hasta que `qa-approve` cerró exitosamente sobre la revisión exacta de `spec` — el gate real bloqueó, no una promesa de prompt.
+- Ninguna skill usó el envelope legacy (`schema/facts/observations`) ni flags retirados (`--max-attempts`, `--evidence-goal`).
+
+**Límite honesto encontrado**: el perfil aislado no tenía Engram ni BookStack MCP configurados — las secciones correspondientes de `qa-explore`/`qa-docs` se marcaron correctamente `NOT_APPLICABLE` en vez de fabricar una llamada `mem_save` o bloquear el ledger. Esto confirma que la ausencia de Engram no le da autoridad sobre el workflow (consistente con la decisión 1.1: Engram es memoria, nunca autoridad) pero también significa que este smoke test **no** ejercitó una llamada real de `mem_save`/BookStack — queda sin verificar con MCPs reales conectados.
+
+No se creó ningún Merge Request de GitLab — el agente se detuvo y pidió autorización explícita en vez de fabricar uno, consistente con que la integración real de MR queda en Fase 3C.
+
+**Limpieza post-smoke-test** (requisito explícito del usuario): perfil aislado, proyecto de prueba desechable y el binario `gentle-ai-smoke-3b8.exe` (nunca commiteado, en `.gitignore` vía `*.exe`) fueron eliminados. `git status` quedó limpio.
+
+**Cierre de Fase 3B**: con 3B.1–3B.8 completos y este smoke test real pasando de punta a punta, 3B se considera funcionalmente cerrada contra los criterios PASS del usuario (qa-supervisor no inventa `next_action` ni se salta etapas; `qa-apply` no evade el gate; ninguna skill usa schema/flags legacy; Engram no decide estado). El único punto abierto es la decisión pendiente sobre `internal/catalog/skills.go` (`MVPSkills()`, ver 3B.7) — arreglarlo ahora o diferirlo a Fase 3C. **No se ha hecho merge a `main`.**
+
 ## Fase 3C — Integraciones avanzadas (después de 3B, explícitamente separada)
 
 Se separa deliberadamente de 3B para no bloquear el regreso de las skills funcionales esperando integraciones más grandes:
