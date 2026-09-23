@@ -113,3 +113,35 @@ func mustRunQA(t *testing.T, run func([]string, io.Writer) error, args []string)
 		t.Fatalf("unexpected error running %v: %v (output: %s)", args, err, buf.String())
 	}
 }
+
+func TestQAReset_ClosesStuckActiveAttemptWithAudit(t *testing.T) {
+	dir := t.TempDir()
+	change := "cli-change-reset"
+
+	mustRunQA(t, RunQABegin, []string{"--change", change, "--stage", "explore", "--cwd", dir, "--request-id", "b1"})
+
+	var resetOut bytes.Buffer
+	err := RunQAReset([]string{"--change", change, "--cwd", dir, "--actor", "qa-lead", "--reason", "agent died mid-stage"}, &resetOut)
+	if err != nil {
+		t.Fatalf("qa-reset: unexpected error: %v", err)
+	}
+	var reset QAResetResult
+	if err := json.Unmarshal(resetOut.Bytes(), &reset); err != nil {
+		t.Fatalf("decode qa-reset output %q: %v", resetOut.String(), err)
+	}
+	if reset.Stage != "explore" || reset.Outcome != "interrupted" {
+		t.Fatalf("unexpected qa-reset result: %+v", reset)
+	}
+
+	// Retryable afterwards.
+	mustRunQA(t, RunQABegin, []string{"--change", change, "--stage", "explore", "--cwd", dir, "--request-id", "b2"})
+}
+
+func TestQAReset_RequiresActorAndReason(t *testing.T) {
+	dir := t.TempDir()
+	var out bytes.Buffer
+	err := RunQAReset([]string{"--change", "cli-change-reset-b", "--cwd", dir, "--actor", "qa-lead"}, &out)
+	if err == nil {
+		t.Fatal("expected an error when --reason is missing")
+	}
+}

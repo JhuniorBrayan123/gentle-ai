@@ -288,6 +288,64 @@ func renderQAApproveHelp(stdout io.Writer) error {
 	return nil
 }
 
+// ---- qa-reset ----
+
+// QAResetResult is the JSON-encoded result of qa-reset.
+type QAResetResult struct {
+	Change  string `json:"change"`
+	Stage   string `json:"stage"`
+	Outcome string `json:"outcome"`
+	Actor   string `json:"actor"`
+	Reason  string `json:"reason"`
+}
+
+// RunQAReset is the CLI entry point for `gentle-ai qa-reset`: an audited
+// manual recovery for a stuck active attempt (3A.6). It never deletes
+// history — the closed attempt remains in Attempts, marked interrupted with
+// its actor/reason, and the stage becomes retryable again.
+func RunQAReset(args []string, stdout io.Writer) error {
+	if hasHelpFlag(args) {
+		_, err := fmt.Fprintln(stdout, "Usage: gentle-ai qa-reset --change <name> [--cwd <repo>] --actor <name> --reason <text>\n\nCloses a stuck active attempt as interrupted, audited with --actor/--reason. Never deletes history.")
+		return err
+	}
+	flags := flag.NewFlagSet("qa-reset", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	change := flags.String("change", "", "")
+	cwd := flags.String("cwd", "", "")
+	actor := flags.String("actor", "", "")
+	reason := flags.String("reason", "", "")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if flags.NArg() != 0 {
+		return fmt.Errorf("unexpected qa-reset argument %q", flags.Arg(0))
+	}
+	for name, value := range map[string]string{"change": *change, "actor": *actor, "reason": *reason} {
+		if strings.TrimSpace(value) == "" {
+			return fmt.Errorf("qa-reset requires --%s", name)
+		}
+	}
+
+	ctx := context.Background()
+	machine, err := newQAMachine(*cwd)
+	if err != nil {
+		return err
+	}
+
+	attempt, err := machine.Reset(ctx, *change, *actor, *reason)
+	if err != nil {
+		return fmt.Errorf("qa-reset: %w", err)
+	}
+
+	return encodeJSON(stdout, QAResetResult{
+		Change:  *change,
+		Stage:   attempt.Stage,
+		Outcome: string(attempt.Outcome),
+		Actor:   attempt.ResetBy,
+		Reason:  attempt.ResetReason,
+	})
+}
+
 // ---- qa-status ----
 
 // QAStatusResult is the JSON-encoded result of qa-status. Stage is the stage

@@ -141,6 +141,8 @@ func RunArgs(args []string, stdout io.Writer) error {
 			return cli.RunQAApprove(args[1:], stdout)
 		case "qa-status":
 			return cli.RunQAStatus(args[1:], stdout)
+		case "qa-reset":
+			return cli.RunQAReset(args[1:], stdout)
 		case "codegraph":
 			return cli.RunCodeGraph(args[1:], stdout)
 		case "telemetry":
