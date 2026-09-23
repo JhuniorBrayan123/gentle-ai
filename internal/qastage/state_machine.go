@@ -2,9 +2,12 @@ package qastage
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // AttemptOutcome is the result of a finished (or in-progress) QA stage
@@ -33,8 +36,40 @@ type Attempt struct {
 
 // ledgerState is the JSON persisted in a QAStateStore Record for a change.
 type ledgerState struct {
-	Attempts  []Attempt  `json:"attempts"`
-	Approvals []Approval `json:"approvals,omitempty"`
+	Attempts   []Attempt       `json:"attempts"`
+	Approvals  []Approval      `json:"approvals,omitempty"`
+	RequestLog []requestRecord `json:"request_log,omitempty"`
+}
+
+// requestRecord is one idempotency entry: operation+request-id maps to the
+// fingerprint of the payload it was called with, and to the index (1-based)
+// of the result it produced (an Attempts ordinal, or an Approvals position).
+// A replay with the same operation/request-id/fingerprint returns that same
+// result without mutating anything further; a mismatched fingerprint is a
+// conflict (design decision 1.1).
+type requestRecord struct {
+	Operation   string `json:"operation"`
+	RequestID   string `json:"request_id"`
+	Fingerprint string `json:"fingerprint"`
+	ResultIndex int    `json:"result_index"`
+}
+
+// ErrRequestConflict is returned when a request-id is reused with a
+// different payload than the one it was first used with.
+var ErrRequestConflict = errors.New("qastage: request-id was already used with a different payload")
+
+func fingerprintParts(parts ...string) string {
+	sum := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
+	return hex.EncodeToString(sum[:])
+}
+
+func findRequest(state ledgerState, operation, requestID string) (requestRecord, bool) {
+	for _, record := range state.RequestLog {
+		if record.Operation == operation && record.RequestID == requestID {
+			return record, true
+		}
+	}
+	return requestRecord{}, false
 }
 
 // Errors returned by QAStateMachine. These replace v2's
@@ -112,10 +147,18 @@ func nextExpectedStage(state ledgerState) string {
 // the last completed stage. Both checks apply from the very first qa-begin —
 // closing the v2 gap where a fresh change's first begin bypassed validation
 // entirely (baseline Escenario 3).
-func (m *QAStateMachine) Begin(ctx context.Context, change, stage string) (Attempt, error) {
+func (m *QAStateMachine) Begin(ctx context.Context, change, stage, requestID string) (Attempt, error) {
 	state, head, err := m.readState(ctx, change)
 	if err != nil {
 		return Attempt{}, err
+	}
+
+	fingerprint := fingerprintParts(stage)
+	if existing, ok := findRequest(state, "begin", requestID); ok {
+		if existing.Fingerprint != fingerprint {
+			return Attempt{}, ErrRequestConflict
+		}
+		return state.Attempts[existing.ResultIndex-1], nil
 	}
 
 	if len(state.Attempts) > 0 && state.Attempts[len(state.Attempts)-1].Outcome == OutcomeRunning {
@@ -132,6 +175,7 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage string) (Attem
 
 	attempt := Attempt{Ordinal: len(state.Attempts) + 1, Stage: stage, Outcome: OutcomeRunning}
 	state.Attempts = append(state.Attempts, attempt)
+	state.RequestLog = append(state.RequestLog, requestRecord{Operation: "begin", RequestID: requestID, Fingerprint: fingerprint, ResultIndex: attempt.Ordinal})
 
 	if err := m.commit(ctx, change, head.Revision, state); err != nil {
 		return Attempt{}, err
@@ -144,7 +188,7 @@ func (m *QAStateMachine) Begin(ctx context.Context, change, stage string) (Attem
 // passed attempts) — failed and interrupted leave the same stage as the next
 // expected one, so a retry opens a brand-new attempt without touching
 // history (design decision 1.1).
-func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome AttemptOutcome) (Attempt, error) {
+func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome AttemptOutcome, requestID string) (Attempt, error) {
 	if outcome != OutcomePassed && outcome != OutcomeFailed && outcome != OutcomeInterrupted {
 		return Attempt{}, ErrInvalidOutcome
 	}
@@ -154,12 +198,21 @@ func (m *QAStateMachine) Finish(ctx context.Context, change string, outcome Atte
 		return Attempt{}, err
 	}
 
+	fingerprint := fingerprintParts(string(outcome))
+	if existing, ok := findRequest(state, "finish", requestID); ok {
+		if existing.Fingerprint != fingerprint {
+			return Attempt{}, ErrRequestConflict
+		}
+		return state.Attempts[existing.ResultIndex-1], nil
+	}
+
 	if len(state.Attempts) == 0 || state.Attempts[len(state.Attempts)-1].Outcome != OutcomeRunning {
 		return Attempt{}, ErrNoActiveAttempt
 	}
 
 	idx := len(state.Attempts) - 1
 	state.Attempts[idx].Outcome = outcome
+	state.RequestLog = append(state.RequestLog, requestRecord{Operation: "finish", RequestID: requestID, Fingerprint: fingerprint, ResultIndex: state.Attempts[idx].Ordinal})
 
 	if err := m.commit(ctx, change, head.Revision, state); err != nil {
 		return Attempt{}, err

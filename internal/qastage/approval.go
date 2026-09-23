@@ -45,17 +45,27 @@ func stageHasCompleted(state ledgerState, stage string) bool {
 // Approve records an approval for stage, which must have already completed
 // (Outcome == passed) at least once. It does not yet bind to a specific
 // artifact_revision — that invalidation-on-change behavior is added in 3A.8.
-func (m *QAStateMachine) Approve(ctx context.Context, change, stage, actor, reason string) (Approval, error) {
+func (m *QAStateMachine) Approve(ctx context.Context, change, stage, actor, reason, requestID string) (Approval, error) {
 	state, head, err := m.readState(ctx, change)
 	if err != nil {
 		return Approval{}, err
 	}
+
+	fingerprint := fingerprintParts(stage, actor, reason)
+	if existing, ok := findRequest(state, "approve", requestID); ok {
+		if existing.Fingerprint != fingerprint {
+			return Approval{}, ErrRequestConflict
+		}
+		return state.Approvals[existing.ResultIndex-1], nil
+	}
+
 	if !stageHasCompleted(state, stage) {
 		return Approval{}, ErrNothingToApprove
 	}
 
 	approval := Approval{Stage: stage, Actor: actor, Reason: reason}
 	state.Approvals = append(state.Approvals, approval)
+	state.RequestLog = append(state.RequestLog, requestRecord{Operation: "approve", RequestID: requestID, Fingerprint: fingerprint, ResultIndex: len(state.Approvals)})
 
 	if err := m.commit(ctx, change, head.Revision, state); err != nil {
 		return Approval{}, err

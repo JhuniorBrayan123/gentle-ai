@@ -10,16 +10,16 @@ func TestFinish_FailedDoesNotAdvance_AllowsRetryOfSameStage(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	if _, err := machine.Begin(ctx, "change-l", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-l", "explore", "req-begin-1"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-l", OutcomeFailed); err != nil {
+	if _, err := machine.Finish(ctx, "change-l", OutcomeFailed, "req-finish-1"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	// Retry: same stage must still be the expected one, since failed never
 	// advances the machine.
-	retry, err := machine.Begin(ctx, "change-l", "explore")
+	retry, err := machine.Begin(ctx, "change-l", "explore", "req-begin-2")
 	if err != nil {
 		t.Fatalf("expected explore to remain retryable after a failed outcome, got %v", err)
 	}
@@ -32,14 +32,14 @@ func TestFinish_InterruptedDoesNotAdvance_AllowsRetryOfSameStage(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	if _, err := machine.Begin(ctx, "change-m", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-m", "explore", "req-begin-3"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-m", OutcomeInterrupted); err != nil {
+	if _, err := machine.Finish(ctx, "change-m", OutcomeInterrupted, "req-finish-2"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if _, err := machine.Begin(ctx, "change-m", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-m", "explore", "req-begin-4"); err != nil {
 		t.Fatalf("expected explore to remain retryable after an interrupted outcome, got %v", err)
 	}
 }
@@ -48,11 +48,11 @@ func TestFinish_RejectsInvalidOutcome(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	if _, err := machine.Begin(ctx, "change-n", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-n", "explore", "req-begin-5"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	_, err := machine.Finish(ctx, "change-n", AttemptOutcome("bogus"))
+	_, err := machine.Finish(ctx, "change-n", AttemptOutcome("bogus"), "req-finish-bogus")
 	if !errors.Is(err, ErrInvalidOutcome) {
 		t.Fatalf("expected ErrInvalidOutcome, got %v", err)
 	}
@@ -62,16 +62,16 @@ func TestRetryHistory_PreservesEveryPastAttempt(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	if _, err := machine.Begin(ctx, "change-o", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-o", "explore", "req-begin-6"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-o", OutcomeFailed); err != nil {
+	if _, err := machine.Finish(ctx, "change-o", OutcomeFailed, "req-finish-3"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Begin(ctx, "change-o", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-o", "explore", "req-begin-7"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if _, err := machine.Finish(ctx, "change-o", OutcomePassed); err != nil {
+	if _, err := machine.Finish(ctx, "change-o", OutcomePassed, "req-finish-4"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -101,7 +101,7 @@ func TestReset_ClosesActiveAttemptAsInterruptedWithAudit(t *testing.T) {
 	machine := newTestMachine(t)
 	ctx := context.Background()
 
-	if _, err := machine.Begin(ctx, "change-q", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-q", "explore", "req-begin-8"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -125,7 +125,7 @@ func TestReset_ClosesActiveAttemptAsInterruptedWithAudit(t *testing.T) {
 		t.Fatalf("expected the reset attempt to remain in history, got %d", len(attempts))
 	}
 
-	if _, err := machine.Begin(ctx, "change-q", "explore"); err != nil {
+	if _, err := machine.Begin(ctx, "change-q", "explore", "req-begin-9"); err != nil {
 		t.Fatalf("expected explore to be retryable after reset, got %v", err)
 	}
 }
