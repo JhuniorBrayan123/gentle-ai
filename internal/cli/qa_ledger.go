@@ -290,11 +290,15 @@ func renderQAApproveHelp(stdout io.Writer) error {
 
 // ---- qa-status ----
 
-// QAStatusResult is the JSON-encoded result of qa-status.
+// QAStatusResult is the JSON-encoded result of qa-status. Stage is the stage
+// next_action applies to (what to begin, or what's running to finish) —
+// callers like qa-supervisor use it to know what to delegate without ever
+// deciding order themselves.
 type QAStatusResult struct {
 	Change     string `json:"change"`
 	Revision   string `json:"revision"`
 	NextAction string `json:"next_action"`
+	Stage      string `json:"stage,omitempty"`
 	Complete   bool   `json:"complete"`
 }
 
@@ -333,6 +337,7 @@ func RunQAStatus(args []string, stdout io.Writer) error {
 		Change:     status.Change,
 		Revision:   status.Revision,
 		NextAction: status.NextAction,
+		Stage:      status.Stage,
 		Complete:   status.Complete,
 	})
 }

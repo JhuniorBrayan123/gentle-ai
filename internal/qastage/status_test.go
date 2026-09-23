@@ -16,6 +16,9 @@ func TestStatus_FreshChangeExpectsBegin(t *testing.T) {
 	if status.NextAction != "begin" || status.Complete {
 		t.Fatalf("unexpected status: %+v", status)
 	}
+	if status.Stage != "explore" {
+		t.Fatalf("expected Stage=explore (the stage to begin next), got %q", status.Stage)
+	}
 	if status.Revision != "" {
 		t.Fatalf("expected an empty revision for a never-used change, got %q", status.Revision)
 	}
@@ -35,6 +38,9 @@ func TestStatus_ActiveAttemptExpectsFinish(t *testing.T) {
 	}
 	if status.NextAction != "finish" || status.Complete {
 		t.Fatalf("unexpected status: %+v", status)
+	}
+	if status.Stage != "explore" {
+		t.Fatalf("expected Stage=explore (the running attempt's stage), got %q", status.Stage)
 	}
 	if status.Revision == "" {
 		t.Fatal("expected a non-empty revision once a record exists")
@@ -65,5 +71,8 @@ func TestStatus_ExhaustedVocabularyIsComplete(t *testing.T) {
 	}
 	if status.NextAction != "complete" || !status.Complete {
 		t.Fatalf("expected an exhausted vocabulary to report complete, got %+v", status)
+	}
+	if status.Stage != "" {
+		t.Fatalf("expected an empty Stage once complete, got %q", status.Stage)
 	}
 }
