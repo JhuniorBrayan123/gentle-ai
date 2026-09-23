@@ -257,7 +257,38 @@ Antes de escribir cualquier skill, extraer G1-G6 (Regla Cero incluida) a un recu
 
 **No hacer merge a `main` hasta que ese flujo pueda ejecutarse end-to-end desde OpenCode.**
 
-### Fase 3C — Integraciones avanzadas (después de 3B, explícitamente separada)
+#### Grafo de dependencias de skills (evidencia real, `legacy-v2-custom`)
+
+Generado con `grep` real sobre las 5 skills core ya portadas y `skills/_shared/qa-gate-policy.md`, antes de decidir qué auxiliar portar en 3B.6 (registrado aquí formalmente, como pidió el usuario, aunque la verificación en sí ya se había hecho):
+
+```
+qa-supervisor
+  ├── qa-status / qa-approve (CLI real, no skill)
+  ├── qa-explore   (delega)
+  ├── qa-spec      (delega)
+  ├── qa-apply     (delega)
+  ├── qa-verify    (delega)
+  ├── qa-docs      (delega, ya existía desde 3A.10)
+  └── skills/_shared/qa-gate-policy.md (política compartida)
+        └── qa-doc-reference   (referenciada: formato de ficha PRD)
+
+qa-explore
+  └── qa-locator-hunting (referenciada: caza de locators, paso 5 obligatorio)
+
+qa-docs
+  └── qa-doc-access (referenciada solo por nombre: "eso es responsabilidad de qa-doc-access, fuera de este alcance")
+
+qa-spec, qa-apply, qa-verify
+  └── (sin dependencias de otras skills — solo BookStack/Engram/ledger CLI)
+
+Sin referencia entrante desde ninguna skill portada (NO se portan):
+  qa-evidence
+  qa-review
+```
+
+**Conclusión**: 8 skills con referencia real y confirmada (`qa-supervisor`, `qa-explore`, `qa-spec`, `qa-apply`, `qa-verify`, `qa-docs`, `qa-locator-hunting`, `qa-doc-reference`, `qa-doc-access` — 9 en total), 2 sin ninguna referencia entrante (`qa-evidence`, `qa-review`) y por lo tanto no portadas en 3B. Si en el futuro alguna skill nueva necesita evidencia con capturas específicas o revisión adversarial de un cambio QA, se re-evalúa entonces — no se anticipa sin uso confirmado.
+
+## Fase 3C — Integraciones avanzadas (después de 3B, explícitamente separada)
 
 Se separa deliberadamente de 3B para no bloquear el regreso de las skills funcionales esperando integraciones más grandes:
 
