@@ -48,6 +48,15 @@ var selectableFoundationSkills = []model.SkillID{
 	model.SkillWorkUnitCommits,
 	model.SkillRDDDefectWorkflow,
 	model.SkillSystemicIssueTriage,
+	model.SkillQASupervisor,
+	model.SkillQAExplore,
+	model.SkillQASpec,
+	model.SkillQAApply,
+	model.SkillQAVerify,
+	model.SkillQADocs,
+	model.SkillQALocatorHunting,
+	model.SkillQADocReference,
+	model.SkillQADocAccess,
 }
 
 // foundationSkills are the non-SDD product skills installed by the
