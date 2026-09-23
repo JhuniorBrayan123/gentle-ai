@@ -110,16 +110,20 @@ gate-policy + doc-reference + docs stale note + fallback Codegen).
 
 ### 3C.2 — locator-hunting NIVEL 0/1 + Playwright MCP
 
-- [ ] Re-verificar (sin cambio de código) que NIVEL 0 (POM local) y NIVEL 2
-  (GitLab) siguen correctos; ejercitar NIVEL 2 una vez de verdad vía GitLab
-  MCP conectado.
-- [ ] Re-confirmar paridad de mirror entre `skills/qa-locator-hunting/**` e
-  `internal/assets/skills/qa-locator-hunting/**`.
+- [x] Re-verificar (sin cambio de código) que NIVEL 0 (POM local) y NIVEL 2
+  (GitLab) siguen correctos; ejercitado NIVEL 2 de verdad vía
+  `search_projects("erp-mf-seguridad")` → `SmartClic/erp-mf-seguridad`,
+  coincide exacto con la fila del catálogo, cero drift. NIVEL 0 no se puede
+  ejercitar dentro de `gentle-ai` (no es un proyecto de automatización
+  consumidor, no tiene `src/pages/**`) — correctamente diferido a 3C.6.
+- [x] Re-confirmar paridad de mirror entre `skills/qa-locator-hunting/**` e
+  `internal/assets/skills/qa-locator-hunting/**` (`diff -q`, idénticos).
 - [ ] Preguntar al usuario si conectar Playwright MCP y autorizar navegación
   a un entorno real de dev/staging ahora, o diferir NIVEL 1 (y por lo tanto
-  el cierre completo de 3C.2) para más adelante.
-- [ ] No tratar GitLab/NIVEL 2 como sustituto de NIVEL 1 — las Hard Rules de
-  la skill prohíben saltar niveles.
+  el cierre completo de 3C.2) para más adelante. **PENDIENTE — punto de
+  autorización real, se pregunta explícitamente.**
+- [x] No tratar GitLab/NIVEL 2 como sustituto de NIVEL 1 — las Hard Rules de
+  la skill prohíben saltar niveles (confirmado, sin cambios necesarios).
 
 ### 3C.3 — QACodeReviewer + RDDAdapter real
 
