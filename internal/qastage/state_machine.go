@@ -1,0 +1,157 @@
+package qastage
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
+// AttemptOutcome is the result of a finished (or in-progress) QA stage
+// attempt. Only OutcomeRunning is used by 3A.4; OutcomePassed/Failed/
+// Interrupted semantics beyond "advance vs. don't advance" are completed in
+// 3A.6.
+type AttemptOutcome string
+
+const (
+	OutcomeRunning AttemptOutcome = "running"
+	OutcomePassed  AttemptOutcome = "passed"
+)
+
+// Attempt is one begin/finish cycle for a single QA stage.
+type Attempt struct {
+	Ordinal int            `json:"ordinal"`
+	Stage   string         `json:"stage"`
+	Outcome AttemptOutcome `json:"outcome"`
+}
+
+// ledgerState is the JSON persisted in a QAStateStore Record for a change.
+type ledgerState struct {
+	Attempts []Attempt `json:"attempts"`
+}
+
+// Errors returned by QAStateMachine. These replace v2's
+// ErrRuntimeStageOutOfOrder/ErrRuntimeStageApprovalRequired with a single,
+// v3-native vocabulary (design decision 1.1: the semantics are preserved,
+// the exact v2 names are not).
+var (
+	ErrStageOutOfOrder      = errors.New("qastage: stage is not the vocabulary's first stage or the immediate successor of the last completed stage")
+	ErrAttemptAlreadyActive = errors.New("qastage: change already has an active (unfinished) attempt")
+	ErrNoActiveAttempt      = errors.New("qastage: change has no active attempt to finish")
+)
+
+// QAStateMachine implements the fixed 5-stage QA vocabulary
+// (explore/spec/apply/verify/docs) on top of a QAStateStore. Unlike v2's
+// configurable StageVocabulary, the sequence is fixed by design (1.1).
+type QAStateMachine struct {
+	store QAStateStore
+}
+
+// NewQAStateMachine returns a state machine persisting through store.
+func NewQAStateMachine(store QAStateStore) *QAStateMachine {
+	return &QAStateMachine{store: store}
+}
+
+func (m *QAStateMachine) readState(ctx context.Context, change string) (ledgerState, Record, error) {
+	head, err := m.store.Head(ctx, change)
+	if err != nil {
+		return ledgerState{}, Record{}, err
+	}
+	if head.Revision == "" {
+		return ledgerState{}, head, nil
+	}
+	var state ledgerState
+	if err := json.Unmarshal(head.Data, &state); err != nil {
+		return ledgerState{}, Record{}, fmt.Errorf("qastage: decode ledger state for %q: %w", change, err)
+	}
+	return state, head, nil
+}
+
+func lastCompletedStage(state ledgerState) string {
+	for i := len(state.Attempts) - 1; i >= 0; i-- {
+		if state.Attempts[i].Outcome == OutcomePassed {
+			return state.Attempts[i].Stage
+		}
+	}
+	return ""
+}
+
+// nextExpectedStage returns the only stage label a qa-begin may use right
+// now: the vocabulary's first stage if none is completed yet, the immediate
+// successor of the last completed stage otherwise, or "" once the
+// vocabulary is exhausted (nothing may follow "docs").
+func nextExpectedStage(state ledgerState) string {
+	vocab := QAStageVocabulary()
+	last := lastCompletedStage(state)
+	if last == "" {
+		return vocab[0]
+	}
+	for i, stage := range vocab {
+		if stage == last {
+			if i+1 < len(vocab) {
+				return vocab[i+1]
+			}
+			return ""
+		}
+	}
+	return ""
+}
+
+// Begin opens a new attempt for stage. It is rejected when: an attempt is
+// already active for change, or stage is not the vocabulary's first stage
+// (for a change with no completed attempts) or the immediate successor of
+// the last completed stage. Both checks apply from the very first qa-begin —
+// closing the v2 gap where a fresh change's first begin bypassed validation
+// entirely (baseline Escenario 3).
+func (m *QAStateMachine) Begin(ctx context.Context, change, stage string) (Attempt, error) {
+	state, head, err := m.readState(ctx, change)
+	if err != nil {
+		return Attempt{}, err
+	}
+
+	if len(state.Attempts) > 0 && state.Attempts[len(state.Attempts)-1].Outcome == OutcomeRunning {
+		return Attempt{}, ErrAttemptAlreadyActive
+	}
+
+	if stage != nextExpectedStage(state) {
+		return Attempt{}, ErrStageOutOfOrder
+	}
+
+	attempt := Attempt{Ordinal: len(state.Attempts) + 1, Stage: stage, Outcome: OutcomeRunning}
+	state.Attempts = append(state.Attempts, attempt)
+
+	if err := m.commit(ctx, change, head.Revision, state); err != nil {
+		return Attempt{}, err
+	}
+	return attempt, nil
+}
+
+// Finish closes the active attempt as passed, advancing the state machine.
+// Failed/interrupted outcomes and retry semantics are added in 3A.6.
+func (m *QAStateMachine) Finish(ctx context.Context, change string) (Attempt, error) {
+	state, head, err := m.readState(ctx, change)
+	if err != nil {
+		return Attempt{}, err
+	}
+
+	if len(state.Attempts) == 0 || state.Attempts[len(state.Attempts)-1].Outcome != OutcomeRunning {
+		return Attempt{}, ErrNoActiveAttempt
+	}
+
+	idx := len(state.Attempts) - 1
+	state.Attempts[idx].Outcome = OutcomePassed
+
+	if err := m.commit(ctx, change, head.Revision, state); err != nil {
+		return Attempt{}, err
+	}
+	return state.Attempts[idx], nil
+}
+
+func (m *QAStateMachine) commit(ctx context.Context, change, expectedRevision string, state ledgerState) error {
+	payload, err := json.Marshal(state)
+	if err != nil {
+		return fmt.Errorf("qastage: encode ledger state for %q: %w", change, err)
+	}
+	_, err = m.store.Append(ctx, change, expectedRevision, payload)
+	return err
+}
