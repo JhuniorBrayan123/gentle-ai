@@ -1856,9 +1856,13 @@ func TestEmbeddedAssetCount(t *testing.T) {
 		}
 	}
 
-	// We expect 27 skill directories (11 SDD + judgment-day + 13 foundation/review + hermes-ephemeral-delegation + _shared).
-	if skillDirs != 27 {
-		t.Fatalf("expected 27 skill directories, got %d", skillDirs)
+	// We expect 36 skill directories (the prior 27 — 11 SDD + judgment-day +
+	// 13 foundation/review + hermes-ephemeral-delegation + _shared — plus the
+	// 9 QA-Orchestrator v3 skills added in Fase 3B: qa-supervisor, qa-explore,
+	// qa-spec, qa-apply, qa-verify, qa-docs, qa-locator-hunting,
+	// qa-doc-reference, qa-doc-access).
+	if skillDirs != 36 {
+		t.Fatalf("expected 36 skill directories, got %d", skillDirs)
 	}
 
 	// Verify each skill directory has a SKILL.md.
