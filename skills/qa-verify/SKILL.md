@@ -26,20 +26,23 @@ Carga esta skill cuando `qa-supervisor` te delegue validar una implementación Q
 2. Si el comando se rechaza, **DETENTE** y devuelve el rechazo tal cual al orquestador/supervisor.
 3. Solo si `qa-begin` responde con éxito continúa con la validación de abajo.
 
-## Diseño híbrido: Functional QA (esta skill) + revisión de código (delegada)
+## Revisión de código real (RDD) para los ítems 3-4 del checklist G6
 
-A diferencia de v2, esta skill **no reimplementa** verificaciones de código/diff que Gentle-AI 3.7 ya resuelve mejor (secretos, riesgo, diff, mantenibilidad). Esa porción se delega a `QACodeReviewer` (interfaz Go, `internal/qastage/reviewer.go`, 3A.11) — hoy es un stub (`RDDAdapter`) que devuelve "no implementado"; la integración real con `gentle-ai review inspect-candidate` es Fase 3C. Mientras esa integración no exista:
+A diferencia de v2, esta skill **no reimplementa** verificaciones de código/diff que Gentle-AI 3.7 ya resuelve mejor (secretos, riesgo, diff, mantenibilidad). Para los ítems 3 (lint) y 4 (secretos) de abajo, invoca el ciclo real de RDD directamente sobre el diff que produjo `qa-apply` — el mismo protocolo que ya usa el orquestador para sus propios commits, no una integración Go separada. El stub `QACodeReviewer`/`RDDAdapter` de 3A.11 se retiró en 3C.3 (código muerto: el ciclo real de RDD es interactivo y con estado — consentimiento humano, revisores LLM por lente — y no cabe en una llamada síncrona Go sin depender igual de un agente externo por debajo).
 
-- Corre igual la checklist funcional completa (abajo) — eso es 100% responsabilidad de esta skill y no depende de RDD.
-- Para las verificaciones de código/diff que normalmente delegarías a `QACodeReviewer` (puntos 3-4 del checklist), si RDD real todavía no está disponible, ejecútalas manualmente como hoy (lint, revisión de secretos) y **anota explícitamente** en el reporte que fueron manuales porque la integración de Fase 3C aún no existe — no bloquees el cierre de `verify` por eso.
-- Cuando Fase 3C entregue la integración real, esta sección deja de aplicar y el checklist se actualiza para invocar `QACodeReviewer` directamente en vez de hacerlo a mano.
+0. **Antes de todo**: `gentle-ai review mode status` (solo lectura). Si el modo efectivo es `disabled`, anota en el reporte "RDD deshabilitado por el usuario — ítems 3-4 no aplicables" y sigue con el resto del checklist sin insistir. Si está habilitado (default), continúa.
+1. **Preflight (siempre primero)**: `gentle-ai review status --cwd <repo> --contract gentle-ai.review-integration/v2 --agent <runtime> --next-transition`. Rutea **solo** desde el `next_transition` que devuelve — nunca inventes un comando desde memoria o de una corrida anterior.
+2. Si `next_transition` es `execute` con `operation: "review.start"`, ejecútalo tal cual, con sus argumentos exactos.
+3. Si START devuelve un envelope `gentle-ai.review-integration.consent/v3`, preséntaselo íntegro al humano (headline, razón, cada opción con su efecto) y espera su respuesta — nunca decidas `granted`/`declined` en su nombre. Si declina, anota en el reporte que la revisión de código fue omitida por decisión humana y sigue con el resto del checklist; eso no bloquea el cierre de `verify`.
+4. Si START confirma la revisión (`state: "reviewing"`), sigue el `next_transition` de STATUS — normalmente un `collect` con uno o más `review.capture-result` por lente. Ejecuta cada uno tal cual (nunca agregues `--input`; capturan en proceso).
+5. Al aprobarse, el último capture devuelve `review.acknowledge-approved` — ejecútalo exactamente una vez. Registra los hallazgos (si los hay) en el reporte; ningún hallazgo de RDD bloquea `verify` por sí solo, salvo que tú (checklist funcional G6) también hayas fallado la prueba.
 
 ## Checklist funcional G6 (obligatoria, TODA)
 
 1. `npx tsc --noEmit` — tipos compilan.
 2. Ejecutar la prueba modificada/creada — pasa.
-3. Revisar lint del proyecto — limpio (manual hasta que exista `QACodeReviewer` real).
-4. Verificar que NO haya credenciales/secretos en el diff (manual hasta que exista `QACodeReviewer` real).
+3. Lint del proyecto — vía el ciclo real de RDD de arriba (o "no aplicable" si RDD está deshabilitado).
+4. Credenciales/secretos en el diff — vía el ciclo real de RDD de arriba (o "no aplicable" si RDD está deshabilitado).
 5. Verificar que NO haya esperas fijas innecesarias.
 6. Verificar que el test siga Screenplay+POM (sin locators crudos en el archivo de test, actor/tasks/questions usados según el diseño del spec) — reutilizando lo existente cuando aplica, o con la estructura nueva creada según SOLID cuando el proyecto no tenía patrón previo.
 7. Comparar el resultado contra la documentación BookStack consultada.
@@ -52,7 +55,7 @@ A diferencia de v2, esta skill **no reimplementa** verificaciones de código/dif
 
 ## Salida (obligatorio, cierre de la etapa)
 
-1. **Cuerpo del reporte en Engram**: `mem_save` con `topic_key: "qa/{change}/verify-report"` — hallazgos, comandos ejecutados, resultados de la validación funcional, y qué puntos del checklist fueron manuales por falta de integración RDD real (Fase 3C).
+1. **Cuerpo del reporte en Engram**: `mem_save` con `topic_key: "qa/{change}/verify-report"` — hallazgos, comandos ejecutados, resultados de la validación funcional, y el resultado real del ciclo RDD para los ítems 3-4 (aprobado con sus hallazgos, declinado por el humano, o no aplicable por RDD deshabilitado).
 2. **Admisión anti-alucinación**: arma el envelope canónico `gentle-ai.qa-stage-artifact/v1` (`findings`/`pending_questions`/`scope`/`predecessor_sha256` — nunca el envelope legacy que el Core real rechaza) y pásalo por `gentle-ai qa-validate --input - --change {change} --stage verify --source-revision <artifact_revision del apply>`.
 3. **Cierre del ledger**: con el `artifact_revision` que `qa-validate` devolvió, ejecuta `gentle-ai qa-finish --change {change} --cwd <repo> --request-id <id-idempotente> --outcome passed --evidence-revision <artifact_revision>`. Si hay hallazgos graves o la prueba falla, usa `--outcome failed`.
 4. Solo tras un `qa-finish` exitoso reportas la etapa `verify` como cerrada al orquestador/supervisor.
@@ -62,7 +65,8 @@ A diferencia de v2, esta skill **no reimplementa** verificaciones de código/dif
 - No modifiques código para "arreglar" hallazgos; reporta y deja la corrección a `qa-apply`.
 - Si el resultado contradice BookStack, preséntalo como contradicción al humano (G1/G4).
 - No inventes ni asumas un `artifact_revision` — es siempre el que devuelve `qa-validate`.
-- No acoples esta skill al CLI interno de RDD directamente — cuando la integración de Fase 3C exista, pasa por `QACodeReviewer`, nunca invoques `gentle-ai review inspect-candidate` a mano desde aquí.
+- Nunca inventes un comando de `gentle-ai review` desde memoria o de una corrida anterior — rutea siempre desde el `next_transition` real que devuelve el propio STATUS.
+- Un envelope de consentimiento (`gentle-ai.review-integration.consent/v3`) se presenta íntegro al humano y se espera su respuesta — nunca decidas `granted`/`declined` en su nombre.
 
 ## Comandos de referencia
 

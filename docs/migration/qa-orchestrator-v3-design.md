@@ -326,12 +326,20 @@ No se creó ningún Merge Request de GitLab — el agente se detuvo y pidió aut
 
 ## Fase 3C — Integraciones avanzadas (después de 3B, explícitamente separada)
 
-Se separa deliberadamente de 3B para no bloquear el regreso de las skills funcionales esperando integraciones más grandes:
+Se separa deliberadamente de 3B para no bloquear el regreso de las skills funcionales esperando integraciones más grandes. Sub-fases (orden explícito del usuario, 2026-09-23): 3C.1 Engram+BookStack MCP, 3C.2 locator-hunting NIVEL 0/1 + Playwright MCP, 3C.3 QACodeReviewer/RDD real, 3C.4 G6 funcional completo, 3C.5 MR real vía GitLab MCP, 3C.6 smoke E2E final sobre un repo real. Seguimiento detallado tarea por tarea en `odd/tasks/qa-orchestrator-fase-3c.md` (mandato ODD); esta sección resume solo los cierres.
 
-- Integración real de RDD detrás de `QACodeReviewer`/`RDDAdapter` (hoy stub, 3A.11).
-- Playwright MCP real para NIVEL 1 de `qa-locator-hunting` (diferido en el baseline, Escenario 5b).
-- `qa-locator-hunting` NIVEL 0 contra un repo de automatización real (diferido en el baseline, Escenario 5a).
-- Creación real de MR en GitLab al cerrar el ciclo (diferido en el baseline, Escenario 7).
-- Checklist G6 funcional end-to-end (tsc/lint/Playwright reales, diferido en el baseline, Escenario 6).
+### 3C.1 — Engram + BookStack MCP (cerrado, 2026-09-23)
 
-No se implementa nada de las secciones 9 y de esta sección todavía — quedan como plan, pendientes de que se autorice empezar 3B.1.
+Corregido un bug real verificado en vivo: 5 skills (`qa-explore`, `qa-spec`, `qa-apply`, `qa-supervisor`, `qa-gate-policy.md`) llamaban una tool BookStack inexistente (`bookstack_bookstack_search`) en vez de la real `bookstack_search`. Rellenados los placeholders de página de `qa-gate-policy.md` con la página real verificada (BookStack ID `3239`). Documentado en `qa-doc-reference` el paso de resolución Libro/Capítulo (`bookstack_get_book`/`bookstack_get_chapter`, ya que `bookstack_get_page` solo devuelve IDs numéricos). Corregida la nota obsoleta de `qa-docs` sobre skills "que todavía no existen".
+
+**Hallazgo de arquitectura no anticipado**: ¿qué hace `qa-explore` cuando BookStack no documenta una funcionalidad *existente* y el código tampoco basta para conocer el comportamiento real de UI? Resuelto 100% a nivel de skill, cero cambios de Core (verificado leyendo `internal/qastage/state_machine.go`/`artifact.go` directamente): fallback opcional de captura Codegen dirigida por el humano, cerrado con `qa-finish --outcome interrupted` sobre un artefacto `scope.status:"blocked"` (primitivos ya existentes desde 3A.6), retomado en un `qa-begin` nuevo que extrae hechos "OBSERVED (Codegen)" al cuerpo libre de Engram — nunca al `findings[]` validado por el Core (clasificación sigue siendo `DOCUMENTED|MISSING|NOT_APPLICABLE`). Aditivo: no se tocaron los pasos 0-7 existentes de `qa-explore`.
+
+### 3C.2 — locator-hunting NIVEL 0/1 + Playwright MCP (parcial, 2026-09-23)
+
+NIVEL 0 (POM local) y NIVEL 2 (GitLab) re-verificados; NIVEL 2 ejercitado en vivo (`search_projects("erp-mf-seguridad")` → `SmartClic/erp-mf-seguridad`, cero drift contra el catálogo). Playwright MCP real (`@playwright/mcp`) conectado con scope local (no comiteado); verificado funcionando en un proceso `claude mcp list` aparte, pero esta sesión arrancó antes de agregarlo y no lo ve todavía (confirmado con `session_connectors_status`) — NIVEL 1 queda pendiente de una sesión nueva, más la autorización explícita de navegar a un entorno real de dev/staging que la propia skill exige.
+
+### 3C.3 — QACodeReviewer/RDD real (cerrado con cambio de diseño, 2026-09-23)
+
+**Incompatibilidad real encontrada y evidenciada** (no un simple detalle de "en qué paquete vive"): el diseño de 3A.11 asumía que `QACodeReviewer.Review(ctx, change) ([]ReviewFinding, error)` sería una llamada Go síncrona. El ciclo real de RDD, verificado usándolo dos veces en esta misma sesión, es un protocolo con estado (STATUS→START→consentimiento humano→capturas por lente vía revisores LLM→acknowledge) que no cabe en esa forma sin depender igual de un binario de agente externo instalado y autenticado (confirmado leyendo `internal/reviewerprovider`: sus adapters ya hacen `os/exec` sobre `claude`/`codex`/`opencode`/`pi`). Además, `internal/cli` ya importa `internal/qastage`, así que un adapter real ahí generaría un ciclo de imports.
+
+**Decisión del usuario**: retirar `QACodeReviewer`/`RDDAdapter` (código muerto — nada en producción lo llamaba) y mover la integración a nivel de skill: `qa-verify` invoca el ciclo real de RDD directamente para los ítems 3-4 del checklist G6, siguiendo el mismo contrato que ya sigue este orquestador (rutear solo desde `next_transition`, relay sin decidir del consentimiento, `acknowledge-approved` exactamente una vez). `internal/qastage/reviewer.go`/`reviewer_test.go` eliminados; `go build`/`go test ./internal/qastage/...` verdes tras el borrado (nada más los referenciaba). `skills/qa-verify` (+ mirror) y `skills/_shared/qa-gate-policy.md` actualizados con el flujo real.

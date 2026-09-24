@@ -101,9 +101,10 @@ Al declarar finalizada una implementación o validación, exige y ejecuta:
 7. Comparar el resultado contra la documentación consultada (BookStack).
 8. Entregar el comando de ejecución exacto y el resultado/evidencia
    obtenido (screenshots, traces, videos o salida de reporter de
-   Playwright). La integración con revisión automatizada de código
-   (`QACodeReviewer`/RDD) queda fuera de esta checklist funcional — ver
-   Fase 3C en `docs/migration/qa-orchestrator-v3-design.md`.
+   Playwright). La revisión automatizada de código/diff (lint, secretos) vive
+   fuera de esta checklist funcional — `qa-verify` invoca el ciclo real de
+   RDD directamente para eso, ver `skills/qa-verify/SKILL.md` y Fase 3C.3 en
+   `docs/migration/qa-orchestrator-v3-design.md`.
 
 ## Ledger QA (mecanismo técnico que hace cumplir G3/G5, no una regla de negocio nueva)
 

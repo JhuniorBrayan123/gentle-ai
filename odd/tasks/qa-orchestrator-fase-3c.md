@@ -37,25 +37,23 @@ Confirmado con evidencia real de código/MCP (no supuesto):
 |---|---|---|
 | 3C.1 | Sí | Ninguno — BookStack MCP y Engram ya conectados en este entorno |
 | 3C.2 | Parcial | NIVEL 0 (POM local) y NIVEL 2 (GitLab) listos; NIVEL 1 requiere Playwright MCP (no conectado) + autorización explícita de navegar a un entorno real |
-| 3C.3 | No | (a) `internal/cli` ya importa `internal/qastage` → un `RDDAdapter` real no puede vivir en `qastage` sin ciclo de imports; (b) generar hallazgos reales requiere un binario de agente externo instalado y autenticado (claude/codex/opencode/pi) — no es Go puro. Necesita decisión de arquitectura antes de TDD. |
+| 3C.3 | Sí — cerrado con cambio de diseño | Ninguno. `QACodeReviewer`/`RDDAdapter` (Go) retirado; `qa-verify` invoca el ciclo real de RDD directamente a nivel de skill. |
 | 3C.4 | Parcial | Los ítems 1,2,5,6,7,8 del checklist G6 ya son responsabilidad 100% de `qa-verify`; los ítems 3-4 (lint/secretos) dependen de 3C.3; el cierre completo también depende de 3C.6 (repo real) |
 | 3C.5 | Parcial | Adaptador/plumbing (interfaz + stub + tests contra un cliente GitLab falso) sí puede construirse ahora; la invocación real de `create_merge_request` exige autorización explícita del usuario en cada ocasión — nunca general |
 | 3C.6 | No | Depende de que el usuario indique qué repositorio real de automatización usar — decisión de producto, no técnica |
 
 Decisiones de producto/arquitectura pendientes (se preguntan cuando se llegue
 a esa sub-fase, no todas de una vez):
-- 3C.3: ¿`RDDAdapter` real vive en `internal/cli` (nuevo tipo, cableado en el
-  punto de `qa-verify`) o hace `shell out` al binario `gentle-ai` compilado
-  desde `internal/qastage`?
-- 3C.3: ¿`QACodeReviewer.Review(ctx, change)` sigue siendo una llamada
-  bloqueante única, o `qa-verify` debe correr él mismo el protocolo completo
-  STATUS→START→capture-result→acknowledge-approved?
 - 3C.5: ¿la autorización de MR real se vuelve un gate auditable en código
   (como `qa-approve`) o se queda como stop-and-ask conversacional (ya
   demostrado en 3B.8)?
 - 3C.6: ¿qué repositorio real de automatización se usa?
-- 3C.2: ¿se conecta Playwright MCP ahora, y se autoriza navegar a un
-  entorno real de dev/staging?
+- 3C.2: pendiente confirmar en sesión nueva que Playwright MCP conecta, y
+  autorizar navegar a un entorno real de dev/staging.
+
+Resueltas: 3C.3 (ver sección de esa sub-fase — retiro de `QACodeReviewer`/
+`RDDAdapter`, integración a nivel de skill); 3C.2 Playwright MCP ya
+conectado (pendiente solo sesión nueva + autorización de entorno).
 
 ## Tareas
 
@@ -133,16 +131,32 @@ gate-policy + doc-reference + docs stale note + fallback Codegen).
 - [x] No tratar GitLab/NIVEL 2 como sustituto de NIVEL 1 — las Hard Rules de
   la skill prohíben saltar niveles (confirmado, sin cambios necesarios).
 
-### 3C.3 — QACodeReviewer + RDDAdapter real
+### 3C.3 — QACodeReviewer + RDDAdapter real — CERRADO CON CAMBIO DE DISEÑO
 
-- [ ] Presentar al usuario la decisión de arquitectura (adapter en
-  `internal/cli` vs. subprocess) antes de escribir cualquier test.
-- [ ] Corregir el comentario obsoleto en `reviewer.go`/`reviewer_test.go`
-  ("Fase 3B" → debería decir 3C.3; y la referencia a
-  `gentle-ai review inspect-candidate` como entry point es incorrecta).
-- [ ] TDD (RED primero) una vez resuelta la decisión de arquitectura.
-- [ ] Cablear el `RDDAdapter` real como caller real de `qa-verify` (hoy no
-  existe ningún caller productivo).
+- [x] Presentada al usuario la incompatibilidad real (no solo "en qué
+  paquete vive"): el ciclo real de RDD es un protocolo con estado
+  (STATUS→START→consentimiento humano→capturas por lente→acknowledge),
+  verificado usándolo dos veces en esta sesión — no cabe en una llamada Go
+  síncrona sin depender igual de un agente externo instalado y autenticado
+  (`internal/reviewerprovider` ya hace `os/exec` sobre `claude`/`codex`/
+  `opencode`/`pi`). Además `internal/cli` ya importa `internal/qastage`
+  (ciclo de imports si el adapter viviera ahí).
+- [x] **Decisión del usuario**: retirar `QACodeReviewer`/`RDDAdapter`
+  (código muerto, nada en producción lo llamaba) y mover la integración a
+  nivel de skill — `qa-verify` invoca el ciclo real de RDD directamente.
+- [x] Eliminados `internal/qastage/reviewer.go` y `reviewer_test.go`.
+  `go build ./...`, `go vet ./...`, `go test ./internal/qastage/...` verdes
+  tras el borrado.
+- [x] `skills/qa-verify/SKILL.md` (+ mirror) reescrito: nueva sección
+  "Revisión de código real (RDD)" con el protocolo real (preflight STATUS,
+  relay de consentimiento sin decidir, capturas por lente, acknowledge
+  exactamente una vez, chequeo de `review mode status` primero). Checklist
+  G6 ítems 3-4 actualizados. Guardrails corregidos (ya no dicen "no invoques
+  RDD directamente" — ahora es exactamente lo que se pide).
+- [x] `skills/_shared/qa-gate-policy.md` actualizado (ya no menciona
+  `QACodeReviewer`).
+- [x] `docs/migration/qa-orchestrator-v3-design.md` sección Fase 3C
+  actualizada con el cierre real de 3C.1-3C.3.
 
 ### 3C.4 — G6 funcional completo / qa-verify E2E
 
