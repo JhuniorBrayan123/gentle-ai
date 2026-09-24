@@ -39,6 +39,15 @@ var additionalSkillLabels = map[model.SkillID]string{
 	model.SkillRDDDefectWorkflow:   "RDD Defect Workflow",
 	model.SkillSystemicIssueTriage: "Systemic Issue Triage",
 	model.SkillGentleAIBench:       "Gentle AI Bench",
+	model.SkillQASupervisor:        "QA Supervisor",
+	model.SkillQAExplore:           "QA Explore",
+	model.SkillQASpec:              "QA Spec",
+	model.SkillQAApply:             "QA Apply",
+	model.SkillQAVerify:            "QA Verify",
+	model.SkillQADocs:              "QA Docs",
+	model.SkillQALocatorHunting:    "QA Locator Hunting",
+	model.SkillQADocReference:      "QA Doc Reference",
+	model.SkillQADocAccess:         "QA Doc Access",
 }
 
 // SkillPickerOptions returns the action buttons shown after the skill checkboxes.
