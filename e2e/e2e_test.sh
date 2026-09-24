@@ -690,6 +690,17 @@ test_cc_skills_full() {
         assert_file_not_exists "$skills_dir/issue-creation/SKILL.md" "issue-creation NOT installed by default"
         assert_file_exists "$skills_dir/skill-registry/SKILL.md" "skill-registry SKILL.md"
 
+        # Verify the 9 qa-orchestrator-v3 skills exist
+        assert_file_exists "$skills_dir/qa-supervisor/SKILL.md" "qa-supervisor SKILL.md"
+        assert_file_exists "$skills_dir/qa-explore/SKILL.md" "qa-explore SKILL.md"
+        assert_file_exists "$skills_dir/qa-spec/SKILL.md" "qa-spec SKILL.md"
+        assert_file_exists "$skills_dir/qa-apply/SKILL.md" "qa-apply SKILL.md"
+        assert_file_exists "$skills_dir/qa-verify/SKILL.md" "qa-verify SKILL.md"
+        assert_file_exists "$skills_dir/qa-docs/SKILL.md" "qa-docs SKILL.md"
+        assert_file_exists "$skills_dir/qa-locator-hunting/SKILL.md" "qa-locator-hunting SKILL.md"
+        assert_file_exists "$skills_dir/qa-doc-reference/SKILL.md" "qa-doc-reference SKILL.md"
+        assert_file_exists "$skills_dir/qa-doc-access/SKILL.md" "qa-doc-access SKILL.md"
+
         # Real content check
         assert_file_size_min "$skills_dir/go-testing/SKILL.md" 200 "go-testing skill has real content"
         assert_file_size_min "$skills_dir/skill-creator/SKILL.md" 200 "skill-creator skill has real content"
@@ -719,6 +730,9 @@ test_cc_skills_ecosystem() {
         # Foundation skills present
         assert_file_exists "$skills_dir/go-testing/SKILL.md" "Foundation skills present"
         assert_file_exists "$skills_dir/skill-creator/SKILL.md" "skill-creator present"
+        # qa-orchestrator-v3 skills present
+        assert_file_exists "$skills_dir/qa-supervisor/SKILL.md" "qa-supervisor present"
+        assert_file_exists "$skills_dir/qa-docs/SKILL.md" "qa-docs present"
         assert_file_not_exists "$skills_dir/branch-pr/SKILL.md" "branch-pr NOT in ecosystem default"
         assert_file_not_exists "$skills_dir/issue-creation/SKILL.md" "issue-creation NOT in ecosystem default"
         # Stack-specific skills NOT present
@@ -962,6 +976,8 @@ test_oc_skills_full() {
         assert_file_not_exists "$skill_dir/sdd-init/SKILL.md" "sdd-init NOT installed by skills alone"
         assert_file_exists "$skill_dir/go-testing/SKILL.md" "go-testing skill"
         assert_file_exists "$skill_dir/skill-creator/SKILL.md" "skill-creator skill"
+        assert_file_exists "$skill_dir/qa-supervisor/SKILL.md" "qa-supervisor skill"
+        assert_file_exists "$skill_dir/qa-docs/SKILL.md" "qa-docs skill"
         assert_file_not_exists "$skill_dir/branch-pr/SKILL.md" "branch-pr NOT installed by default"
         assert_file_not_exists "$skill_dir/issue-creation/SKILL.md" "issue-creation NOT installed by default"
         assert_file_size_min "$skill_dir/go-testing/SKILL.md" 200 "go-testing skill has real content"
