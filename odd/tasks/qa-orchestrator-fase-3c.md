@@ -97,6 +97,14 @@ conectado (pendiente solo sesión nueva + autorización de entorno).
   pero con Engram+BookStack conectados de verdad, para confirmar que no
   queda ningún otro mismatch de prosa-vs-API — se puede diferir sin bloquear
   el cierre de 3C.1.
+- [x] **Corrección post-revisión RDD** (candidato `review-1d6ef9a33aa80aae`,
+  aprobado, hallazgo informativo no bloqueante): el fallback Codegen de
+  `qa-explore` insertaba su propia lista numerada 1-4 entre los pasos
+  principales 2 y 3, duplicando números de paso cerca uno del otro —
+  ambigüedad real para un agente siguiendo la skill secuencialmente.
+  Corregido: el fallback ahora es un `###` con sub-pasos con letra (a-d), sin
+  colisión con la numeración 0-7 del flujo principal. Aplicado en
+  `skills/qa-explore` + mirror.
 
 **Ruta/commits**: pendiente de commit inicial de 3C.1 (bookstack tool-name +
 gate-policy + doc-reference + docs stale note + fallback Codegen).
