@@ -43,15 +43,15 @@ var additionalSkillLabels = map[model.SkillID]string{
 	// implemented case; QA Doc Reference renders a BookStack PRD citation as
 	// a structured ficha; QA Doc Access is the BookStack MCP search/citation
 	// skill the other two delegate to.
-	model.SkillQASupervisor:        "QA Supervisor",
-	model.SkillQAExplore:           "QA Explore",
-	model.SkillQASpec:              "QA Spec",
-	model.SkillQAApply:             "QA Apply",
-	model.SkillQAVerify:            "QA Verify",
-	model.SkillQADocs:              "QA Docs",
-	model.SkillQALocatorHunting:    "QA Locator Hunting",
-	model.SkillQADocReference:      "QA Doc Reference",
-	model.SkillQADocAccess:         "QA Doc Access",
+	model.SkillQASupervisor:     "QA Supervisor",
+	model.SkillQAExplore:        "QA Explore",
+	model.SkillQASpec:           "QA Spec",
+	model.SkillQAApply:          "QA Apply",
+	model.SkillQAVerify:         "QA Verify",
+	model.SkillQADocs:           "QA Docs",
+	model.SkillQALocatorHunting: "QA Locator Hunting",
+	model.SkillQADocReference:   "QA Doc Reference",
+	model.SkillQADocAccess:      "QA Doc Access",
 }
 
 // SkillPickerOptions returns the action buttons shown after the skill checkboxes.
