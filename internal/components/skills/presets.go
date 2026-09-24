@@ -57,6 +57,7 @@ var selectableFoundationSkills = []model.SkillID{
 	model.SkillQALocatorHunting,
 	model.SkillQADocReference,
 	model.SkillQADocAccess,
+	model.SkillQAEvidence,
 }
 
 // foundationSkills are the non-SDD product skills installed by the

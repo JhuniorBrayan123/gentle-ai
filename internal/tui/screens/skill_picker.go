@@ -52,6 +52,7 @@ var additionalSkillLabels = map[model.SkillID]string{
 	model.SkillQALocatorHunting: "QA Locator Hunting",
 	model.SkillQADocReference:   "QA Doc Reference",
 	model.SkillQADocAccess:      "QA Doc Access",
+	model.SkillQAEvidence:       "QA Evidence",
 }
 
 // SkillPickerOptions returns the action buttons shown after the skill checkboxes.

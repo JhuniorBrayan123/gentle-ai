@@ -39,19 +39,24 @@ A diferencia de v2, esta skill **no reimplementa** verificaciones de código/dif
 
 ## Checklist funcional G6 (obligatoria, TODA)
 
-1. `npx tsc --noEmit` — tipos compilan.
-2. Ejecutar la prueba modificada/creada — pasa.
+Los ítems 1, 2, 5, 6, 7 y 8 se delegan a la herramienta standalone
+`qa-evidence` (ver `skills/qa-evidence/SKILL.md`) — invócala con el
+`{change}` actual para que el bundle de evidencia quede adjunto a esta
+etapa. No los reimplementes inline.
+
+1. `npx tsc --noEmit` — tipos compilan (vía `qa-evidence`).
+2. Ejecutar la prueba modificada/creada — pasa (vía `qa-evidence`).
 3. Lint del proyecto — vía el ciclo real de RDD de arriba (o "no aplicable" si RDD está deshabilitado).
 4. Credenciales/secretos en el diff — vía el ciclo real de RDD de arriba (o "no aplicable" si RDD está deshabilitado).
-5. Verificar que NO haya esperas fijas innecesarias.
-6. Verificar que el test siga Screenplay+POM (sin locators crudos en el archivo de test, actor/tasks/questions usados según el diseño del spec) — reutilizando lo existente cuando aplica, o con la estructura nueva creada según SOLID cuando el proyecto no tenía patrón previo.
-7. Comparar el resultado contra la documentación BookStack consultada.
-8. Entregar el comando de ejecución y el resultado obtenido.
+5. Verificar que NO haya esperas fijas innecesarias (vía `qa-evidence`).
+6. Screenplay+POM — criterio completo en `skills/qa-evidence/SKILL.md` (Ítem 6) (vía `qa-evidence`).
+7. Comparar el resultado contra la documentación BookStack consultada (vía `qa-evidence`).
+8. Entregar el comando de ejecución y el resultado obtenido (vía `qa-evidence`).
 
 ## Evidencia reproducible (G6)
 
-- Captura **screenshots**, **traces** (en fallo), **videos** o salida de **reporter** de Playwright.
-- Registra artefactos con rutas y comandos exactos de reproducción.
+Producida por `qa-evidence` (ítems 1,2,5,6,7,8 de arriba) — ver
+`skills/qa-evidence/SKILL.md`.
 
 ## Salida (obligatorio, cierre de la etapa)
 

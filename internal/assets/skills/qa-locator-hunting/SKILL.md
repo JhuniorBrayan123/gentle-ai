@@ -61,3 +61,6 @@ se pudo cazar con certeza, devolvé el reporte exacto de
 - `references/erp-mf-catalog.md` — catálogo `erp-mf-*` y reglas D1-D3.
 - `references/locator-fallback.md` — preguntas y reportes del fallback honesto.
 - Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
+- Contrato de herramienta standalone (uso sin `{change}` activo, nunca avanza
+  el ledger): sección "Contrato de herramientas QA standalone" del mismo
+  archivo.

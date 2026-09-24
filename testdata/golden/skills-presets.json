@@ -29,7 +29,8 @@
       "qa-docs",
       "qa-locator-hunting",
       "qa-doc-reference",
-      "qa-doc-access"
+      "qa-doc-access",
+      "qa-evidence"
     ]
   },
   {
@@ -62,7 +63,8 @@
       "qa-docs",
       "qa-locator-hunting",
       "qa-doc-reference",
-      "qa-doc-access"
+      "qa-doc-access",
+      "qa-evidence"
     ]
   },
   {

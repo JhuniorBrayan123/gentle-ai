@@ -15,3 +15,7 @@ metadata:
 4. NEVER self-decide a divergence; always defer to official docs or human judgment.
 
 Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
+
+Contrato de herramienta standalone (uso sin `{change}` activo, nunca avanza
+el ledger): sección "Contrato de herramientas QA standalone" del mismo
+archivo.
