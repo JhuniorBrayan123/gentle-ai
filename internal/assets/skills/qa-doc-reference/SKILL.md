@@ -90,3 +90,6 @@ Valores ilustrativos de un PRD de Punto de Venta (NO es una cita real):
 ## Comandos de referencia
 
 - Reglas G1-G6: lee `skills/_shared/qa-gate-policy.md` (fuente única in-repo).
+- Contrato de herramienta standalone (uso sin `{change}` activo, nunca avanza
+  el ledger): sección "Contrato de herramientas QA standalone" del mismo
+  archivo.

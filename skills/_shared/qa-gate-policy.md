@@ -126,6 +126,21 @@ Toda skill `qa-*` debe:
   usando el `artifact_revision` real que `qa-validate` devuelve como
   `--evidence-revision` — nunca un hash autodeclarado.
 
+## Contrato de herramientas QA standalone
+
+Aplica a `qa-locator-hunting`, `qa-doc-reference`, `qa-doc-access` y
+`qa-evidence`:
+
+- Puede ejecutarse sin un `{change}` activo.
+- No debe mutar el estado del flujo QA (ledger) salvo que quien la invoca la
+  adjunte explícitamente a un `{change}`.
+- Nunca avanza etapas (`qa-begin`/`qa-finish`) por sí misma — eso es
+  responsabilidad exclusiva de las 5 skills de etapa (`qa-explore`/`qa-spec`/
+  `qa-apply`/`qa-verify`/`qa-docs`).
+- Puede devolver evidencia/artefactos para que una etapa orquestada los
+  consuma después, si recibe contexto de `{change}` — ese contexto es
+  siempre opcional para su uso standalone.
+
 ## Uso de este archivo
 
 - Cada `SKILL.md` de la familia `qa-*` referencia este archivo por ruta

@@ -343,3 +343,40 @@ NIVEL 0 (POM local) y NIVEL 2 (GitLab) re-verificados; NIVEL 2 ejercitado en viv
 **Incompatibilidad real encontrada y evidenciada** (no un simple detalle de "en qué paquete vive"): el diseño de 3A.11 asumía que `QACodeReviewer.Review(ctx, change) ([]ReviewFinding, error)` sería una llamada Go síncrona. El ciclo real de RDD, verificado usándolo dos veces en esta misma sesión, es un protocolo con estado (STATUS→START→consentimiento humano→capturas por lente vía revisores LLM→acknowledge) que no cabe en esa forma sin depender igual de un binario de agente externo instalado y autenticado (confirmado leyendo `internal/reviewerprovider`: sus adapters ya hacen `os/exec` sobre `claude`/`codex`/`opencode`/`pi`). Además, `internal/cli` ya importa `internal/qastage`, así que un adapter real ahí generaría un ciclo de imports.
 
 **Decisión del usuario**: retirar `QACodeReviewer`/`RDDAdapter` (código muerto — nada en producción lo llamaba) y mover la integración a nivel de skill: `qa-verify` invoca el ciclo real de RDD directamente para los ítems 3-4 del checklist G6, siguiendo el mismo contrato que ya sigue este orquestador (rutear solo desde `next_transition`, relay sin decidir del consentimiento, `acknowledge-approved` exactamente una vez). `internal/qastage/reviewer.go`/`reviewer_test.go` eliminados; `go build`/`go test ./internal/qastage/...` verdes tras el borrado (nada más los referenciaba). `skills/qa-verify` (+ mirror) y `skills/_shared/qa-gate-policy.md` actualizados con el flujo real.
+
+### Transversal — Stages vs. herramientas QA standalone (2026-09-24)
+
+Distinción arquitectónica que ya existía en la práctica (confirmada leyendo
+las 9 skills `qa-*` una por una) y que esta sesión deja formalizada:
+
+- **A. Stage skills** (ligadas al ledger, parte de `QAStateMachine`):
+  `qa-explore`, `qa-spec`, `qa-apply`, `qa-verify`, `qa-docs`. Cada una exige
+  `gentle-ai qa-begin --change {change} --stage <nombre> ...` antes de hacer
+  cualquier otra cosa.
+- **B. Herramientas QA standalone** (sin estado, invocables fuera de un
+  `{change}` activo): `qa-locator-hunting`, `qa-doc-reference`,
+  `qa-doc-access`, y `qa-evidence` (nueva).
+
+`qa-evidence` se había evaluado y descartado para portar en 3B por falta de
+uso confirmado (ver la conclusión de la sección 3B.6, línea 289: "no se
+anticipa sin uso confirmado"). La decisión de esta sesión revierte ese
+descarte: `qa-evidence` pasa a implementarse como productora standalone del
+bundle de evidencia reproducible G6, acotada a los ítems 1, 2, 5, 6, 7 y 8
+del checklist (tsc, ejecución de la prueba, esperas fijas, Screenplay+POM,
+comparación contra BookStack, comando+resultado/capturas/traces/videos) —
+**nunca** los ítems 3-4 (lint/secretos), que se mantienen como responsabilidad
+de RDD real dentro de `qa-verify`, sin duplicar, según la decisión ya cerrada
+en 3C.3 arriba.
+
+En OpenCode, `/qa-supervisor` y las 4 herramientas standalone reciben
+archivos de comando `/qa-*` reales, replicando el mismo patrón que
+`internal/components/sdd/commands.go` ya usa para exponer `/sdd-*`. Las 5
+stage skills deliberadamente **no** reciben comandos standalone propios:
+siguen gateadas por el ledger, invocables solo a través del flujo que
+`qa-supervisor` enruta según `next_action`.
+
+Seguimiento detallado tarea por tarea (mandato ODD) en
+`odd/tasks/qa-orchestrator-fase-3c.md`, sección "Transversal — Distinción
+Stages vs. Herramientas QA standalone (qa-evidence, comandos `/qa-*` en
+OpenCode)" — esta sección se mantiene a nivel de resumen de decisión, como el
+resto de las subsecciones de Fase 3C.

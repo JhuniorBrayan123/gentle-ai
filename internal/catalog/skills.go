@@ -49,6 +49,9 @@ var mvpSkills = []Skill{
 	{ID: model.SkillQALocatorHunting, Name: "qa-locator-hunting", Category: "qa", Priority: "p0"},
 	{ID: model.SkillQADocReference, Name: "qa-doc-reference", Category: "qa", Priority: "p0"},
 	{ID: model.SkillQADocAccess, Name: "qa-doc-access", Category: "qa", Priority: "p0"},
+	{ID: model.SkillQAEvidence, Name: "qa-evidence", Category: "qa", Priority: "p0"},
+	// Standalone UI implementation skills
+	{ID: model.SkillSmartopsUI, Name: "smartops-ui", Category: "workflow", Priority: "p0"},
 }
 
 func MVPSkills() []Skill {

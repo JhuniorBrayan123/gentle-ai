@@ -200,6 +200,115 @@ gate-policy + doc-reference + docs stale note + fallback Codegen).
   `docs/migration/qa-orchestrator-v3-design.md`, siguiendo el patrón de
   3B.8.
 
+### Transversal — Distinción Stages vs. Herramientas QA standalone (qa-evidence, comandos `/qa-*` en OpenCode)
+
+Surgida en sesión (2026-09-24) a partir de una propuesta del usuario, no parte
+del scoping original de 3C.1-3C.6. Separa arquitectónicamente:
+
+- **A. Stages/executors del flujo orquestado** (`qa-explore`, `qa-spec`,
+  `qa-apply`, `qa-verify`, `qa-docs`): dependen de `QAStateMachine`, `{change}`
+  y `next_action`. Confirmado por lectura directa de los 5 `SKILL.md`.
+- **B. Herramientas QA independientes** (`qa-locator-hunting`,
+  `qa-doc-reference`, `qa-doc-access`, `qa-evidence` — nueva): invocables
+  fuera de un flujo activo y reutilizadas por las stages cuando corresponda.
+  Confirmado por lectura directa que las 3 primeras ya son standalone-safe
+  hoy (cero referencia a `{change}`/`QAStateMachine`/verbos de ledger); nunca
+  deben requerir `{change}` obligatorio ni avanzar el ledger por sí mismas.
+
+`qa-evidence` se evaluó y descartó en 3B por falta de uso confirmado (ver
+`docs/migration/qa-orchestrator-v3-design.md:289`). Decisión del usuario en
+esta sesión: **sí implementarla ahora**, con alcance acotado — productor del
+bundle de evidencia reproducible G6 (ítems 1,2,5,6,7,8: tsc, ejecución,
+esperas fijas, Screenplay+POM, comparación BookStack, comando+resultado/
+capturas/traces/videos), NUNCA los ítems 3-4 (lint/secretos, que siguen
+siendo RDD real dentro de `qa-verify`, sin duplicar — decisión ya cerrada en
+3C.3).
+
+- [x] Crear `skills/qa-evidence/SKILL.md` (+ mirror
+  `internal/assets/skills/qa-evidence/SKILL.md`): productor standalone del
+  bundle de evidencia G6 (ítems 1,2,5,6,7,8), invocable sin `{change}` o
+  reutilizado por `qa-verify` cuando lo tiene. Sesión 2026-09-24 (Block 2)
+  además: acortó `description` a 159 chars (el frontmatter lint de
+  `internal/assets` exige <=160 y el original de 223 lo rompía — hallazgo
+  nuevo, no reportado por el work-unit previo) y convirtió la lista
+  ordenada 1/2/5/6/7/8 de "Alcance" a bullets `- **Ítem N**` para que
+  CommonMark no la renumere 1-6 y desalinee la numeración real de G6.
+  Mirrors verificados byte-idénticos (`diff -q`).
+- [x] Registrar `SkillQAEvidence` en las 3 fuentes de verdad, mismo patrón
+  exacto que las 9 skills existentes: `internal/model/types.go` (const
+  block, tras `SkillQADocAccess`), `internal/components/skills/presets.go`
+  (`selectableFoundationSkills`), `internal/catalog/skills.go`
+  (`MVPSkills()`). Confirmado por lectura directa de los 3 archivos.
+- [x] Actualizar `skills/qa-verify/SKILL.md` (+ mirror): delegar los ítems
+  1,2,5,6,7,8 del checklist funcional G6 a `qa-evidence` en vez de
+  ejecutarlos inline; ítems 3-4 (RDD) sin cambios. Sesión 2026-09-24
+  (Block 2) además: el ítem 6 todavía repetía en prosa completa el criterio
+  Screenplay+POM que ya vive en `qa-evidence` — se recortó a un puntero de
+  una línea (`Screenplay+POM — criterio completo en
+  skills/qa-evidence/SKILL.md (Ítem 6)`), sin tocar `qa-gate-policy.md`.
+  Mirrors verificados byte-idénticos (`diff -q`).
+- [x] Añadir sección "Standalone QA Tool Contract" en
+  `skills/_shared/qa-gate-policy.md`, tras "Ledger QA" y antes de "Uso de
+  este archivo": may run without active change; must not mutate QA workflow
+  state unless explicitly attached to a change; must never advance stages;
+  may return evidence/artifacts for later consumption by orchestrated
+  stages. Referenciar desde los 4 `SKILL.md` de herramientas standalone
+  (`qa-locator-hunting`, `qa-doc-reference`, `qa-doc-access`, `qa-evidence`).
+  Confirmado presente como "Contrato de herramientas QA standalone"
+  (líneas 129-142).
+- [x] Documentar la distinción A/B en `docs/migration/qa-orchestrator-v3-design.md`,
+  nueva subsección tras el cierre de 3C.3 (línea 345). Confirmado presente:
+  "### Transversal — Stages vs. herramientas QA standalone (2026-09-24)".
+- [x] Go: replicar el patrón de `internal/components/sdd/commands.go` +
+  `SDDCommandsAssetDir` (`internal/assets/commands.go`) para exponer
+  comandos públicos `/qa-*` en OpenCode — SOLO para las 4 herramientas
+  standalone + `/qa-supervisor` como entrypoint del flujo completo. NUNCA
+  para `qa-explore/spec/apply/verify/docs` (son stages del state machine,
+  no comandos standalone). Sesión 2026-09-24 (Block 2): implementado como
+  `internal/components/skills/qa_commands.go`
+  (`InjectQACommands`/`QACommandPaths`), NO reutilizando
+  `internal/assets/opencode/commands/` — ese directorio lo barre
+  `sdd.Inject()` paso "2. Write slash commands" vía `fs.ReadDir` sin
+  gating de selección de skills (SDD se instala independiente de qué
+  skills QA se eligieron), lo que habría escrito los 5 `/qa-*` sin
+  respetar selección y roto el conteo exacto `len==13` de
+  `TestOpenCodeEmbeddedAssetLayout` (`internal/assets/assets_test.go`).
+  Los 5 `.md` reales viven en el directorio nuevo
+  `internal/assets/opencode/qa-commands/` en su lugar, con el mismo
+  contrato de lectura/escritura (`assets.Read` + `filemerge.WriteFileAtomic`)
+  que usa `sdd.Inject()`. Desviación deliberada del texto literal de esta
+  tarea y del diseño — documentada aquí y en el reporte de la sesión.
+- [x] Wiring en el pipeline real de instalación/sync (mismos call sites que
+  SDD: `internal/cli/run.go`, `internal/cli/sync.go`) para que estos
+  comandos QA se escriban igual que los de SDD, sin tocar el pipeline SDD
+  existente. Sesión 2026-09-24 (Block 2): `skills.InjectQACommands` llamado
+  junto a `skills.Inject` en ambos `case model.ComponentSkills:` (run.go y
+  sync.go); `skills.QACommandPaths` añadido a
+  `componentPathsWithWorkspaceScoped` (`case model.ComponentSkills:`, usado
+  por install/uninstall y por `sync.go` vía `syncComponentPathsWithWorkspace`)
+  y a `syncAdapterSkillBackupTargets` (snapshot de respaldo pre-sync), para
+  que uninstall/rollback no dejen huérfanos ni un backup sin cubrir.
+- [x] Tests para invocación standalone (comando `/qa-*` sin `{change}`
+  activo) — replicando el patrón de
+  `internal/components/sdd/commands_test.go`: nuevo
+  `internal/components/skills/qa_commands_test.go` con 5 tests
+  (`TestInjectQACommandsWritesStandaloneToolCommandsForOpenCode`,
+  `TestStageSkillsNeverGetStandaloneCommands`,
+  `TestInjectQACommandsSkipsClaudeCode`,
+  `TestInjectQACommandsSelectionGating`,
+  `TestQACommandPathsMatchesInjectQACommands`).
+  [ ] Pendiente genuino: no se agregó un test a nivel de contenido que
+  verifique la invocación desde el flujo orquestado (`qa-verify` delegando
+  a `qa-evidence` con `{change}` presente) — no existía antes de esta
+  sesión (confirmado por grep) y no estaba en el alcance RED/GREEN
+  explícito de esta tarea; queda fuera de este work-unit.
+- [x] Actualizar conteos de skills afectados por el 10º skill QA
+  (`e2e/e2e_test.sh`, `internal/tui/screens/skill_picker_test.go`,
+  `testdata/golden/skills-presets.json`, goldens de TUI) — mismo patrón que
+  la corrección de CI ya hecha para las 9 skills originales (PR #32).
+  Confirmado ya reflejado en los 3 archivos por lectura directa (trabajo
+  previo a esta sesión).
+
 ## Ruteo de delegación
 
 Exploración/mapeo inicial de 3C.1-3C.6: delegado vía Workflow (5 lentes en
