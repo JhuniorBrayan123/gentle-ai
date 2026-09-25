@@ -36,6 +36,13 @@ Carga esta skill cuando `qa-supervisor` te delegue implementar un cambio QA **ap
 6. **NO** agregues dependencias ni toques config global sin autorización.
 7. **NO** modifiques tests fuera del alcance del spec.
 8. **NO** guardes secretos, tokens ni credenciales en el código.
+9. **Comentarios**: el código debe ser autodocumentado — los nombres de
+   Actors/Tasks/Questions/Interactions ya expresan el qué. NUNCA agregues
+   comentarios que narren pasos ("Step 1: ...", "we'll rely on...", "for
+   now...") ni comentarios que solo repitan en prosa lo que la línea de
+   código ya dice. Un comentario se justifica únicamente para explicar un
+   porqué no obvio (una restricción real, un workaround, un comportamiento
+   de la UI que el código no puede expresar por sí solo).
 
 ## Validación previa a declarar terminado
 
@@ -53,6 +60,7 @@ Carga esta skill cuando `qa-supervisor` te delegue implementar un cambio QA **ap
 ## Guardrails
 
 - Implementas solo el spec aprobado; si descubres un requisito nuevo, márcalo como pendiente de aprobación y NO lo implementes (G3/G5).
+- Si el spec aprobado exige una aserción/validación que no sabes cómo implementar (falta un target, una Question, o un dato del proyecto), **DETENTE y repórtalo como bloqueado pendiente de aclaración** (G3/G4) — nunca la sustituyas por una aserción trivial, un comentario tipo "for now" o una aserción duplicada de otra ya existente. Abandonar en silencio una validación que el spec exige es tan grave como agregar alcance no aprobado.
 - No inventes ni asumas un `artifact_revision` — es siempre el que devuelve `qa-validate`.
 - Si el spec aprobado referencia evidencia de Codegen ("OBSERVED (Codegen)" de la exploración), implementa exactamente lo que `qa-spec` diseñó a partir de ella — nunca copies selectores o código crudo de Codegen directamente al archivo de test final.
 
