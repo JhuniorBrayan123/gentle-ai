@@ -198,3 +198,80 @@ assertions. RED must be observed before implementation, then GREEN, then refacto
 ## Outstanding (not fixed, out of scope for this feature — flagged for a separate decision)
 - Uninstall doesn't remove standalone OpenCode command files (`opencode/commands/*.md`) for any
   tool in this category (qa-* and now smartops-ui alike). Pre-existing gap, not introduced here.
+  Registered as a separate task: `odd/tasks/fix-uninstall-rollback-opencode-commands.md`
+  (`fix(lifecycle): track standalone OpenCode commands in uninstall/rollback`), not implemented.
+
+## RDD review + commit (closing this feature)
+- 2026-09-24: Branched off to `feat/smartops-ui-skill` (from `qa-orchestrator-v3`), preserving all
+  17 uncommitted paths. RDD is on (global). Ran a scoped native review (contract v2) covering
+  exactly the 17 changed paths of this feature (6 selected as `intended_untracked`, matching the
+  smartops-ui block exactly — nothing else was in the diff to scope out).
+  - Consent: risk tier `high` (17 files, 655 changed lines; risk_evidence: shell-process signals in
+    `e2e/e2e_test.sh`). Consent was NOT assumed from the user's general "run RDD" instruction —
+    presented losslessly via AskUserQuestion; user answered "Sí, revisar este cambio" (granted).
+  - Ran all 4 lenses (review-risk, review-resilience, review-readability, review-reliability)
+    concurrently via `review capture-result`, `--agent claude-code`, no `--input` (in-process
+    native capture). **Note on execution environment**: ran in an isolated fake home (scratchpad,
+    `USERPROFILE`/`HOME`/`XDG_*` overrides) to avoid any real-environment side effect, same lesson
+    as T9. The `claude` reviewer subprocess needed real credentials to authenticate — copied
+    `~/.claude/.credentials.json` and `~/.claude.json` (read-only copies, originals untouched) into
+    the fake home for the duration of the review, deleted immediately after `acknowledge-approved`
+    succeeded. `managed_assets_outdated` stop was resolved by running the returned `sync` command,
+    also inside the isolated fake home only.
+  - Outcome: **approved**, 8 advisory findings, all non-blocking/informational (none opened a
+    correction). Notable ones (kept as evidence for the follow-up task, not fixed here):
+    - R4-uninstall-command-leak / R3-002 (resilience/reliability): confirms the uninstall gap this
+      task's own T9 observed — `commands/smartops-ui.md` isn't removed by uninstall, same as the
+      pre-existing qa-* gap.
+    - R1-001 (risk): flags the T9 side-effect incident narrative itself as evidence of a real,
+      unaddressed Windows `USERPROFILE`/`$HOME` mismatch risk in `e2e_test.sh` for future
+      contributors — pre-existing, not introduced by this candidate.
+    - R2-001/002/003 (readability): duplicated gating logic between `InjectSmartopsUICommands`/
+      `SmartopsUICommandPaths`, a doc comment deferring its rationale to `qa_commands.go` (outside
+      this diff), and a label capitalization mismatch ("Smartops UI" vs "SmartOps UI" in
+      `skill_picker.go:56`) — left as-is per user's explicit "don't implement anything else" scope;
+      not fixed in this commit.
+  - Acknowledged exactly once (`review acknowledge-approved`), authority burned
+    (`consumed_revision: sha256:868882ad2...`).
+  - Committed on `feat/smartops-ui-skill`: `ad129342` — `feat(skills): add SmartOps UI Figma
+    implementation skill` (17 files, +643/-16).
+- Not pushed, no PR opened — out of scope for this request.
+
+## Real deployment + unrelated infra fixes (post-commit)
+- 2026-09-25: Real (non-isolated) `gentle-ai sync --agents opencode,claude-code,antigravity,vscode-copilot
+  --strict-tdd` run, confirmed with user beforehand. Deployed `smartops-ui` to all 4 real agents;
+  verified afterward: `state.json` binary version = `ad12934296f6` (this commit), QA skills
+  unaffected (10 qa-*, 31 total dirs).
+- Unrelated fixes done at the user's request, not part of this feature's scope: installed official
+  `figma@claude-plugins-official` Claude Code plugin (14 Figma skills, own `figma` MCP server,
+  distinct from the project-level `figma-dev-mode` MCP which still needs the Figma desktop app's
+  Dev Mode running locally); repaired the `engram@engram` Claude Code plugin (stale 0.1.0 cache had
+  no `bin/`, updated to 0.1.3 which no longer bundles a binary at all — root cause was the real
+  `engram.exe` v2.2.0 setup script (`engram setup claude-code`) requiring `jq`, which was missing;
+  installed `jq` via winget (choco failed, needs admin this machine doesn't have elevated), then
+  `engram setup claude-code` succeeded and rewrote `~/.claude.json`'s `engram` MCP entry with the
+  correct absolute binary path). Requires a Claude Code restart to take effect — not yet confirmed
+  reconnected as of this note.
+
+## First real benchmark (user-run, independently verified)
+- 2026-09-25: User ran `/smartops-ui` for real against `reportes-mock-api\reportes`, Figma frame
+  `node-id=14-45` ("Resumen"). Not run by this session — I only verified the result afterward, not
+  the process (no visibility into that session's actual tool-call count, MCP calls, or context
+  usage — the full benchmark metrics table from the protocol couldn't be completed for that reason).
+  - Scope produced: 106 files across two work sessions (2026-09-24 20:00 and 2026-09-25 00:00) —
+    the `cmp-resumen` module, the `cmp-a-quien-contactar` module, and a shared component library
+    (`cmp-app-shell`, `cmp-kpi-card`, `cmp-page-header`, `cmp-lista-pie`, `cmp-tarjeta-grafico`,
+    `cmp-estado-crm-badge`, `cmp-estado-region`). Wider than "one screen" but justified: Resumen's
+    own cards navigate to the other modules (`drilldown-destino.constant.ts` present).
+  - Independently verified by me (not just the user's screenshot): `npm run build`
+    (`vue-tsc -b && vite build`) passed clean (one non-blocking chunk-size warning only); spot-
+    checked 6 leaf components and confirmed real SmartOps UI usage (`v-button`, `v-table`,
+    `v-badge`, `v-paginator`, `v-skeleton`, `v-avatar`, `v-sidebar`, `v-icon`, `v-text`) — not
+    reinvented HTML; no narrative comments in the generated `.ts` files.
+  - `reportes-mock-api\reportes` is still not a git repo, so no diff/history evidence beyond file
+    mtimes and the build/grep checks above.
+
+**Engram mirror status**: pending — `plugin:engram:engram` MCP server disconnected for this whole
+session (stale plugin cache, fixed above but requires a Claude Code restart neither confirmed nor
+possible from this non-interactive session). This file is the durable record until Engram
+reconnects and this summary can be mirrored to `odd/smartops-ui-skill-mvp/summary`.
