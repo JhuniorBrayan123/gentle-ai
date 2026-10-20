@@ -261,9 +261,21 @@ func managedAgentBackupPaths(homeDir string, adapter agents.Adapter, diagnostics
 	}
 
 	if adapter.SupportsSkills() {
-		add(managedSkillBackupPaths(homeDir, adapter, diagnostics)...)
+		skillDir := adapter.SkillsDir(homeDir)
+		for _, path := range managedSkillBackupPaths(homeDir, adapter, diagnostics) {
+			// The SDD-owned shared references belong to the retired-SDD
+			// inventory, which enters the snapshot only when present: a path
+			// recorded as absent would be deleted by the restore, removing a
+			// file the user created after the upgrade.
+			if isSDDOwnedSharedReference(skillDir, path) {
+				if _, err := os.Lstat(path); err != nil {
+					continue
+				}
+			}
+			add(path)
+		}
 		// The upgraded binary's sync retires SDD skills (#5157).
-		add(legacyassets.PresentRetiredSDDAssetPaths(adapter.Agent(), legacyassets.SDDAssetDirs{Skills: adapter.SkillsDir(homeDir)})...)
+		add(legacyassets.PresentRetiredSDDAssetPaths(adapter.Agent(), legacyassets.SDDAssetDirs{Skills: skillDir})...)
 	}
 
 	// It also retires Codex's SDD profiles and the SDD block of its lowercase
@@ -336,6 +348,19 @@ func presentPaths(paths []string) []string {
 	return present
 }
 
+// isSDDOwnedSharedReference reports whether path names one of the shared
+// references the SDD component owns inside the runtime's skills directory.
+func isSDDOwnedSharedReference(skillDir, path string) bool {
+	if skillDir == "" {
+		return false
+	}
+	sharedDir := filepath.Join(skillDir, "_shared")
+	if filepath.Dir(filepath.Clean(path)) != filepath.Clean(sharedDir) {
+		return false
+	}
+	return slices.Contains(skills.SDDOwnedSharedReferences(), filepath.Base(path))
+}
+
 func isRealDir(path string) bool {
 	info, err := os.Lstat(path)
 	return err == nil && info.IsDir()
@@ -373,17 +398,7 @@ func managedSkillBackupPaths(homeDir string, adapter agents.Adapter, diagnostics
 		writeBackupDiagnostic(diagnostics, "backup: skipping embedded path %s: %v", assets.SharedSkillDir, sharedErr)
 	}
 	for _, relPath := range sharedFiles {
-		path := filepath.Join(skillDir, "_shared", filepath.FromSlash(relPath))
-		if slices.Contains(skills.SDDOwnedSharedReferences(), relPath) {
-			// The SDD-owned shared references belong to the retired-SDD
-			// inventory, which enters the snapshot only when present: a path
-			// recorded as absent would be deleted by the restore, removing a
-			// file the user created after the upgrade.
-			if _, err := os.Lstat(path); err != nil {
-				continue
-			}
-		}
-		paths = append(paths, path)
+		paths = append(paths, filepath.Join(skillDir, "_shared", filepath.FromSlash(relPath)))
 	}
 
 	return paths
