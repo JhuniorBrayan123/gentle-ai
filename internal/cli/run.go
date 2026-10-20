@@ -962,11 +962,16 @@ func (r *installRuntime) stagePlan() pipeline.StagePlan {
 			apply = append(apply, nativeReviewAgentStep{id: "agent:native-review:" + string(agent), agent: agent, homeDir: r.homeDir, workspaceDir: r.workspaceDir, scope: r.scope, selection: r.selection, state: r.state})
 		}
 	}
-	apply = append(apply, retiredSDDAssetStepList(retiredSDDAssetSteps("agent:retire-sdd-assets:", r.homeDir, r.workspaceDir, r.scope, r.resolved.Agents, nil, r.state))...)
-	// After the native installer: it rewrites a Gentle-owned v3 Kimi
-	// gentleman.yaml, so the SDD subagents it declared can be retired now.
-	apply = append(apply, retiredSDDAgentSteps("agent:retire-sdd:", r.homeDir, r.scope, r.resolved.Agents, nil, r.state)...)
-	apply = append(apply, retiredOpenCodeSDDSettingsSteps("agent:retire-sdd-settings:", r.homeDir, r.workspaceDir, r.scope, r.resolved.Agents, nil, r.state)...)
+	// The SDD retirement only runs when the selection does not keep the SDD
+	// layer. A selection that carries SDD installs it, and retiring its assets
+	// right afterwards would delete what the user asked for.
+	if !r.selection.RetainsSDD() {
+		apply = append(apply, retiredSDDAssetStepList(retiredSDDAssetSteps("agent:retire-sdd-assets:", r.homeDir, r.workspaceDir, r.scope, r.resolved.Agents, nil, r.state))...)
+		// After the native installer: it rewrites a Gentle-owned v3 Kimi
+		// gentleman.yaml, so the SDD subagents it declared can be retired now.
+		apply = append(apply, retiredSDDAgentSteps("agent:retire-sdd:", r.homeDir, r.scope, r.resolved.Agents, nil, r.state)...)
+		apply = append(apply, retiredOpenCodeSDDSettingsSteps("agent:retire-sdd-settings:", r.homeDir, r.workspaceDir, r.scope, r.resolved.Agents, nil, r.state)...)
+	}
 
 	// Routing guidance is scheduled per agent and outside the component loop:
 	// an agent that cannot choose between direct and delegated work is unusable,

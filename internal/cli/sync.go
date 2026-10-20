@@ -596,12 +596,17 @@ func (r *syncRuntime) stagePlan() pipeline.StagePlan {
 			apply = append(apply, nativeReviewAgentStep{id: "sync:agent:native-review:" + string(agent), agent: agent, homeDir: r.homeDir, workspaceDir: r.workspaceDir, scope: r.scope, selection: r.selection, changedFiles: &r.changedFiles, state: r.state})
 		}
 	}
-	apply = append(apply, retiredSDDAssetStepList(retiredSDDAssetSteps("sync:agent:retire-sdd-assets:", r.homeDir, r.workspaceDir, r.scope, r.agentIDs, &r.changedFiles, r.state))...)
-	// After the native installer: it rewrites a Gentle-owned v3 Kimi
-	// gentleman.yaml, so the SDD subagents it declared can be retired now.
-	apply = append(apply, retiredSDDAgentSteps("sync:agent:retire-sdd:", r.homeDir, r.scope, r.agentIDs, &r.changedFiles, r.state)...)
-	// Before routing guidance, which rewrites the same settings documents.
-	apply = append(apply, retiredOpenCodeSDDSettingsSteps("sync:agent:retire-sdd-settings:", r.homeDir, r.workspaceDir, r.scope, r.agentIDs, &r.changedFiles, r.state)...)
+	// The SDD retirement only runs when the selection does not keep the SDD
+	// layer. A selection that carries SDD keeps it, and retiring its assets
+	// would delete what the user asked for.
+	if !r.selection.RetainsSDD() {
+		apply = append(apply, retiredSDDAssetStepList(retiredSDDAssetSteps("sync:agent:retire-sdd-assets:", r.homeDir, r.workspaceDir, r.scope, r.agentIDs, &r.changedFiles, r.state))...)
+		// After the native installer: it rewrites a Gentle-owned v3 Kimi
+		// gentleman.yaml, so the SDD subagents it declared can be retired now.
+		apply = append(apply, retiredSDDAgentSteps("sync:agent:retire-sdd:", r.homeDir, r.scope, r.agentIDs, &r.changedFiles, r.state)...)
+		// Before routing guidance, which rewrites the same settings documents.
+		apply = append(apply, retiredOpenCodeSDDSettingsSteps("sync:agent:retire-sdd-settings:", r.homeDir, r.workspaceDir, r.scope, r.agentIDs, &r.changedFiles, r.state)...)
+	}
 
 	// Routing guidance is refreshed per agent and outside the component loop, for
 	// the same reason install schedules it there: a persisted selection without
