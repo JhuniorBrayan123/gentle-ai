@@ -32,7 +32,7 @@ func TestInjectWritesSupportFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	shared = slices.DeleteFunc(shared, func(name string) bool { return internalSharedSources[name] })
+	shared = slices.DeleteFunc(shared, func(name string) bool { return internalSharedSources[name] || sddOwnedSharedSources[name] })
 	for _, tt := range []struct {
 		agent        model.AgentID
 		wantCommands []string
@@ -71,6 +71,13 @@ func TestInjectWritesSupportFiles(t *testing.T) {
 			}
 			if _, err := os.Stat(filepath.Join(adapter.SkillsDir(home), sharedDirName, "odd-orchestrator-sections.md")); !os.IsNotExist(err) {
 				t.Fatalf("internal odd-orchestrator-sections.md installed: %v", err)
+			}
+			// The SDD-owned shared references belong to the SDD component, so
+			// a selection without SDD never writes them.
+			for name := range sddOwnedSharedSources {
+				if _, err := os.Stat(filepath.Join(adapter.SkillsDir(home), sharedDirName, name)); !os.IsNotExist(err) {
+					t.Fatalf("SDD-owned shared reference %s installed by the skills component: %v", name, err)
+				}
 			}
 			if _, err := os.Stat(marker); !os.IsNotExist(err) {
 				t.Fatalf("legacy _shared/SKILL.md marker not removed: %v", err)

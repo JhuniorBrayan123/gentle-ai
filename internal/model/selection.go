@@ -77,8 +77,20 @@ func (s *Selection) EnsureComponent(component ComponentID) {
 // componentSyncStep that writes model assignments into
 // ~/.config/opencode/opencode.json then never runs, yet the sync still
 // reports success.
+//
+// In this fork the SDD layer is retained, so an explicit request for SDD work
+// selects the SDD component and its assets are installed instead of retired.
 func CarriesSDDWork(modelAssignments map[string]ModelAssignment) bool {
 	return modelAssignments != nil
+}
+
+// RetainsSDD reports whether the selection keeps the fork's SDD layer.
+//
+// The SDD layer is conditional: a selection that carries the SDD component
+// installs it and keeps its assets, and a selection without it leaves the
+// upstream ODD-only behaviour untouched, where the SDD assets are retired.
+func (s Selection) RetainsSDD() bool {
+	return s.HasComponent(ComponentSDD)
 }
 
 // SyncOverrides holds optional overrides applied to the sync selection.

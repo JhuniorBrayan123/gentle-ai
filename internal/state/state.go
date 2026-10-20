@@ -254,16 +254,17 @@ func (s InstallState) RestoreSelection(selection *model.Selection) {
 	selection.Preset, selection.SDDMode, selection.StrictTDD = s.Preset, "", false
 }
 
-// activeComponents preserves the persisted legacy value for decoding and
-// historical restore while keeping it out of current install/sync selections.
+// activeComponents returns the component list a selection persists and
+// restores.
+//
+// Upstream v4 retired the SDD component and dropped it from the persisted
+// selection, so a legacy SDD install could never be restored. This fork keeps
+// the SDD layer, so a user-selected SDD must survive persistence and restore:
+// the SDD component is installed and its assets are kept whenever the
+// selection carries it, and only a selection without SDD leaves the SDD
+// assets to the retirement path.
 func activeComponents(components []model.ComponentID) []model.ComponentID {
-	var active []model.ComponentID
-	for _, component := range components {
-		if component != model.ComponentSDD {
-			active = append(active, component)
-		}
-	}
-	return active
+	return append([]model.ComponentID(nil), components...)
 }
 
 // MergeAgents returns a new InstallState that combines existing with the

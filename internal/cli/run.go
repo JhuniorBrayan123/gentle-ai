@@ -42,6 +42,7 @@ import (
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/permissions"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/persona"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/reviewassets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/sdd"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/skills"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/telemetryruntime"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/theme"
@@ -88,7 +89,10 @@ var (
 	installCommunityToolWithHome = communitytool.InstallWithHome
 	injectInstallPersona         = defaultInjectInstallPersona
 	injectSyncPersona            = defaultInjectSyncPersona
-	pathEnvEntries               = func(profile system.PlatformProfile) []string {
+	// injectSDD is the SDD layer installer. It is a package-level var so
+	// tests can replace it without touching the real injector.
+	injectSDD      = sdd.Inject
+	pathEnvEntries = func(profile system.PlatformProfile) []string {
 		return splitPathForOS(os.Getenv("PATH"), profile.OS)
 	}
 	addUserPath          = system.AddToUserPath
@@ -938,9 +942,6 @@ func (r *installRuntime) stagePlan() pipeline.StagePlan {
 	}
 
 	for _, component := range r.resolved.OrderedComponents {
-		if component == model.ComponentSDD {
-			continue
-		}
 		step := componentApplyStep{
 			id:           "component:" + string(component),
 			component:    component,
@@ -3341,7 +3342,31 @@ func (s componentApplyStep) Run() error {
 		}
 		return nil
 	case model.ComponentSDD:
-		// Legacy persisted selections are readable, but their retired assets are not reinstalled.
+		// The fork keeps the SDD layer: the component installs the SDD
+		// orchestrator, its skills, its slash commands and its shared
+		// convention files whenever the selection carries it.
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			opts := sdd.InjectOptions{
+				OpenCodeModelAssignments:    s.selection.ModelAssignments,
+				OpenCodeSettingsPath:        effectiveOpenCodeSettingsPath(s.homeDir, s.workspaceDir, s.scope, adapter),
+				ClaudeModelAssignments:      s.selection.ClaudeModelAssignments,
+				ClaudePhaseAssignments:      s.selection.ClaudePhaseAssignments,
+				KiroModelAssignments:        s.selection.KiroModelAssignments,
+				CodexModelAssignments:       s.selection.CodexModelAssignments,
+				CodexCarrilModelAssignments: s.selection.CodexCarrilModelAssignments,
+				CodexPhaseModelAssignments:  s.selection.CodexPhaseModelAssignments,
+				StrictTDD:                   s.selection.StrictTDD,
+				CodeGraphGuidanceMarkdown:   codeGraphGuidanceMarkdownForSDD(s.homeDir, s.selection.CommunityTools),
+			}
+			if s.scope == ScopeWorkspace {
+				opts.WorkspaceDir = s.workspaceDir
+			}
+			opts.IncludeOpenCodeBackgroundPolicy = s.backgroundPolicy && adapter.Agent() == model.AgentOpenCode
+			if _, err := injectSDD(targetDir, adapter, s.selection.SDDMode, opts); err != nil {
+				return fmt.Errorf("inject sdd for %q: %w", adapter.Agent(), err)
+			}
+		}
 		return nil
 	case model.ComponentSkills:
 		skillIDs := selectedSkillIDs(s.selection)
@@ -3815,9 +3840,6 @@ func installBackupTargets(homeDir, workspaceDir string, scope InstallScope, sele
 	}
 
 	for _, component := range resolved.OrderedComponents {
-		if component == model.ComponentSDD {
-			continue
-		}
 		for _, path := range componentPathsWithWorkspaceScoped(homeDir, workspaceDir, scope, selection, adapters, component) {
 			paths[path] = struct{}{}
 		}
@@ -4145,6 +4167,17 @@ func componentPathsWithWorkspaceScoped(homeDir, workspaceDir string, scope Insta
 				}
 			}
 			paths = append(paths, sddSubAgentPaths(targetDir, adapter)...)
+			if adapter.SupportsSkills() {
+				skillDir := adapter.SkillsDir(targetDir)
+				if skillDir != "" {
+					// The SDD component installs the SDD skills and the shared
+					// convention files it owns, so both are declared for the
+					// snapshot and the post-apply verification.
+					if managed, err := sdd.ManagedSkillPaths(skillDir); err == nil {
+						paths = append(paths, managed...)
+					}
+				}
+			}
 			if adapter.Agent() == model.AgentCodex {
 				// SDD installs the Codex skill-registry hook outside the skills
 				// directory, so it must share the component's backup contract.
@@ -4387,6 +4420,15 @@ func shouldInjectNativeReviewCodeGraphGuidance(homeDir string, selected []model.
 		}
 	}
 	return false
+}
+
+// codeGraphGuidanceMarkdownForSDD returns the shared CodeGraph search-order
+// guidance the SDD phase prompts carry when the community tool is selected.
+func codeGraphGuidanceMarkdownForSDD(homeDir string, selected []model.CommunityToolID) string {
+	if !shouldInjectNativeReviewCodeGraphGuidance(homeDir, selected) {
+		return ""
+	}
+	return communitytool.CodeGraphGuidanceMarkdown()
 }
 
 func communityToolIDsToStrings(tools []model.CommunityToolID) []string {

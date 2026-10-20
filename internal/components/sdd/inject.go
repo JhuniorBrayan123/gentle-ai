@@ -238,6 +238,33 @@ var compatibilitySDDSkillIDs = []model.SkillID{
 	"sdd-onboard", "judgment-day",
 }
 
+// SDDSharedConventionFiles returns the shared convention files the SDD
+// component owns and installs.
+//
+// The skills component deliberately leaves them alone, so an install that does
+// not select SDD never writes them and the SDD retirement can remove the ones
+// an earlier SDD install left behind. The SDD component installs them whenever
+// the selection carries SDD.
+func SDDSharedConventionFiles() []string {
+	return []string{"openspec-convention.md", "sdd-phase-common.md", "sdd-status-contract.md"}
+}
+
+// ManagedSkillPaths returns every file the SDD component writes under
+// skillDir: the shared convention files it owns and the SDD skill documents.
+// The paths are the ones the injector writes, so install and sync can
+// snapshot and verify them.
+func ManagedSkillPaths(skillDir string) ([]string, error) {
+	paths := make([]string, 0, len(SDDSharedConventionFiles())+len(compatibilitySDDSkillIDs))
+	for _, name := range SDDSharedConventionFiles() {
+		paths = append(paths, filepath.Join(skillDir, "_shared", name))
+	}
+	skillPaths, err := skills.DirectoryPaths(skillDir, compatibilitySDDSkillIDs, "capable")
+	if err != nil {
+		return nil, fmt.Errorf("enumerate SDD skills: %w", err)
+	}
+	return append(paths, skillPaths...), nil
+}
+
 // SkillDirectoryPaths returns every file that InjectSkillDirectoryForAgent may write or
 // remove. The legacy marker remains a transaction target so a failed refresh can
 // restore it from the compatibility backup.

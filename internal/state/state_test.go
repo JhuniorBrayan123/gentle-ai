@@ -236,7 +236,13 @@ func TestCommunityToolsRoundTrip(t *testing.T) {
 	}
 }
 
-func TestLegacySDDDecodesButNeverRestoresActiveSelection(t *testing.T) {
+// TestLegacySDDDecodesAndRestoresActiveSelection pins the fork's conditional
+// SDD contract. Upstream v4 retired the SDD component and dropped it from the
+// persisted selection, so a legacy SDD install could never be restored. This
+// fork keeps the SDD layer: a persisted SDD component is restored and a new
+// selection that carries SDD persists it, while the retired SDD mode and the
+// strict-TDD flag stay retired.
+func TestLegacySDDDecodesAndRestoresActiveSelection(t *testing.T) {
 	var legacy InstallState
 	if err := json.Unmarshal([]byte(`{"selection_configured":true,"components":["sdd","engram"],"sdd_mode":"multi","strict_tdd":true}`), &legacy); err != nil {
 		t.Fatal(err)
@@ -246,13 +252,13 @@ func TestLegacySDDDecodesButNeverRestoresActiveSelection(t *testing.T) {
 	}
 	selection := model.Selection{}
 	legacy.RestoreSelection(&selection)
-	if selection.HasComponent(model.ComponentSDD) || selection.SDDMode != "" || !selection.HasComponent(model.ComponentEngram) || selection.StrictTDD {
-		t.Fatalf("active selection restored retired mode: %+v", selection)
+	if !selection.HasComponent(model.ComponentSDD) || selection.SDDMode != "" || !selection.HasComponent(model.ComponentEngram) || selection.StrictTDD {
+		t.Fatalf("active selection did not restore the selected SDD component: %+v", selection)
 	}
 	var next InstallState
 	next.SetSelection(model.Selection{Components: []model.ComponentID{model.ComponentEngram, model.ComponentSDD}, SDDMode: model.SDDModeMulti, StrictTDD: true})
-	if slices.Contains(next.Components, model.ComponentSDD) || next.SDDMode != "" || next.StrictTDD {
-		t.Fatalf("new state persisted retired mode: %+v", next)
+	if !slices.Contains(next.Components, model.ComponentSDD) || next.SDDMode != "" || next.StrictTDD {
+		t.Fatalf("new state did not persist the selected SDD component: %+v", next)
 	}
 }
 

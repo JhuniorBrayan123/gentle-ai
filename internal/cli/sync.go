@@ -32,6 +32,7 @@ import (
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/permissions"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/persona"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/reviewassets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/sdd"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/skills"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/telemetryruntime"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/components/theme"
@@ -701,9 +702,6 @@ func syncBackupTargetsScoped(homeDir, workspaceDir string, scope InstallScope, s
 	workspace := scope == ScopeWorkspace
 	paths := map[string]struct{}{}
 	for _, component := range selection.Components {
-		if component == model.ComponentSDD {
-			continue
-		}
 		if workspace && workspaceGlobalOnlyComponent(component) {
 			continue
 		}
@@ -1521,7 +1519,33 @@ func (s componentSyncStep) Run() error {
 		return nil
 
 	case model.ComponentSDD:
-		// Preserve legacy state parsing without resurrecting retired SDD assets.
+		// The fork keeps the SDD layer: the component refreshes the SDD
+		// orchestrator, its skills, its slash commands and its shared
+		// convention files whenever the selection carries it.
+		for _, adapter := range adapters {
+			targetDir := componentInjectionDirScoped(s.homeDir, s.workspaceDir, s.scope, adapter)
+			opts := sdd.InjectOptions{
+				OpenCodeModelAssignments:    s.selection.ModelAssignments,
+				OpenCodeSettingsPath:        syncOpenCodeSettingsPath(s.homeDir, s.workspaceDir, s.scope, adapter),
+				ClaudeModelAssignments:      s.selection.ClaudeModelAssignments,
+				ClaudePhaseAssignments:      s.selection.ClaudePhaseAssignments,
+				KiroModelAssignments:        s.selection.KiroModelAssignments,
+				CodexModelAssignments:       s.selection.CodexModelAssignments,
+				CodexCarrilModelAssignments: s.selection.CodexCarrilModelAssignments,
+				CodexPhaseModelAssignments:  s.selection.CodexPhaseModelAssignments,
+				StrictTDD:                   s.selection.StrictTDD,
+				CodeGraphGuidanceMarkdown:   codeGraphGuidanceMarkdownForSDD(s.homeDir, s.selection.CommunityTools),
+			}
+			if s.scope == ScopeWorkspace {
+				opts.WorkspaceDir = s.workspaceDir
+			}
+			opts.IncludeOpenCodeBackgroundPolicy = s.backgroundPolicy && adapter.Agent() == model.AgentOpenCode
+			res, err := injectSDD(targetDir, adapter, s.selection.SDDMode, opts)
+			if err != nil {
+				return fmt.Errorf("sync sdd for %q: %w", adapter.Agent(), err)
+			}
+			s.countChanged(boolToInt(res.Changed), res.Files...)
+		}
 		return nil
 
 	case model.ComponentSkills:
@@ -2713,10 +2737,6 @@ func runPostSyncVerificationScoped(homeDir, workspaceDir string, scope InstallSc
 	adapters := resolveAdapters(selection.Agents)
 
 	for _, component := range selection.Components {
-		if component == model.ComponentSDD {
-			// Legacy state remains readable, but retired assets are not installed.
-			continue
-		}
 		if workspace && workspaceGlobalOnlyComponent(component) {
 			continue
 		}

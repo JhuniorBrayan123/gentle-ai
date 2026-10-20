@@ -34,7 +34,26 @@ const (
 // internalSharedSources are embedded under skills/_shared as source material
 // for rendered prompts only. No installed text references them and v3.7.0
 // never installed them.
-var internalSharedSources = map[string]bool{"odd-orchestrator-sections.md": true}
+//
+// sdd-orchestrator-sections.md holds the canonical bodies the SDD orchestrator
+// prompt substitutes, exactly like odd-orchestrator-sections.md does for the
+// ODD orchestrator, so it is source material and not an installed file.
+var internalSharedSources = map[string]bool{
+	"odd-orchestrator-sections.md": true,
+	"sdd-orchestrator-sections.md": true,
+}
+
+// sddOwnedSharedSources are the shared references the SDD component owns.
+// The skills component leaves them alone so a selection without SDD never
+// writes them: the SDD component installs them when the user selects SDD, and
+// the SDD retirement removes the ones an earlier SDD install left behind.
+// Installing them here instead would make every non-SDD install write a file
+// the retirement then deletes, which is neither idempotent nor verifiable.
+var sddOwnedSharedSources = map[string]bool{
+	"openspec-convention.md": true,
+	"sdd-phase-common.md":    true,
+	"sdd-status-contract.md": true,
+}
 
 // SharedReferencePaths returns every skills/_shared file the skills
 // component writes into skillDir.
@@ -60,7 +79,7 @@ func sharedReferences(skillDir string) ([]directoryAsset, error) {
 	}
 	references := make([]directoryAsset, 0, len(names))
 	for _, name := range names {
-		if internalSharedSources[name] {
+		if internalSharedSources[name] || sddOwnedSharedSources[name] {
 			continue
 		}
 		references = append(references, directoryAsset{
