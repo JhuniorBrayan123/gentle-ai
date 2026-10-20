@@ -225,9 +225,6 @@ func (s *Service) PartialUninstallWithEngramScope(agentIDs []model.AgentID, comp
 // downgrades any that are still shared with an agent this run is not
 // removing (see reconcileSharedComponents), and executes the resulting plan.
 func (s *Service) partialUninstall(agentIDs []model.AgentID, componentIDs []model.ComponentID) (Result, error) {
-	if slices.Contains(componentIDs, model.ComponentSDD) {
-		return Result{}, fmt.Errorf("component %q is retired and cannot be uninstalled; existing files and settings were preserved", model.ComponentSDD)
-	}
 	if len(agentIDs) == 0 {
 		return Result{}, fmt.Errorf("partial uninstall requires at least one agent")
 	}
@@ -407,9 +404,6 @@ type plan struct {
 }
 
 func (s *Service) buildPlan(agentIDs []model.AgentID, componentIDs []model.ComponentID) (plan, error) {
-	if slices.Contains(componentIDs, model.ComponentSDD) {
-		return plan{}, fmt.Errorf("component %q is retired and cannot be uninstalled; existing files and settings were preserved", model.ComponentSDD)
-	}
 	backupTargets := map[string]struct{}{}
 	operationsByKey := map[string]operation{}
 
@@ -496,7 +490,7 @@ func (s *Service) buildPlan(agentIDs []model.AgentID, componentIDs []model.Compo
 			}
 		}
 	}
-	if removesAllAgentComponents(componentIDs) {
+	if removesAllAgentComponents(componentIDs) && !slices.Contains(componentIDs, model.ComponentSDD) {
 		for _, agentID := range agentIDs {
 			adapter, _ := s.registry.Get(agentID)
 			op, targets, ok := s.retiredSDDOperation(adapter)
@@ -1085,6 +1079,17 @@ func (s *Service) componentOperations(adapter agents.Adapter, componentID model.
 			targets = append(targets, path)
 			ops = append(ops, removeFile(path), removeDirIfEmpty(filepath.Dir(path)))
 		}
+	case model.ComponentSDD:
+		// The fork keeps the SDD layer, so uninstalling it removes the SDD
+		// assets gentle-ai manages and keeps every file it cannot prove it
+		// wrote. The retirement inventory and its ownership proof are the
+		// same ones install and sync use (#5157).
+		op, opTargets, ok := s.retiredSDDOperation(adapter)
+		if !ok {
+			break
+		}
+		targets = append(targets, opTargets...)
+		ops = append(ops, op)
 	case model.ComponentGGA:
 		for _, path := range globalBackupTargets(homeDir) {
 			targets = append(targets, path)

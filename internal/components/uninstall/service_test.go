@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"maps"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -194,7 +193,11 @@ func TestRetiredSDDDefaultUninstallSkipsLegacyCleanup(t *testing.T) {
 	}
 }
 
-func TestRetiredSDDExplicitUninstallFailsWithoutWrites(t *testing.T) {
+// TestSDDExplicitUninstallRemovesOnlyManagedAssets pins the fork's
+// conditional SDD contract: the SDD component can be uninstalled, and the
+// uninstall removes only the assets gentle-ai proves it wrote. A
+// user-customized command file is kept.
+func TestSDDExplicitUninstallRemovesOnlyManagedAssets(t *testing.T) {
 	for _, kind := range []string{"partial", "profile selection"} {
 		t.Run(kind, func(t *testing.T) {
 			home := t.TempDir()
@@ -210,50 +213,16 @@ func TestRetiredSDDExplicitUninstallFailsWithoutWrites(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			before := map[string]string{}
-			err = filepath.WalkDir(home, func(path string, entry fs.DirEntry, walkErr error) error {
-				if walkErr != nil {
-					return walkErr
-				}
-				if !entry.IsDir() {
-					data, readErr := os.ReadFile(path)
-					if readErr != nil {
-						return readErr
-					}
-					before[path] = string(data)
-				}
-				return nil
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
 			if kind == "partial" {
 				_, err = svc.PartialUninstall([]model.AgentID{model.AgentClaudeCode}, []model.ComponentID{model.ComponentSDD})
 			} else {
 				_, err = svc.PartialUninstallWithEngramScope([]model.AgentID{model.AgentClaudeCode}, []model.ComponentID{model.ComponentSDD}, model.EngramUninstallScopeGlobal)
 			}
-			if err == nil || !strings.Contains(err.Error(), "retired") {
-				t.Fatalf("expected retired component rejection, got %v", err)
-			}
-			after := map[string]string{}
-			err = filepath.WalkDir(home, func(path string, entry fs.DirEntry, walkErr error) error {
-				if walkErr != nil {
-					return walkErr
-				}
-				if !entry.IsDir() {
-					data, readErr := os.ReadFile(path)
-					if readErr != nil {
-						return readErr
-					}
-					after[path] = string(data)
-				}
-				return nil
-			})
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("SDD uninstall error = %v", err)
 			}
-			if !maps.Equal(before, after) {
-				t.Fatalf("filesystem files changed: before=%v after=%v", before, after)
+			if got, readErr := os.ReadFile(legacy); readErr != nil || string(got) != "user customized" {
+				t.Fatalf("user-customized SDD command changed: %q, %v", got, readErr)
 			}
 		})
 	}
@@ -1670,8 +1639,11 @@ func TestOpenCodePluginPreservationOutsideFullAgentRemoval(t *testing.T) {
 			}
 			svc.snapshotter = stubSnapshotter{}
 			if components[0] == model.ComponentSDD {
-				if _, err := svc.PartialUninstall([]model.AgentID{model.AgentOpenCode}, components); err == nil || !strings.Contains(err.Error(), "retired") {
-					t.Fatalf("SDD-only request must be rejected: %v", err)
+				// The fork keeps the SDD layer, so an SDD-only uninstall is
+				// accepted. It removes the managed SDD assets and leaves the
+				// managed OpenCode plugins alone.
+				if _, err := svc.PartialUninstall([]model.AgentID{model.AgentOpenCode}, components); err != nil {
+					t.Fatalf("SDD-only uninstall error = %v", err)
 				}
 			} else if _, err := svc.PartialUninstall([]model.AgentID{model.AgentOpenCode}, components); err != nil {
 				t.Fatal(err)
