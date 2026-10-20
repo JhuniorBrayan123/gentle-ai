@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/filecoord"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/filecoord"
 )
 
 // Record is one immutable, content-addressed entry in a QA change's history.

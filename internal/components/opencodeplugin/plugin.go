@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/filemerge"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
 )
 
 type Definition struct {
@@ -39,25 +39,28 @@ type Result struct {
 	Files   []string
 }
 
-var definitions = []Definition{
-	{
-		ID:          model.OpenCodePluginSubAgentStatusline,
-		Name:        "Sub-agent Statusline",
-		PackageName: "opencode-subagent-statusline",
-		RepoURL:     "https://github.com/Joaquinvesapa/sub-agent-statusline",
-		Owner:       "Joaquinvesapa",
-		Repo:        "sub-agent-statusline",
-		Description: "OpenCode sidebar/statusline for sub-agent activity",
-	},
-	{
-		ID:          model.OpenCodePluginSDDEngramManage,
-		Name:        "SDD Engram Manager",
-		PackageName: "opencode-sdd-engram-manage",
-		RepoURL:     "https://github.com/j0k3r-dev-rgl/sdd-engram-plugin",
-		Owner:       "j0k3r-dev-rgl",
-		Repo:        "sdd-engram-plugin",
-		Description: "OpenCode TUI for SDD profiles and Engram memories",
-	},
+// Retained only to identify registrations owned by older installations during
+// explicit CLI uninstall. External plugins are never installable or updatable.
+var legacyStatuslineDefinition = Definition{
+	ID:          model.OpenCodePluginSubAgentStatusline,
+	Name:        "Sub-agent Statusline",
+	PackageName: "opencode-subagent-statusline",
+	RepoURL:     "https://github.com/Joaquinvesapa/sub-agent-statusline",
+	Owner:       "Joaquinvesapa",
+	Repo:        "sub-agent-statusline",
+	Description: "OpenCode sidebar/statusline for sub-agent activity",
+}
+
+// Retain only for identifying registrations owned by older installations during
+// uninstall. It is not offered in the installation or update catalogs.
+var legacySDDEngramDefinition = Definition{
+	ID:          model.OpenCodePluginSDDEngramManage,
+	Name:        "SDD Engram Manager",
+	PackageName: "opencode-sdd-engram-manage",
+	RepoURL:     "https://github.com/j0k3r-dev-rgl/sdd-engram-plugin",
+	Owner:       "j0k3r-dev-rgl",
+	Repo:        "sdd-engram-plugin",
+	Description: "OpenCode TUI for SDD profiles and Engram memories",
 }
 
 const gentleLogoPluginFile = "gentle-logo.tsx"
@@ -125,85 +128,30 @@ const plugin = { id: "gentle-logo", tui }
 export default plugin
 `
 
-func Definitions() []Definition {
-	out := make([]Definition, len(definitions))
-	copy(out, definitions)
-	return out
-}
-
 func DefinitionFor(id model.OpenCodeCommunityPluginID) (Definition, bool) {
-	for _, def := range definitions {
-		if def.ID == id {
-			return def, true
-		}
+	if id == model.OpenCodePluginSDDEngramManage {
+		return legacySDDEngramDefinition, true
+	}
+	if id == model.OpenCodePluginSubAgentStatusline {
+		return legacyStatuslineDefinition, true
 	}
 	return Definition{}, false
 }
 
-// InstallPaths returns every path a selected plugin installation can mutate.
-// The outer install snapshot uses this before apply so later failures restore
-// plugin registration and plugin-owned assets together.
-func InstallPaths(homeDir string, selected []model.OpenCodeCommunityPluginID) ([]string, error) {
-	opencodeDir := filepath.Join(homeDir, ".config", "opencode")
-	tuiPath := filepath.Join(opencodeDir, "tui.json")
-	paths := make([]string, 0, len(selected)+1)
-	seen := map[string]struct{}{}
-	addPath := func(path string) {
-		if _, ok := seen[path]; ok {
-			return
-		}
-		seen[path] = struct{}{}
-		paths = append(paths, path)
-	}
-
-	for _, id := range selected {
-		switch id {
-		case model.OpenCodePluginGentleLogo:
-			addPath(filepath.Join(opencodeDir, "tui-plugins", gentleLogoPluginFile))
-		default:
-			if _, ok := DefinitionFor(id); !ok {
-				return nil, fmt.Errorf("unknown OpenCode community plugin %q", id)
-			}
-		}
-		addPath(tuiPath)
-	}
-
-	return paths, nil
-}
-
 func Install(homeDir string, id model.OpenCodeCommunityPluginID) (Result, error) {
+	// Legacy lookup is uninstall-only: refuse before probing or mutating anything.
+	if id != model.OpenCodePluginGentleLogo {
+		return Result{}, fmt.Errorf("OpenCode community plugin %q is not installable; existing configuration preserved", id)
+	}
 	major, err := opencode.DetectRuntimeMajor(context.Background())
 	if err != nil {
 		return Result{}, err
 	}
 	if major == opencode.RuntimeV2 {
-		if id == model.OpenCodePluginGentleLogo {
-			return Result{}, UnsupportedLogoError{}
-		}
-		return Result{}, fmt.Errorf("OpenCode community plugin V2 compatibility is unverified; existing configuration preserved")
+		return Result{}, UnsupportedLogoError{}
 	}
 
-	if id == model.OpenCodePluginGentleLogo {
-		return installGentleLogo(homeDir)
-	}
-
-	def, ok := DefinitionFor(id)
-	if !ok {
-		return Result{}, fmt.Errorf("unknown OpenCode community plugin %q", id)
-	}
-
-	opencodeDir := filepath.Join(homeDir, ".config", "opencode")
-	if err := os.MkdirAll(opencodeDir, 0o755); err != nil {
-		return Result{}, fmt.Errorf("create OpenCode config dir: %w", err)
-	}
-
-	tuiPath := filepath.Join(opencodeDir, "tui.json")
-	written, err := ensureTUIPlugin(tuiPath, def.PackageName)
-	if err != nil {
-		return Result{}, err
-	}
-
-	return Result{Changed: written, Files: []string{tuiPath}}, nil
+	return installGentleLogo(homeDir)
 }
 
 func installGentleLogo(homeDir string) (Result, error) {
@@ -302,7 +250,7 @@ func (p priorFile) restore(path string) error {
 		}
 		return nil
 	}
-	if _, err := filemerge.WriteFileAtomic(path, p.data, p.mode.Perm()); err != nil {
+	if _, err := filemerge.WriteFileAtomicMode(path, p.data, p.mode.Perm()); err != nil {
 		return err
 	}
 	return nil
@@ -392,5 +340,17 @@ func stringSlice(value any) []string {
 			out = append(out, s)
 		}
 	}
+	return out
+}
+
+// Definitions returns every known OpenCode community plugin definition.
+//
+// Upstream v4 keeps the statusline and SDD-Engram entries as legacy,
+// uninstall-only registrations; the fork's community-plugin selection screen
+// still lists them, so the catalog accessor is retained.
+func Definitions() []Definition {
+	out := make([]Definition, 0, 2)
+	out = append(out, legacyStatuslineDefinition)
+	out = append(out, legacySDDEngramDefinition)
 	return out
 }

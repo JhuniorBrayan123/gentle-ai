@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/filemerge"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 )
 
 // ggaConfigDir returns the platform-appropriate directory that GGA reads its
@@ -103,8 +103,8 @@ func BuildConfig(provider string) []byte {
 	b.WriteString("# File patterns to review (comma-separated globs)\n")
 	b.WriteString("FILE_PATTERNS=\"*.ts,*.tsx,*.js,*.jsx,*.py,*.go\"\n")
 	b.WriteString("\n")
-	b.WriteString("# Patterns to exclude\n")
-	b.WriteString("EXCLUDE_PATTERNS=\"*.test.*,*.spec.*,*.d.ts,dist/*,build/*,node_modules/*\"\n")
+	b.WriteString("# Patterns to exclude (GGA requires explicit suffixes after a leading wildcard)\n")
+	b.WriteString("EXCLUDE_PATTERNS=\"*.test.ts,*.test.tsx,*.spec.ts,*.spec.tsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,*.d.ts,dist/*,build/*,node_modules/*\"\n")
 	b.WriteString("\n")
 	b.WriteString("# Rules file\n")
 	b.WriteString("RULES_FILE=\"AGENTS.md\"\n")

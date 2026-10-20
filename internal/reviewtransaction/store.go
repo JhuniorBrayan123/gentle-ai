@@ -909,16 +909,6 @@ func WriteTransactionAtomic(path string, transaction Transaction) error {
 	return writeAtomic(path, append(payload, '\n'), 0o644)
 }
 
-// PublishFileNoReplace atomically publishes source only when destination is absent.
-func PublishFileNoReplace(source, destination string) error {
-	return publishNoReplace(source, destination)
-}
-
-// ReplaceFileAtomic atomically replaces destination with source.
-func ReplaceFileAtomic(source, destination string) error {
-	return replaceFileAtomic(source, destination)
-}
-
 func readRevision(path string) (string, error) {
 	payload, err := os.ReadFile(path)
 	if err != nil {
@@ -966,4 +956,20 @@ func writeAtomic(path string, payload []byte, mode os.FileMode) error {
 		return &directorySyncError{path: path, cause: err}
 	}
 	return nil
+}
+
+// PublishFileNoReplace atomically publishes source only when destination is absent.
+//
+// Upstream v4 keeps the platform helpers unexported; the QA/SDD layer
+// (internal/sddstatus) publishes runtime ledger files through this contract,
+// so the exported wrapper is retained.
+func PublishFileNoReplace(source, destination string) error {
+	return publishNoReplace(source, destination)
+}
+
+// ReplaceFileAtomic atomically replaces destination with source.
+//
+// Exported wrapper kept for the QA/SDD layer (internal/sddstatus).
+func ReplaceFileAtomic(source, destination string) error {
+	return replaceFileAtomic(source, destination)
 }

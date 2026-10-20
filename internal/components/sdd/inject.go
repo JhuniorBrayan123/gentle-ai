@@ -10,14 +10,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/agentguidance"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/opencodedefault"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/skills"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/agentguidance"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/filemerge"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/opencodedefault"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/skills"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
 )
 
 const legacyMandatoryWording = "TOTALMENTE " + "obligatorio"
@@ -2775,7 +2775,7 @@ func migrateLegacyOpenCodeSDDOrchestrator(baseJSON []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filemerge.MergeJSONObjectsPreserveJSONC(baseJSON, overlay)
+	return filemerge.MergeOpenCodeJSONCObjects(baseJSON, overlay)
 }
 
 func looksLikeOpenCodeSDDConductor(agentRaw any) bool {
@@ -2869,7 +2869,7 @@ func migrateLegacyOpenCodeAgentsKey(baseJSON []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	updated, err := filemerge.MergeJSONObjectsPreserveJSONC(baseJSON, overlay)
+	updated, err := filemerge.MergeOpenCodeJSONCObjects(baseJSON, overlay)
 	if err != nil {
 		return nil, err
 	}
@@ -2928,7 +2928,7 @@ func migrateLegacyOpenCodeCommandPrompt(baseJSON []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filemerge.MergeJSONObjectsPreserveJSONC(baseJSON, overlay)
+	return filemerge.MergeOpenCodeJSONCObjects(baseJSON, overlay)
 }
 
 // sddOrchestratorMarkers are used to detect if SDD content was already injected

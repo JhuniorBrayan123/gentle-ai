@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/pathquote"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/reviewtransaction"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/state"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/pathquote"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/reviewtransaction"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/state"
 )
 
 // ReviewModeSchema identifies the user-facing kill-switch projection.
@@ -94,10 +94,36 @@ func RunReviewMode(args []string, stdout io.Writer) error {
 	} else {
 		result.Status, err = applyReviewMode(ctx, *cwd, operation, selectedScope, *expectedRevision, revisionProvided)
 	}
-	if emitErr := emitReviewMode(stdout, result, *emitJSON); emitErr != nil && err == nil {
+	// #4670: a status that could not be resolved carries the fail-closed
+	// projection, not a decision, so the human surface must not render it as
+	// one. #5533: a failed enable or disable carries the same projection.
+	unavailable := err != nil && !reviewModeStatusResolved(result.Status)
+	if emitErr := emitReviewMode(stdout, result, *emitJSON, unavailable); emitErr != nil && err == nil {
 		return emitErr
 	}
 	return err
+}
+
+// reviewModeStatusResolved reports whether status is a resolution rather than
+// the fail-closed projection. It is read from the state, never the error: a
+// refusal such as clearing a clone override under a global off, or a write
+// that applied only for this build, still returns what was resolved. A
+// resolved status names a source that holds the value it reports; the
+// fail-closed projection names a source while both sources stay unset, or no
+// source at all.
+func reviewModeStatusResolved(status reviewtransaction.RDDModeStatus) bool {
+	switch status.Source {
+	case reviewtransaction.RDDModeSourceDefault:
+		return status.Global == reviewtransaction.RDDModeUnset &&
+			status.CloneLocal == reviewtransaction.RDDModeUnset &&
+			status.Effective == reviewtransaction.RDDModeOn
+	case reviewtransaction.RDDModeSourceGlobal:
+		return status.Global != reviewtransaction.RDDModeUnset
+	case reviewtransaction.RDDModeSourceCloneLocal:
+		return status.CloneLocal != reviewtransaction.RDDModeUnset
+	default:
+		return false
+	}
 }
 
 // reviewModeStatus is strictly read-only: it never creates user state and never
@@ -273,9 +299,62 @@ func quotePOSIXShellToken(path string) string {
 	return "'" + strings.ReplaceAll(path, "'", `'"'"'`) + "'"
 }
 
+// reviewModePrivateModeIneffectiveError rewrites the unsafe-path refusal for
+// the #5112 mount class: a filesystem that cannot represent private POSIX
+// modes makes the printed chmod repair a loop the operator can never exit,
+// so the refusal names the capability and the two continuations that actually
+// change the outcome instead. It is only ever constructed on mounts where the
+// probe proved the capability missing, and it wraps the same generic
+// unsafe-path refusal, so nothing about the fail-closed decision changes.
+type reviewModePrivateModeIneffectiveError struct {
+	Path  string
+	Cause error
+}
+
+func (err *reviewModePrivateModeIneffectiveError) Unwrap() error { return err.Cause }
+
+func (err *reviewModePrivateModeIneffectiveError) Error() string {
+	return fmt.Sprintf(
+		"the clone-local review mode path %s cannot be made private: the filesystem hosting it does not "+
+			"persist POSIX permission modes (WSL DrvFS without the metadata option, exFAT, and SMB without "+
+			"POSIX extensions all behave this way), so chmod cannot repair it; remount the drive with POSIX "+
+			"metadata enabled or move the repository to a filesystem that does, then rerun the original command",
+		pathquote.Quote(err.Path),
+	)
+}
+
+// reviewModeUnsupportedFilesystemError is the #4670 refusal for a Git common
+// directory on a filesystem that cannot keep review authority private, an
+// SMB/UNC share being the reported instance. Like the #5112 refusal above, it
+// replaces a repair the operator cannot perform -- the path is already
+// correct, the volume is not -- with the continuations that change the
+// outcome. It wraps the typed cause, so the fail-closed decision is untouched.
+type reviewModeUnsupportedFilesystemError struct {
+	Refusal *reviewtransaction.UnsupportedAuthorityFilesystemError
+	Cause   error
+}
+
+func (err *reviewModeUnsupportedFilesystemError) Unwrap() error { return err.Cause }
+
+func (err *reviewModeUnsupportedFilesystemError) Error() string {
+	return "the clone-local review mode is unavailable: " + err.Refusal.Error()
+}
+
+func reviewModeUnsupportedFilesystemRefusal(err error) error {
+	var unsupported *reviewtransaction.UnsupportedAuthorityFilesystemError
+	if !errors.As(err, &unsupported) {
+		return nil
+	}
+	return &reviewModeUnsupportedFilesystemError{Refusal: unsupported, Cause: err}
+}
+
 func reviewModeUnsafePathRefusal(err error) error {
 	var unsafePath *reviewtransaction.UnsafeRARPathError
 	if errors.As(err, &unsafePath) {
+		var ineffective *reviewtransaction.PrivateModeIneffectiveError
+		if errors.As(err, &ineffective) {
+			return &reviewModePrivateModeIneffectiveError{Path: unsafePath.Path, Cause: err}
+		}
 		return &reviewModeUnsafePathError{Path: unsafePath.Path, Directory: unsafePath.Directory, Cause: err}
 	}
 	return nil
@@ -321,6 +400,9 @@ func reviewModeUnreadable(
 ) error {
 	if err == nil {
 		return nil
+	}
+	if unsupported := reviewModeUnsupportedFilesystemRefusal(err); unsupported != nil {
+		return unsupported
 	}
 	if unsafePath := reviewModeUnsafePathRefusal(err); unsafePath != nil {
 		return unsafePath
@@ -452,13 +534,20 @@ func writeGlobalRDDMode(operation string) error {
 	})
 }
 
-func emitReviewMode(stdout io.Writer, result ReviewModeResult, emitJSON bool) error {
+func emitReviewMode(stdout io.Writer, result ReviewModeResult, emitJSON bool, unavailable bool) error {
 	if emitJSON {
 		payload, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
 			return err
 		}
 		_, err = fmt.Fprintf(stdout, "%s\n", payload)
+		return err
+	}
+	if unavailable {
+		// The failed-closed projection names a source only because the type
+		// requires one; printing it read as "off (decided by clone_local)"
+		// beside "clone-local: unset", a decision no stored record made.
+		_, err := fmt.Fprint(stdout, "receipt-driven development: unavailable (the review mode could not be resolved)\n")
 		return err
 	}
 	_, err := fmt.Fprintf(
@@ -945,6 +1034,10 @@ func reviewConsentEvidenceSubject(reason reviewtransaction.RiskReason) string {
 		return "shell scripting"
 	case reviewtransaction.RiskReasonProcessBoundary, reviewtransaction.RiskReasonProcessScanLimit:
 		return "code that starts other processes"
+	case reviewtransaction.RiskReasonDangerousSink:
+		return "a dangerous code pattern"
+	case reviewtransaction.RiskReasonAgentEscalation:
+		return "the agent that made this change flagged it as high risk"
 	case reviewtransaction.RiskReasonExecutableMode:
 		return "an executable permission change"
 	case reviewtransaction.RiskReasonExecutableChange:

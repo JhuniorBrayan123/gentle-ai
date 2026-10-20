@@ -3,7 +3,7 @@ package agentbuilder
 import (
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 )
 
 // SDDIntegrationMode defines how a generated agent integrates with SDD phases.
@@ -39,7 +39,6 @@ type RegistryEntry struct {
 	Description      string          `json:"description"`
 	CreatedAt        time.Time       `json:"created_at"`
 	GenerationEngine model.AgentID   `json:"generation_engine"`
-	SDDIntegration   *SDDIntegration `json:"sdd_integration,omitempty"`
 	InstalledAgents  []model.AgentID `json:"installed_agents"`
 }
 
