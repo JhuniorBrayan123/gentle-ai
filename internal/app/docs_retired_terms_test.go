@@ -35,9 +35,27 @@ var retirementNote = regexp.MustCompile(`(?i)\b(retired|legacy)\b`)
 // with a "> **Historical ..." callout near the top.
 var historicalBanner = regexp.MustCompile(`^>\s*\*\*Historical\b`)
 
+// forkSDDOwnedDocs are the fork-owned pages that document the SDD and QA
+// layers this fork keeps on top of upstream v4. Upstream v4 retired SDD, so
+// its guard treats the SDD vocabulary as retired everywhere; the fork has a
+// requirement behind these pages, so they are exempt. Every other living doc
+// still must not advertise a retired term.
+var forkSDDOwnedDocs = map[string]bool{
+	"docs/antigravity-sdd-workaround.md":                           true,
+	"docs/migration/qa-orchestrator-v2-baseline-checklist.md":      true,
+	"docs/migration/qa-orchestrator-v2-to-v3.md":                   true,
+	"docs/migration/qa-orchestrator-v2-to-v3-validation-report.md": true,
+	"docs/migration/qa-orchestrator-v3-design.md":                  true,
+	"docs/openspec-config.md":                                      true,
+	"docs/prd-opencode-profiles.md":                                true,
+}
+
 func TestLivingDocsDoNotAdvertiseRetiredTerms(t *testing.T) {
 	root := filepath.Join("..", "..")
 	for _, name := range livingDocs(t, root) {
+		if forkSDDOwnedDocs[name] {
+			continue
+		}
 		content, err := os.ReadFile(filepath.Join(root, name))
 		if err != nil {
 			t.Fatal(err)

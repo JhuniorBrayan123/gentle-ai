@@ -38,6 +38,7 @@ internal/
     legacyassets/          Retired managed paths for snapshots and rollback
     mutationjournal/       Before-images of mutated files for atomic rollback
     filemerge/             Marker-based file merging (inject without clobbering)
+    sdd/                   Spec-Driven Development layer: orchestrator, phases, and the QA handoff
   skillregistry/           .atl skill registry refresh/list support
   agents/                  Agent adapters (config strategy per agent)
     <agent>/               One adapter per supported agent; see agents.md

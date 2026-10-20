@@ -63,9 +63,16 @@ func TestCompatibilitySkillsRefreshRetainsOrdinarySkillsWithoutSDD(t *testing.T)
 		t.Fatal(err)
 	}
 	for _, path := range paths {
-		if strings.Contains(path, "sdd-") {
-			t.Errorf("retired compatibility path: %s", path)
+		if !strings.Contains(path, "sdd-") {
+			continue
 		}
+		// This fork keeps its SDD layer, so the shared SDD convention files
+		// are current compatibility paths. Only a retired sdd-* skill
+		// directory stays out of them.
+		if strings.Contains(filepath.ToSlash(path), "/_shared/") {
+			continue
+		}
+		t.Errorf("retired compatibility path: %s", path)
 	}
 	// v3.7.0 refreshed the shared references in the compatibility root; the
 	// skills component owns them again (#4471).
@@ -569,9 +576,16 @@ func TestAdapterSkillFilesAreBackupTargets(t *testing.T) {
 			}
 		}
 		for _, path := range targets {
-			if strings.HasPrefix(path, filepath.Join(home, ".claude", "skills")+string(filepath.Separator)) && strings.Contains(path, "sdd-") {
-				t.Errorf("retired skill backup target: %s", path)
+			if !strings.HasPrefix(path, filepath.Join(home, ".claude", "skills")+string(filepath.Separator)) || !strings.Contains(path, "sdd-") {
+				continue
 			}
+			// This fork keeps its SDD layer, so the shared SDD convention
+			// files are current assets that must be part of the snapshot. Only
+			// a retired sdd-* skill directory stays out of it.
+			if strings.Contains(filepath.ToSlash(path), "/_shared/") {
+				continue
+			}
+			t.Errorf("retired skill backup target: %s", path)
 		}
 	}
 }

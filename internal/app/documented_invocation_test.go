@@ -379,13 +379,13 @@ func registrySurfaceViolation(words []string) string {
 var documentedInvocationKnownFailures = map[string]string{}
 
 func TestDocumentedInvocationsRunAsDocumented(t *testing.T) {
-	// Retired workflow documents must not remain in the current documentation tree.
+	// Upstream v4 retired SDD, so these pages had to be gone. This fork keeps
+	// its SDD layer, so its workflow documentation is current guidance and must
+	// stay in the documentation tree.
 	for _, name := range []string{"openspec-config.md", "antigravity-sdd-workaround.md", "prd-opencode-profiles.md"} {
 		path := filepath.Join("..", "..", "docs", name)
-		if _, err := os.Stat(path); err == nil {
-			t.Errorf("retired workflow document remains: %s", path)
-		} else if !os.IsNotExist(err) {
-			t.Errorf("cannot inspect retired document %s: %v", path, err)
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("fork SDD workflow document missing: %s: %v", path, err)
 		}
 	}
 	// Secondary live guides must not promise the removed SDD workflow.

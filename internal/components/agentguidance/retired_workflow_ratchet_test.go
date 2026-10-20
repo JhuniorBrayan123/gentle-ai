@@ -20,6 +20,23 @@ import (
 // retiredWorkflowReference matches SDD and OpenSpec, both retired in v4.0.0.
 var retiredWorkflowReference = regexp.MustCompile(`(?i)sdd|openspec`)
 
+// forkRenderedSDDAllowlist names the rendered lines the fork's SDD layer
+// legitimately produces. Upstream v4 retired SDD, so its ratchet forbids the
+// vocabulary everywhere; this fork keeps SDD, so the foreground-writer rule
+// that keeps an SDD apply out of a background task must survive.
+var forkRenderedSDDAllowlist = []string{
+	"SDD apply or other writers",
+}
+
+func forkRenderedLineAllowed(line string) bool {
+	for _, allowed := range forkRenderedSDDAllowlist {
+		if strings.Contains(line, allowed) {
+			return true
+		}
+	}
+	return false
+}
+
 // TestRenderedGuidanceHasNoRetiredWorkflowReferences is a ratchet over what
 // Gentle AI writes into each runtime: guidance and orchestrator blocks, strict
 // TDD, personas and output styles, Engram protocol, CodeGraph guidance, and
@@ -145,8 +162,12 @@ func assertRenderedFilesClean(t *testing.T, paths []string) {
 func assertNoRetiredWorkflowReference(t *testing.T, source, content string) {
 	t.Helper()
 	for index, line := range strings.Split(content, "\n") {
-		if retiredWorkflowReference.MatchString(line) {
-			t.Errorf("%s:%d renders retired workflow reference: %s", source, index+1, strings.TrimSpace(line))
+		if !retiredWorkflowReference.MatchString(line) {
+			continue
 		}
+		if forkRenderedLineAllowed(line) {
+			continue
+		}
+		t.Errorf("%s:%d renders retired workflow reference: %s", source, index+1, strings.TrimSpace(line))
 	}
 }

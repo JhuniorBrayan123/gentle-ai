@@ -496,13 +496,17 @@ func TestInjectWithCapability_SkipsSDDSkillsWhenCapabilityEmpty(t *testing.T) {
 	// Shared support files are still written, so the assertion targets the
 	// skill directory rather than the total file count.
 	skillDir := opencodeAdapter().SkillsDir(home)
-	if _, err := os.Stat(filepath.Join(skillDir, string(model.SkillSDDApply), "SKILL.md")); !os.IsNotExist(err) {
+	sddSkillDir := filepath.Join(skillDir, string(model.SkillSDDApply))
+	if _, err := os.Stat(filepath.Join(sddSkillDir, "SKILL.md")); !os.IsNotExist(err) {
 		t.Fatalf("InjectWithCapability(capability=%q) installed the SDD skill, stat err = %v", "", err)
 	}
 	for _, file := range result.Files {
-		if strings.Contains(file, string(model.SkillSDDApply)) {
-			t.Fatalf("InjectWithCapability(capability=%q) wrote %q, want no SDD skill file", "", file)
+		// This fork keeps its SDD layer, so the sdd-* slash command is a
+		// current asset. Only the SDD skill directory itself must be absent.
+		if !strings.HasPrefix(file, sddSkillDir+string(filepath.Separator)) {
+			continue
 		}
+		t.Fatalf("InjectWithCapability(capability=%q) wrote %q, want no SDD skill file", "", file)
 	}
 }
 

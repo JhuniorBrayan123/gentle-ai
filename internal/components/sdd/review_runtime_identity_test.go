@@ -140,12 +140,20 @@ func TestAdvertisedRenderedReviewProtocolsBindRuntimeOnce(t *testing.T) {
 				}
 				return
 			}
+			// Upstream v4's canonical review ledger contract binds the runtime
+			// in more than one negotiated command (the assess preflight, the
+			// selectorless STATUS, and the two deliberate-restart invocations),
+			// and the shared Delegated Verification Gate adds its own assess
+			// command. Every one of them must name the executing runtime; the
+			// count itself is not a contract.
 			bindings := regexp.MustCompile(`--agent[= ]+[A-Za-z0-9._-]+`).FindAllString(content, -1)
-			if len(bindings) != 1 {
-				t.Fatalf("rendered review protocol carries %d raw runtime bindings, want exactly one: %v", len(bindings), bindings)
+			if len(bindings) == 0 {
+				t.Fatalf("rendered review protocol carries no raw runtime binding: %v", bindings)
 			}
-			if bindings[0] != "--agent "+string(agent.ID) {
-				t.Fatalf("rendered review protocol binds %q, want %q", bindings[0], "--agent "+string(agent.ID))
+			for _, binding := range bindings {
+				if binding != "--agent "+string(agent.ID) {
+					t.Fatalf("rendered review protocol binds %q, want %q", binding, "--agent "+string(agent.ID))
+				}
 			}
 
 			status := "gentle-ai review status --cwd <repo> --contract gentle-ai.review-integration/v2 --agent " + string(agent.ID) + " --next-transition"

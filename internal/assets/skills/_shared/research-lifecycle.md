@@ -14,3 +14,18 @@ Research remains optional during ODD. After exploration, recommend a scoped inve
 ## Evidence and continuation
 
 Validate findings, source attribution and disclosed limitations. Read back any artifact actually claimed as persisted; useful inline or partial research remains useful with its gaps visible. Never manufacture success or evidence. Do not retry or stop solely because optional tools were unavailable. Continue independent authorized work while pausing decisions that depend on missing evidence or unresolved human product choices. A transport failure is not a usable finding.
+
+## SDD Research Contract
+
+This section is owned by the fork's SDD layer and applies to the SDD workflow only. It adds to the ODD contract above; it never replaces it.
+
+Under the SDD workflow, Research remains optional, including after selection. Selecting `sdd-research` never turns research into a blocking admission gate: no research artifact, revision, readiness matrix, or cross-store equality certificate is required before proposal work continues.
+
+#### Research-specific gatekeeper precedence
+
+For `sdd-research` only (including named-profile variants), this contract takes precedence over the generic Automatic Mode Gatekeeper, including its lazy-loaded workflow rules:
+
+- Validate honest findings, source attribution and disclosed limitations; do not require a persisted artifact or full-success status. Read back any artifact actually claimed as persisted, but accept useful inline or partial research with its gaps visible. Never manufacture success or evidence.
+- Do not automatically retry or STOP solely because research is partial, inline or tools are unavailable. Continue independent authorized work; this exception does not admit dishonest claims or unsupported conclusions.
+- Preserve real tool permissions, unresolved human product decisions and unsafe-dependent-work blocks. Terminal transport failures retain their existing stop/continuation rules; missing or malformed transport results are not usable partial research.
+- All other phases retain their existing gatekeeper checks and failure handling. This is not a general artifact, success or retry exemption for planning or implementation.
