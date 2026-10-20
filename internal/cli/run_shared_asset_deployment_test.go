@@ -4,7 +4,6 @@ import (
 	"io/fs"
 	"path/filepath"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
@@ -36,8 +35,9 @@ func embeddedSharedFileNames(t *testing.T) []string {
 	return names
 }
 
-// Shared files remain embedded as source material; ordinary skills own their
-// installed paths, rather than an implicit SDD-wide shared directory.
+// Shared files remain embedded as source material; the SDD layer keeps its
+// convention files embedded and the SDD component installs them, while the
+// skills component owns the ordinary shared references.
 func TestComponentPathsSDDCoversEveryEmbeddedSharedFile(t *testing.T) {
 	names := embeddedSharedFileNames(t)
 	for _, retained := range []string{"engram-convention.md", "odd-orchestrator-sections.md", "skill-resolver.md"} {
@@ -51,9 +51,15 @@ func TestComponentPathsSDDCoversEveryEmbeddedSharedFile(t *testing.T) {
 			t.Errorf("retained shared source missing: %s", retained)
 		}
 	}
-	for _, name := range names {
-		if strings.HasPrefix(name, "sdd-") || name == "openspec-convention.md" {
-			t.Errorf("retired shared source still embedded: %s", name)
+	for _, retained := range []string{"openspec-convention.md", "sdd-phase-common.md", "sdd-status-contract.md"} {
+		found := false
+		for _, name := range names {
+			if name == retained {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("fork SDD shared source missing: %s", retained)
 		}
 	}
 	home := t.TempDir()
@@ -61,5 +67,12 @@ func TestComponentPathsSDDCoversEveryEmbeddedSharedFile(t *testing.T) {
 	paths := componentPathsWithWorkspaceScoped(home, "", ScopeGlobal, selection, resolveAdapters([]model.AgentID{model.AgentGeminiCLI}), model.ComponentSkills)
 	if want := filepath.Join(home, ".gemini", "skills", "go-testing", "SKILL.md"); !containsPath(paths, want) {
 		t.Fatalf("retained skill not tracked: %s", want)
+	}
+	// The SDD convention files belong to the SDD component, so the skills
+	// component neither installs nor declares them.
+	for _, name := range []string{"openspec-convention.md", "sdd-phase-common.md", "sdd-status-contract.md"} {
+		if containsPath(paths, filepath.Join(home, ".gemini", "skills", "_shared", name)) {
+			t.Errorf("skills component declares the SDD-owned shared file %s", name)
+		}
 	}
 }

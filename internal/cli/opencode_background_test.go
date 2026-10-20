@@ -413,13 +413,35 @@ func TestDryRunAndSyncReportsDoNotClaimReadyRuntimeWhenShadowed(t *testing.T) {
 	}
 }
 
-func TestLegacySDDInstallDoesNotWriteBackgroundPolicy(t *testing.T) {
+// TestSDDInstallDoesNotWriteOpenCodeBackgroundPolicy pins the fork's
+// conditional SDD contract. The fork keeps the SDD layer, so the SDD component
+// installs the SDD assets; the OpenCode background-subagent policy stays
+// owned by the background-activation step and is written only when the
+// caller resolved that policy as ready.
+func TestSDDInstallDoesNotWriteOpenCodeBackgroundPolicy(t *testing.T) {
 	home := t.TempDir()
-	if err := (componentApplyStep{component: model.ComponentSDD, homeDir: home, workspaceDir: home, scope: ScopeGlobal, agents: []model.AgentID{model.AgentOpenCode}, selection: model.Selection{SDDMode: model.SDDModeSingle}, backgroundPolicy: true}).Run(); err != nil {
+	if err := (componentApplyStep{component: model.ComponentSDD, homeDir: home, workspaceDir: home, scope: ScopeGlobal, agents: []model.AgentID{model.AgentOpenCode}, selection: model.Selection{SDDMode: model.SDDModeSingle}, backgroundPolicy: false}).Run(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(home, ".config", "opencode")); !os.IsNotExist(err) {
-		t.Fatalf("legacy SDD wrote background assets: %v", err)
+	settings := filepath.Join(home, ".config", "opencode", "opencode.json")
+	raw, err := os.ReadFile(settings)
+	if err != nil {
+		t.Fatalf("SDD install wrote no OpenCode settings: %v", err)
+	}
+	if strings.Contains(string(raw), "gentle-ai:opencode-background-subagents") {
+		t.Fatal("SDD install wrote the OpenCode background policy without a resolved policy")
+	}
+
+	enabled := t.TempDir()
+	if err := (componentApplyStep{component: model.ComponentSDD, homeDir: enabled, workspaceDir: enabled, scope: ScopeGlobal, agents: []model.AgentID{model.AgentOpenCode}, selection: model.Selection{SDDMode: model.SDDModeSingle}, backgroundPolicy: true}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	raw, err = os.ReadFile(filepath.Join(enabled, ".config", "opencode", "opencode.json"))
+	if err != nil {
+		t.Fatalf("SDD install wrote no OpenCode settings: %v", err)
+	}
+	if !strings.Contains(string(raw), "gentle-ai:opencode-background-subagents") {
+		t.Fatal("SDD install did not write the OpenCode background policy it was given")
 	}
 }
 
@@ -711,13 +733,34 @@ func TestSyncBackgroundInvalidSourcesFailBeforeMutation(t *testing.T) {
 	}
 }
 
-func TestLegacySDDSyncDoesNotWriteBackgroundPolicy(t *testing.T) {
+// TestSDDSyncDoesNotWriteOpenCodeBackgroundPolicy pins the same conditional
+// contract on the sync path: the SDD component refreshes the SDD assets, and
+// the OpenCode background-subagent policy is written only when the caller
+// resolved that policy as ready.
+func TestSDDSyncDoesNotWriteOpenCodeBackgroundPolicy(t *testing.T) {
 	home := t.TempDir()
-	if err := (componentSyncStep{component: model.ComponentSDD, homeDir: home, workspaceDir: home, agents: []model.AgentID{model.AgentOpenCode}, selection: model.Selection{SDDMode: model.SDDModeSingle}, backgroundPolicy: true}).Run(); err != nil {
+	if err := (componentSyncStep{component: model.ComponentSDD, homeDir: home, workspaceDir: home, agents: []model.AgentID{model.AgentOpenCode}, selection: model.Selection{SDDMode: model.SDDModeSingle}, backgroundPolicy: false}).Run(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(home, ".config", "opencode")); !os.IsNotExist(err) {
-		t.Fatalf("legacy SDD wrote background assets: %v", err)
+	settings := filepath.Join(home, ".config", "opencode", "opencode.json")
+	raw, err := os.ReadFile(settings)
+	if err != nil {
+		t.Fatalf("SDD sync wrote no OpenCode settings: %v", err)
+	}
+	if strings.Contains(string(raw), "gentle-ai:opencode-background-subagents") {
+		t.Fatal("SDD sync wrote the OpenCode background policy without a resolved policy")
+	}
+
+	enabled := t.TempDir()
+	if err := (componentSyncStep{component: model.ComponentSDD, homeDir: enabled, workspaceDir: enabled, agents: []model.AgentID{model.AgentOpenCode}, selection: model.Selection{SDDMode: model.SDDModeSingle}, backgroundPolicy: true}).Run(); err != nil {
+		t.Fatal(err)
+	}
+	raw, err = os.ReadFile(filepath.Join(enabled, ".config", "opencode", "opencode.json"))
+	if err != nil {
+		t.Fatalf("SDD sync wrote no OpenCode settings: %v", err)
+	}
+	if !strings.Contains(string(raw), "gentle-ai:opencode-background-subagents") {
+		t.Fatal("SDD sync did not write the OpenCode background policy it was given")
 	}
 }
 

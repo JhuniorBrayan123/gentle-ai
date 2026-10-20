@@ -32,11 +32,15 @@ var skillRuntimes = []model.AgentID{
 	model.AgentOpenClaw, model.AgentTrae, model.AgentHermes,
 }
 
-// v370SharedReferences is the exact non-SDD skills/_shared set v3.7.0
-// installed. odd-orchestrator-sections.md is embedded source material only.
-var v370SharedReferences = []string{
-	"README.md", "engram-convention.md", "persistence-contract.md", "research-lifecycle.md",
-	"review-ledger-contract-pi.md", "review-ledger-contract.md", "skill-resolver.md",
+// forkSharedReferences is the exact skills/_shared set the fork installs
+// without the SDD component. It is the v3.7.0 non-SDD set plus the fork's
+// QA gate policy. odd-orchestrator-sections.md is embedded source material
+// only, and the SDD convention files belong to the SDD component, so neither
+// is installed by a selection without SDD.
+var forkSharedReferences = []string{
+	"README.md", "engram-convention.md", "persistence-contract.md", "qa-gate-policy.md",
+	"research-lifecycle.md", "review-ledger-contract-pi.md", "review-ledger-contract.md",
+	"skill-resolver.md",
 }
 
 func installFullGentleman(t *testing.T, agent model.AgentID) string {
@@ -107,8 +111,8 @@ func TestInstallLeavesNoDanglingSharedReferences(t *testing.T) {
 				installed = append(installed, name)
 			}
 			sort.Strings(installed)
-			if strings.Join(installed, ",") != strings.Join(v370SharedReferences, ",") {
-				t.Errorf("installed _shared = %v, want the v3.7.0 non-SDD set %v", installed, v370SharedReferences)
+			if strings.Join(installed, ",") != strings.Join(forkSharedReferences, ",") {
+				t.Errorf("installed _shared = %v, want the fork's non-SDD set %v", installed, forkSharedReferences)
 			}
 			ledger, err := os.ReadFile(filepath.Join(sharedDir, "review-ledger-contract.md"))
 			if err != nil {
@@ -262,7 +266,7 @@ func TestUninstallRemovesRestoredSharedAndCommandFiles(t *testing.T) {
 	if _, err := RunUninstallWithSelection(home, "", []model.AgentID{model.AgentOpenCode}, nil); err != nil {
 		t.Fatalf("uninstall: %v", err)
 	}
-	for _, name := range v370SharedReferences {
+	for _, name := range forkSharedReferences {
 		if _, err := os.Stat(filepath.Join(sharedDir, name)); !os.IsNotExist(err) {
 			t.Errorf("owned _shared/%s survived uninstall: %v", name, err)
 		}
@@ -346,7 +350,7 @@ func TestInstallRefreshesSharedReferencesInCompatibilityRoot(t *testing.T) {
 	if _, err := RunInstall([]string{"--agent", "opencode", "--preset", "full-gentleman"}, system.DetectionResult{}); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range v370SharedReferences {
+	for _, name := range forkSharedReferences {
 		if _, err := os.Stat(filepath.Join(sharedDir, name)); err != nil {
 			t.Errorf("compatibility root missing _shared/%s: %v", name, err)
 		}

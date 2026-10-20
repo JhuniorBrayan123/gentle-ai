@@ -56,6 +56,10 @@ func backupManifestEntries(t *testing.T, home string) map[string]backup.Manifest
 // a sync after SDD retirement removes the native SDD agents a release rendered
 // (Kiro, Claude Code, Cursor, Kimi), snapshots them for rollback, and preserves
 // and reports any file whose bytes no release wrote.
+//
+// The fork keeps the SDD layer, so the retirement only runs for a selection
+// that does not carry the SDD component. This state therefore selects the
+// Skills component alone.
 func TestRunSyncRetiresOwnedSDDAgentsForEveryNativeFamily(t *testing.T) {
 	home := t.TempDir()
 	setSyncTestHome(t, home)
@@ -66,7 +70,7 @@ func TestRunSyncRetiresOwnedSDDAgentsForEveryNativeFamily(t *testing.T) {
 	}
 	if err := state.Write(home, state.InstallState{
 		InstalledAgents: installed, SelectionConfigured: true,
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentSkills},
+		Components: []model.ComponentID{model.ComponentSkills},
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +259,7 @@ func TestRunSyncRetiresKimiSDDAgentsWithoutDanglingParent(t *testing.T) {
 			setSyncTestHome(t, home)
 			if err := state.Write(home, state.InstallState{
 				InstalledAgents: []string{string(model.AgentKimi)}, SelectionConfigured: true,
-				Components: []model.ComponentID{model.ComponentSDD, model.ComponentSkills},
+				Components: []model.ComponentID{model.ComponentSkills},
 			}); err != nil {
 				t.Fatal(err)
 			}

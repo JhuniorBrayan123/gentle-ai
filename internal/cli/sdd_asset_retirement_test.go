@@ -73,13 +73,17 @@ func seedRetiredSDDAssets(t *testing.T, home string) (owned map[string][]byte, e
 // reports every file and hook whose bytes no release wrote. Files beside
 // them are never touched, and a kept edited skill holds the shared SDD
 // references it reads.
+//
+// The fork keeps the SDD layer, so the retirement only runs for a selection
+// that does not carry the SDD component. This state therefore selects the
+// Skills component alone.
 func TestRunSyncRetiresOwnedSDDSkillsCommandsAndHook(t *testing.T) {
 	home := t.TempDir()
 	setSyncTestHome(t, home)
 	agents := []string{string(model.AgentClaudeCode), string(model.AgentQwenCode)}
 	if err := state.Write(home, state.InstallState{
 		InstalledAgents: agents, SelectionConfigured: true,
-		Components: []model.ComponentID{model.ComponentSDD, model.ComponentSkills},
+		Components: []model.ComponentID{model.ComponentSkills},
 	}); err != nil {
 		t.Fatal(err)
 	}
