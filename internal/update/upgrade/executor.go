@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -243,11 +244,20 @@ func managedAgentBackupPaths(homeDir string, adapter agents.Adapter, diagnostics
 	}
 
 	if adapter.SupportsSubAgents() {
+		// The SDD sub-agents belong to the retired-SDD inventory, which
+		// enters the snapshot only when present. The embedded listing
+		// carries them because the fork keeps the SDD layer, so they are
+		// filtered out here and added below when they exist.
+		retiredAgents := legacyassets.RetiredSDDAgentPaths(adapter.Agent(), adapter.SubAgentsDir(homeDir))
 		for _, name := range embeddedFileNames(adapter.EmbeddedSubAgentsDir(), diagnostics) {
-			add(filepath.Join(adapter.SubAgentsDir(homeDir), name))
+			path := filepath.Join(adapter.SubAgentsDir(homeDir), name)
+			if slices.Contains(retiredAgents, path) {
+				continue
+			}
+			add(path)
 		}
 		// The upgraded binary's sync retires native SDD agents (#5157).
-		add(presentPaths(legacyassets.RetiredSDDAgentPaths(adapter.Agent(), adapter.SubAgentsDir(homeDir)))...)
+		add(presentPaths(retiredAgents)...)
 	}
 
 	if adapter.SupportsSkills() {
@@ -363,7 +373,17 @@ func managedSkillBackupPaths(homeDir string, adapter agents.Adapter, diagnostics
 		writeBackupDiagnostic(diagnostics, "backup: skipping embedded path %s: %v", assets.SharedSkillDir, sharedErr)
 	}
 	for _, relPath := range sharedFiles {
-		paths = append(paths, filepath.Join(skillDir, "_shared", filepath.FromSlash(relPath)))
+		path := filepath.Join(skillDir, "_shared", filepath.FromSlash(relPath))
+		if slices.Contains(skills.SDDOwnedSharedReferences(), relPath) {
+			// The SDD-owned shared references belong to the retired-SDD
+			// inventory, which enters the snapshot only when present: a path
+			// recorded as absent would be deleted by the restore, removing a
+			// file the user created after the upgrade.
+			if _, err := os.Lstat(path); err != nil {
+				continue
+			}
+		}
+		paths = append(paths, path)
 	}
 
 	return paths

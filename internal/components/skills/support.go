@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
@@ -53,6 +54,19 @@ var sddOwnedSharedSources = map[string]bool{
 	"openspec-convention.md": true,
 	"sdd-phase-common.md":    true,
 	"sdd-status-contract.md": true,
+}
+
+// SDDOwnedSharedReferences returns the sorted names of the shared references
+// the SDD component owns. The upgrade snapshot uses it to treat them as part
+// of the retired-SDD inventory: they enter the snapshot only when present, so
+// a restore never deletes a file the user created after the upgrade.
+func SDDOwnedSharedReferences() []string {
+	names := make([]string, 0, len(sddOwnedSharedSources))
+	for name := range sddOwnedSharedSources {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 // SharedReferencePaths returns every skills/_shared file the skills
