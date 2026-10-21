@@ -42,6 +42,29 @@ normalize_deadcode_output() {
     | sort -u
 }
 
+deadcode_target_goos() { printf 'linux\n'; }
+deadcode_target_goarch() { printf 'amd64\n'; }
+
+run_deadcode_for_canonical_target() {
+  local host_goos goexe tool_dir tool_path
+  host_goos="$(go env GOHOSTOS)"
+  if [[ "${host_goos}" == "$(deadcode_target_goos)" ]]; then
+    go run "${tool}" "${target}"
+    return
+  fi
+
+  # The committed baseline is the Linux/amd64 graph used by CI. Building the
+  # analyzer for the host and setting GOOS only while it loads the target keeps
+  # Windows/macOS checks comparable without trying to execute a Linux binary.
+  tool_dir="$(mktemp -d)"
+  goexe="$(go env GOEXE)"
+  tool_path="${tool_dir}/deadcode${goexe}"
+  trap 'rm -rf "${tool_dir}"' RETURN
+  GOBIN="${tool_dir}" go install "${tool}"
+  GOOS="$(deadcode_target_goos)" GOARCH="$(deadcode_target_goarch)" \
+    "${tool_path}" "${target}"
+}
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 baseline="${repo_root}/.deadcode-baseline.txt"
 target="${DEADCODE_TARGET:-./cmd/gentle-ai}"
@@ -52,7 +75,7 @@ cd "${repo_root}"
 # Normalize to "<file>\t<symbol>". Line and column are deliberately dropped:
 # pinning them would turn every unrelated edit above a dead function into a
 # spurious failure, and a guard that cries wolf gets disabled.
-current="$(go run "${tool}" "${target}" 2>/dev/null \
+current="$(run_deadcode_for_canonical_target 2>/dev/null \
   | normalize_deadcode_output)"
 
 if [[ "${1:-}" == "--update" ]]; then

@@ -23,6 +23,15 @@ if [[ -z "${definition}" ]]; then
 fi
 eval "${definition}"
 
+for function_name in deadcode_target_goos deadcode_target_goarch; do
+  definition="$(sed -n "/^${function_name}()/,/^}/p" "${repo_root}/scripts/deadcode-ratchet.sh")"
+  if [[ -z "${definition}" ]]; then
+    printf '%s not found in scripts/deadcode-ratchet.sh\n' "${function_name}" >&2
+    exit 1
+  fi
+  eval "${definition}"
+done
+
 expected=$'internal/tui/screens/welcome.go\tRenderWelcome'
 
 unix_actual="$(printf '%s\n' \
@@ -56,3 +65,10 @@ if [[ "${deduped}" != "${expected}" ]]; then
 fi
 
 printf 'deadcode path normalization: pass\n'
+
+if [[ "$(deadcode_target_goos)" != "linux" || "$(deadcode_target_goarch)" != "amd64" ]]; then
+  printf 'deadcode canonical target must remain linux/amd64\n' >&2
+  exit 1
+fi
+
+printf 'deadcode canonical target: pass\n'
