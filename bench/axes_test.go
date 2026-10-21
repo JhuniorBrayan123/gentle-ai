@@ -2,14 +2,23 @@ package main
 
 import "testing"
 
-// Retiring the OpenCode SDD transport axis must not remove the generic axis seam.
-func TestRetiredSDDTaskResultAxisIsNotRegistered(t *testing.T) {
+// The fork retains the OpenCode SDD transport axis as a supported benchmark.
+func TestRetainedSDDTaskResultAxisIsRegistered(t *testing.T) {
+	found := false
 	for _, axis := range Axes() {
-		if axis.Name == "sdd-task-result" {
-			t.Fatal("retired SDD task-result transport axis is still registered")
+		if axis.Name == sddTaskResultAxis {
+			found = true
+			break
 		}
 	}
-	if _, err := selectAxes("sdd-task-result"); err == nil {
-		t.Fatal("retired SDD task-result axis should be rejected as unknown")
+	if !found {
+		t.Fatal("retained SDD task-result transport axis is not registered")
+	}
+	selected, err := selectAxes(sddTaskResultAxis)
+	if err != nil {
+		t.Fatalf("select retained SDD task-result axis: %v", err)
+	}
+	if len(selected) != 1 || selected[0].Name != sddTaskResultAxis {
+		t.Fatalf("selected axes = %+v, want %q", selected, sddTaskResultAxis)
 	}
 }

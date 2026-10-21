@@ -5,13 +5,6 @@ import (
 	"testing"
 )
 
-// Retiring the SDD source must not remove the independent review journeys.
-func TestRetiredSDDSourceAbsent(t *testing.T) {
-	if _, err := os.Stat("journeys_sdd.go"); !os.IsNotExist(err) {
-		t.Fatalf("retired SDD source must be absent after cleanup: %v", err)
-	}
-}
-
 func TestReviewRecoveryGuardRailsPreserved(t *testing.T) {
 	journeys := reviewRecoveryJourneys()
 	if len(journeys) != 1 || journeys[0].ID != "j43-recovery-guard-rails-as-an-operator-meets-them" {
