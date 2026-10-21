@@ -149,7 +149,14 @@ func SupportFilePaths(homeDir string, adapter agents.Adapter, skillIDs []model.S
 // adapter, independent of the current selection. Uninstall and upgrade
 // snapshots use it so a deselected skill's command is still accounted for.
 func AllSkillCommandPaths(homeDir string, adapter agents.Adapter) ([]string, error) {
-	return SkillCommandPaths(homeDir, adapter, AllSkillIDs())
+	allSkills := AllSkillIDs()
+	paths, err := SkillCommandPaths(homeDir, adapter, allSkills)
+	if err != nil {
+		return nil, err
+	}
+	paths = append(paths, QACommandPaths(adapter, homeDir, allSkills)...)
+	paths = append(paths, SmartopsUICommandPaths(adapter, homeDir, allSkills)...)
+	return paths, nil
 }
 
 func skillCommands(homeDir string, adapter agents.Adapter, skillIDs []model.SkillID) ([]directoryAsset, error) {

@@ -1090,6 +1090,13 @@ func (s *Service) componentOperations(adapter agents.Adapter, componentID model.
 		}
 		targets = append(targets, opTargets...)
 		ops = append(ops, op)
+		// Skills and SDD both own files under the commands directory. The
+		// skills cleanup runs while SDD commands may still exist, so give the
+		// directory one final, non-destructive prune after SDD retirement.
+		// removeDirIfEmpty preserves it whenever a user-owned command remains.
+		if commandsDir := adapter.CommandsDir(homeDir); commandsDir != "" {
+			ops = append(ops, removeDirIfEmpty(commandsDir))
+		}
 	case model.ComponentGGA:
 		for _, path := range globalBackupTargets(homeDir) {
 			targets = append(targets, path)

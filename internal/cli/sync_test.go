@@ -4484,12 +4484,9 @@ func TestRunSyncProfilePersistsWhenSDDComponentMissingFromState(t *testing.T) {
 	}
 }
 
-// TestRunSyncPlainSyncHonoursPersistedComponentsWithoutProfile verifies that a
-// plain sync (no --profile / --profile-phase flags) still honours a persisted
-// component selection that omits "sdd" — the fix for #3430 must only re-add
-// ComponentSDD when the caller explicitly asked for profile or model
-// assignment work, not on every sync.
-func TestRunSyncLegacySDDStateKeepsRetainedOwners(t *testing.T) {
+// TestRunSyncLegacySDDStateRestoresRetainedSDD verifies that a state written
+// before the v4 migration still restores this fork's retained SDD component.
+func TestRunSyncLegacySDDStateRestoresRetainedSDD(t *testing.T) {
 	home := t.TempDir()
 	previousHome := osUserHomeDir
 	previousBackup := backup.UserHomeDirFn
@@ -4506,8 +4503,8 @@ func TestRunSyncLegacySDDStateKeepsRetainedOwners(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Selection.HasComponent(model.ComponentSDD) {
-		t.Fatal("legacy SDD component entered active sync selection")
+	if !result.Selection.HasComponent(model.ComponentSDD) {
+		t.Fatal("retained SDD component was dropped from active sync selection")
 	}
 	root := filepath.Join(home, ".claude")
 	for _, path := range []string{"agents/review-risk.md", "settings.json", "CLAUDE.md"} {
@@ -4515,8 +4512,8 @@ func TestRunSyncLegacySDDStateKeepsRetainedOwners(t *testing.T) {
 			t.Errorf("retained owner %s: %v", path, err)
 		}
 	}
-	if _, err := os.Stat(filepath.Join(root, "agents/sdd-apply.md")); !os.IsNotExist(err) {
-		t.Errorf("retired SDD agent recreated: %v", err)
+	if _, err := os.Stat(filepath.Join(root, "agents/sdd-apply.md")); err != nil {
+		t.Errorf("retained SDD agent was not restored: %v", err)
 	}
 }
 
@@ -4557,12 +4554,12 @@ func TestRunSyncPlainSyncHonoursPersistedComponentsWithoutProfile(t *testing.T) 
 	}
 }
 
-func TestRestorePersistedSelectionDoesNotActivateLegacySDDForAssignments(t *testing.T) {
+func TestRestorePersistedSelectionRestoresRetainedSDDForAssignments(t *testing.T) {
 	selection := model.Selection{Components: []model.ComponentID{model.ComponentSDD}, ModelAssignments: map[string]model.ModelAssignment{"explore": {ProviderID: "openai", ModelID: "gpt-5"}}}
 	persisted := state.InstallState{SelectionConfigured: true, Components: []model.ComponentID{model.ComponentSkills, model.ComponentSDD}, SDDMode: model.SDDModeMulti, StrictTDD: true}
 	RestorePersistedSelection(&selection, persisted, SyncFlags{})
-	if selection.HasComponent(model.ComponentSDD) || selection.SDDMode != "" {
-		t.Fatalf("retired SDD activated: %+v", selection)
+	if !selection.HasComponent(model.ComponentSDD) || selection.SDDMode != "" {
+		t.Fatalf("retained SDD selection was not restored cleanly: %+v", selection)
 	}
 	if selection.StrictTDD || selection.ModelAssignments["explore"].ModelID != "gpt-5" || !selection.HasComponent(model.ComponentSkills) {
 		t.Fatalf("retained sync options lost: %+v", selection)

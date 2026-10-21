@@ -403,7 +403,8 @@ func TestUninstallRemovesEmptiedSkillsDirectory(t *testing.T) {
 			}
 			for _, dir := range []string{filepath.Join(skillDir, "_shared"), adapter.CommandsDir(home)} {
 				if _, err := os.Stat(dir); !os.IsNotExist(err) {
-					t.Errorf("emptied directory %s survived uninstall: %v", dir, err)
+					entries, _ := os.ReadDir(dir)
+					t.Errorf("emptied directory %s survived uninstall: %v (entries %v)", dir, err, entries)
 				}
 			}
 		})
