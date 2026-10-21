@@ -94,18 +94,6 @@ type gateResult struct {
 // Reading the product back — uncounted proofs
 // ---------------------------------------------------------------------------
 
-// proveJSON runs one uncounted product invocation and decodes its stdout. A
-// non-JSON answer is reported with the product's own first stderr line, because
-// "the proof could not parse" and "the product refused" are different failures
-// and a fixture that confuses them teaches nothing.
-func proveJSON(sandbox *Sandbox, target any, args ...string) error {
-	observation := sandbox.readBack(args...)
-	if err := json.Unmarshal([]byte(strings.TrimSpace(observation.Stdout)), target); err != nil {
-		return fmt.Errorf("%s: %w (stderr: %s)", strings.Join(args, " "), err, firstLine(observation.Stderr))
-	}
-	return nil
-}
-
 // proveAuthorities reads every review lineage back out of the product.
 func proveAuthorities(sandbox *Sandbox) (authorityHead, error) {
 	var head authorityHead
@@ -422,22 +410,6 @@ func sddProveSelectedApproval(r *journeyRun) error {
 		}
 	}
 	return fmt.Errorf("fixture claims approved lineage %q but review status reports %+v", r.sandbox.Lineage, head.Entries)
-}
-
-// The authority controls intentionally drive the lineage their fixtures chose.
-// Generic journeys must instead follow the product's active authority.
-func sddCaptureSelectedAuthorityLenses(r *journeyRun) error {
-	if r.sandbox.Lineage == "" {
-		return errors.New("no selected authority lineage")
-	}
-	return captureAllLensesFor(r, "--lineage", r.sandbox.Lineage)
-}
-
-func sddCaptureSelectedAuthorityEvidence(r *journeyRun) error {
-	if r.sandbox.Lineage == "" {
-		return errors.New("no selected authority lineage")
-	}
-	return captureFinalEvidenceFor(r, "--lineage", r.sandbox.Lineage)
 }
 
 func sddSelectLineage(lineage string) func(*Sandbox) error {
