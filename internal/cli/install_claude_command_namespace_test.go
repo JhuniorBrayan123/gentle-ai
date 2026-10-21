@@ -41,7 +41,13 @@ func TestRunInstallRejectsRetiredSDDCommands(t *testing.T) {
 	}
 }
 
-func TestRunSyncPreservesUserEditedLegacyClaudeCommandWithoutReinstallingSDD(t *testing.T) {
+// TestRunSyncInstallsSDDCommandsWhenSDDIsSelected pins the fork's conditional
+// SDD contract on the Claude Code command namespace. A selection that carries
+// SDD installs the SDD commands and retires the legacy unprefixed name a
+// pre-#2644 install managed, so the runtime never keeps both. A user's own
+// command survives, and no command file is shadowed by a same-named skill
+// directory.
+func TestRunSyncInstallsSDDCommandsWhenSDDIsSelected(t *testing.T) {
 	home := installTestHome(t)
 	restoreBackupHome := backup.UserHomeDirFn
 	backup.UserHomeDirFn = func() (string, error) { return home, nil }
@@ -64,15 +70,17 @@ func TestRunSyncPreservesUserEditedLegacyClaudeCommandWithoutReinstallingSDD(t *
 		t.Fatalf("RunSync() error = %v", err)
 	}
 
-	// Sync must preserve user edits and never install another SDD command.
-	if data, err := os.ReadFile(legacy); err != nil || string(data) != "# user-edited former SDD command\n" {
-		t.Fatalf("sync changed an unverified legacy command: %q, %v", data, err)
+	// The selected SDD layer installs its own command and retires the legacy
+	// unprefixed name it replaced.
+	installed := filepath.Join(home, ".claude", "commands", "gentle-sdd-init.md")
+	if _, err := os.Stat(installed); err != nil {
+		t.Errorf("sync did not install the SDD command: %v", err)
 	}
-	if containsPath(result.ChangedFiles, legacy) {
-		t.Errorf("ChangedFiles reports untouched legacy command %q", legacy)
+	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
+		t.Errorf("sync kept the legacy unprefixed SDD command: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(home, ".claude", "commands", "gentle-sdd-init.md")); !os.IsNotExist(err) {
-		t.Errorf("sync installed a retired SDD command: %v", err)
+	if !containsPath(result.ChangedFiles, legacy) {
+		t.Errorf("ChangedFiles omits the retired legacy command %q", legacy)
 	}
 	if _, err := os.Stat(custom); err != nil {
 		t.Errorf("sync removed a user-owned command: %v", err)

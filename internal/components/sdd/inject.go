@@ -250,12 +250,16 @@ func SDDSharedConventionFiles() []string {
 }
 
 // ManagedSkillPaths returns every file the SDD component writes under
-// skillDir: the shared convention files it owns and the SDD skill documents.
+// skillDir: the shared references it installs and the SDD skill documents.
 // The paths are the ones the injector writes, so install and sync can
 // snapshot and verify them.
 func ManagedSkillPaths(skillDir string) ([]string, error) {
-	paths := make([]string, 0, len(SDDSharedConventionFiles())+len(compatibilitySDDSkillIDs))
-	for _, name := range SDDSharedConventionFiles() {
+	sharedFiles, err := assets.SharedSkillFileNames()
+	if err != nil {
+		return nil, fmt.Errorf("resolve SDD shared files: %w", err)
+	}
+	paths := make([]string, 0, len(sharedFiles)+len(compatibilitySDDSkillIDs))
+	for _, name := range sharedFiles {
 		paths = append(paths, filepath.Join(skillDir, "_shared", name))
 	}
 	skillPaths, err := skills.DirectoryPaths(skillDir, compatibilitySDDSkillIDs, "capable")

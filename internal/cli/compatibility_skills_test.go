@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/gentleman-programming/gentle-ai/v4/internal/backup"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/sdd"
 	componentskills "github.com/gentleman-programming/gentle-ai/v4/internal/components/skills"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 	"github.com/gentleman-programming/gentle-ai/v4/internal/pipeline"
@@ -575,14 +576,18 @@ func TestAdapterSkillFilesAreBackupTargets(t *testing.T) {
 				t.Errorf("adapter backup targets missing shared reference %q", path)
 			}
 		}
+		// This fork keeps its SDD layer, so a selection that carries SDD owns
+		// the SDD skills and the shared SDD convention files: they are managed
+		// assets that belong in the snapshot.
+		sddManaged, err := sdd.ManagedSkillPaths(filepath.Join(home, ".claude", "skills"))
+		if err != nil {
+			t.Fatalf("sdd.ManagedSkillPaths() error = %v", err)
+		}
 		for _, path := range targets {
 			if !strings.HasPrefix(path, filepath.Join(home, ".claude", "skills")+string(filepath.Separator)) || !strings.Contains(path, "sdd-") {
 				continue
 			}
-			// This fork keeps its SDD layer, so the shared SDD convention
-			// files are current assets that must be part of the snapshot. Only
-			// a retired sdd-* skill directory stays out of it.
-			if strings.Contains(filepath.ToSlash(path), "/_shared/") {
+			if slices.Contains(sddManaged, path) {
 				continue
 			}
 			t.Errorf("retired skill backup target: %s", path)
