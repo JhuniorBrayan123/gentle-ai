@@ -28,6 +28,20 @@ set -euo pipefail
 # makes this reproducible off the author's machine.
 export LC_ALL=C
 
+# normalize_deadcode_output turns the tool output into the "<file>\t<symbol>"
+# lines the baseline holds. The tool prints the file path with the host
+# separator, so a Windows run produced "internal\cli\run.go" against a
+# baseline entry "internal/cli/run.go": every baselined entry then looked
+# removed and every one of them looked new, and the guard reported the whole
+# repository instead of the functions that really are. The separator is
+# normalized here so the comparison is like-for-like on every platform.
+# scripts/test-deadcode-ratchet.sh proves this.
+normalize_deadcode_output() {
+  sed -E 's/^(.+):[0-9]+:[0-9]+: unreachable func: (.+)$/\1\t\2/' \
+    | sed 's#\\#/#g' \
+    | sort -u
+}
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 baseline="${repo_root}/.deadcode-baseline.txt"
 target="${DEADCODE_TARGET:-./cmd/gentle-ai}"
@@ -39,8 +53,7 @@ cd "${repo_root}"
 # pinning them would turn every unrelated edit above a dead function into a
 # spurious failure, and a guard that cries wolf gets disabled.
 current="$(go run "${tool}" "${target}" 2>/dev/null \
-  | sed -E 's/^(.+):[0-9]+:[0-9]+: unreachable func: (.+)$/\1\t\2/' \
-  | sort -u)"
+  | normalize_deadcode_output)"
 
 if [[ "${1:-}" == "--update" ]]; then
   printf '%s\n' "${current}" > "${baseline}"

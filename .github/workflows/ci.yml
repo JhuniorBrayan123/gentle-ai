@@ -160,6 +160,12 @@ jobs:
       # a NEW one appears. It exists because InstallCommandsForDep survived with
       # no callers while the install docs described the dependency remediation
       # it would have performed.
+      # The ratchet compares the tool output against the baseline with
+      # comm(1), so both sides must spell a path the same way. Proved first,
+      # because a mismatch reports the whole repository as new dead code.
+      - name: Check the deadcode ratchet comparison
+        run: bash scripts/test-deadcode-ratchet.sh
+
       - name: Check for new unreachable functions
         run: ./scripts/deadcode-ratchet.sh
 
