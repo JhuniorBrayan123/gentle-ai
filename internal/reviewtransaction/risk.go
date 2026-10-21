@@ -7,15 +7,18 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 )
 
-// LargeChangeLines is a review-composition boundary, not a tier input. Volume
-// deliberately no longer selects a review tier: a five-line authorization edit
-// outranks a five-thousand-line mechanical rename, so only evidence escalates.
+// LargeChangeLines is a review-composition boundary, not a general tier input.
+// Volume deliberately no longer selects a review tier: a five-line
+// authorization edit outranks a five-thousand-line mechanical rename, so only
+// evidence escalates. The single exception is the RDD authority files, whose
+// own changed lines reaching this boundary select focused 4R by size.
 const LargeChangeLines = 400
 const MaxCorrectionChangedLines = 200
 
@@ -41,14 +44,20 @@ const (
 type RiskSignal string
 
 const (
-	SignalAuth         RiskSignal = "auth"
-	SignalUpdate       RiskSignal = "update"
-	SignalSecurity     RiskSignal = "security"
-	SignalPayments     RiskSignal = "payments"
-	SignalDataExposure RiskSignal = "data_exposure"
-	SignalDataLoss     RiskSignal = "data_loss"
-	SignalPermissions  RiskSignal = "permissions"
-	SignalShellProcess RiskSignal = "shell_process"
+	SignalAuth RiskSignal = "auth"
+	// SignalUpdate is no longer derived from the update path token. It stays
+	// declared so frozen authorities and their published reasons still read back.
+	SignalUpdate        RiskSignal = "update"
+	SignalSecurity      RiskSignal = "security"
+	SignalPayments      RiskSignal = "payments"
+	SignalDataExposure  RiskSignal = "data_exposure"
+	SignalDataLoss      RiskSignal = "data_loss"
+	SignalPermissions   RiskSignal = "permissions"
+	SignalShellProcess  RiskSignal = "shell_process"
+	SignalDangerousSink RiskSignal = "dangerous_sink"
+	// SignalAgentEscalation is never derived from the snapshot: it marks the
+	// agent that made the change raising its review to high (S14).
+	SignalAgentEscalation RiskSignal = "agent_escalation"
 )
 
 type DiffStat struct {
@@ -69,6 +78,7 @@ const (
 	RiskReasonServiceToken     RiskReasonCode = "service_token"
 	RiskReasonShellSource      RiskReasonCode = "shell_source"
 	RiskReasonProcessBoundary  RiskReasonCode = "process_boundary"
+	RiskReasonDangerousSink    RiskReasonCode = "dangerous_sink"
 	RiskReasonProcessScanLimit RiskReasonCode = "process_scan_limit"
 	RiskReasonExecutableMode   RiskReasonCode = "executable_mode"
 	// RiskReasonLargeChange is never derived anymore; size stopped selecting a
@@ -84,6 +94,10 @@ const (
 	// it is a separate code because the two state different facts. Reporting an
 	// empty file as an executable change describes content that is not there.
 	RiskReasonEmptyContent RiskReasonCode = "empty_content"
+	// RiskReasonAgentEscalation reports an agent escalation frozen at START
+	// (CompactAgentEscalation), not snapshot evidence; the classifier never
+	// emits it.
+	RiskReasonAgentEscalation RiskReasonCode = "agent_escalation"
 )
 
 // RiskReason records only evidence derivable from the immutable snapshot.
@@ -143,6 +157,51 @@ func SelectReviewLenses(assessment RiskAssessment, focus string) ([]string, erro
 	default:
 		return nil, fmt.Errorf("unsupported review risk %q", assessment.Level)
 	}
+}
+
+// SelectAgentReviewLenses honors the agent's own lens choice for a reviewed
+// tier (verify-always-rdd-high S8): every named lens runs, in canonical order,
+// on medium and high alike. A structural-readback tier has no reviewers.
+func SelectAgentReviewLenses(assessment RiskAssessment, lenses []string) ([]string, error) {
+	if assessment.Level != RiskMedium && assessment.Level != RiskHigh {
+		return nil, fmt.Errorf("an agent lens selection needs a medium or high risk review, not %q", assessment.Level) // refusal:by-design world-action: START validates the agent selection and names the rerun command before this provider-owned check can refuse
+	}
+	chosen := map[string]bool{}
+	for _, lens := range lenses {
+		canonical, ok := ReviewLensFor(lens)
+		if !ok {
+			return nil, fmt.Errorf("unknown review lens %q", lens) // refusal:by-design world-action: START validates the agent selection and names the rerun command before this provider-owned check can refuse
+		}
+		if chosen[canonical] {
+			return nil, fmt.Errorf("repeated review lens %q", canonical) // refusal:by-design world-action: START validates the agent selection and names the rerun command before this provider-owned check can refuse
+		}
+		chosen[canonical] = true
+	}
+	selected := make([]string, 0, len(chosen))
+	for _, lens := range supportedLenses {
+		if chosen[lens] {
+			selected = append(selected, lens)
+		}
+	}
+	if len(selected) == 0 {
+		return nil, errors.New("an agent lens selection names no lens") // refusal:by-design world-action: START validates the agent selection and names the rerun command before this provider-owned check can refuse
+	}
+	return selected, nil
+}
+
+// ReviewLensFor resolves a lens in its short (risk) or canonical
+// (review-risk) form.
+func ReviewLensFor(name string) (string, bool) {
+	name = strings.TrimSpace(name)
+	if lens, ok := reviewFocusLens(name); ok {
+		return lens, true
+	}
+	for _, lens := range supportedLenses {
+		if name == lens {
+			return lens, true
+		}
+	}
+	return "", false
 }
 
 func reviewFocusLens(focus string) (string, bool) {
@@ -582,9 +641,10 @@ func treeBlobSizes(ctx context.Context, repo, tree string, paths []string) ([]tr
 // `stmt.Exec(`, and `/re/.exec(` are database statements and regular
 // expressions, not process boundaries (#2542). Spawn calls that only exist in
 // member form are named explicitly instead.
-const processBoundaryPattern = `(^#!)` +
-	`|((^|[^[:alnum:]_.])(subprocess|child_process|execute_process|exec)([^[:alnum:]_]|$))` +
-	`|(getRuntime\(\)\.exec\(|ProcessBuilder|os\.system\(|os\.exec[lv]p?e?\(|posix_spawn|proc_open\(|shell_exec\(|passthru\(|popen\(|Process\.Start\()`
+const processBoundaryPattern = `((^|[^[:alnum:]_.])(subprocess|child_process|execute_process|exec)([^[:alnum:]_]|$))` +
+	`|(execSync\(|getRuntime\(\)\.exec\(|ProcessBuilder|os\.system\(|os\.exec[lv]p?e?\(|posix_spawn|proc_open\(|shell_exec\(|passthru\(|popen\(|Process\.Start\()`
+
+var processSpawnLine = regexp.MustCompile(`(?i)` + processBoundaryPattern)
 
 func (builder SnapshotBuilder) processBoundaryRiskReasons(ctx context.Context, snapshot Snapshot, stats []DiffStat) ([]RiskReason, error) {
 	repo, err := builder.repositoryRoot(ctx)
@@ -593,7 +653,7 @@ func (builder SnapshotBuilder) processBoundaryRiskReasons(ctx context.Context, s
 	}
 	paths := make([]string, 0, len(stats))
 	for _, stat := range stats {
-		if isContentScanEligible(stat) {
+		if isContentScanEligible(stat) && !isTestRiskPath(stat.Path) {
 			paths = append(paths, stat.Path)
 		}
 	}
@@ -614,15 +674,15 @@ func (builder SnapshotBuilder) processBoundaryRiskReasons(ctx context.Context, s
 			}
 			treePaths = append(treePaths, blob.path)
 		}
-		if len(treePaths) == 0 {
+		// Both trees still count toward the scan budget above, but an
+		// interpreter directive is whole-file evidence only in the candidate:
+		// a shebang that exists solely on the base side no longer executes.
+		if tree != snapshot.CandidateTree || len(treePaths) == 0 {
 			continue
 		}
-		// An interpreter directive and a spawn construct are both process
-		// boundaries the file's extension can neither promise nor deny, so the
-		// same bounded pass looks for either inside the frozen bytes.
 		fixedArgs := []string{
 			"grep", "-I", "-l", "-z", "-i", "-E",
-			processBoundaryPattern, tree, "--",
+			`^#!`, tree, "--",
 		}
 		prefixLength := gitArgvPrefixLength(repo, fixedArgs...)
 		for _, batch := range batchLiteralPathspecs(treePaths, prefixLength) {
@@ -643,7 +703,82 @@ func (builder SnapshotBuilder) processBoundaryRiskReasons(ctx context.Context, s
 			}
 		}
 	}
+	// Diff output is bounded separately from the blob inventory; an oversized
+	// patch fails closed into the same scan-limit reason the blob scan uses,
+	// instead of erroring the whole assessment. Presentation is pinned so user
+	// prefix config cannot break path attribution, a textconv driver cannot
+	// replace the frozen bytes being scanned, and a binary or -diff attribute
+	// cannot collapse the patch into "Binary files differ".
+	diffFixedArgs := []string{
+		"-c", "core.quotePath=false", "diff", "--text", "--no-color", "--no-ext-diff", "--no-textconv",
+		"--src-prefix=a/", "--dst-prefix=b/", "--unified=0",
+		snapshot.BaseTree, snapshot.CandidateTree, "--",
+	}
+	diffPrefixLength := gitArgvPrefixLength(repo, diffFixedArgs...)
+	for _, batch := range batchLiteralPathspecs(paths, diffPrefixLength) {
+		args := append(append([]string{}, diffFixedArgs...), batch...)
+		output, err := runGitCaptured(ctx, repo, nil, nil, int(processBoundaryScanByteLimit), false, true, args...)
+		var limitErr *GitOutputLimitError
+		if errors.As(err, &limitErr) {
+			return []RiskReason{{Code: RiskReasonProcessScanLimit, Signal: SignalShellProcess, Path: strings.TrimPrefix(batch[0], ":(literal)")}}, nil
+		}
+		if err != nil {
+			return nil, fmt.Errorf("inspect process boundary diff: %w", err)
+		}
+		batchPaths := make(map[string]struct{}, len(batch))
+		for _, pathspec := range batch {
+			batchPaths[strings.TrimPrefix(pathspec, ":(literal)")] = struct{}{}
+		}
+		// ambiguousReason names the fail-closed scan-limit path when a section's
+		// attribution cannot be trusted: the first path handed to this batch, so
+		// the reason still points somewhere inspectable inside it.
+		ambiguousReason := RiskReason{Code: RiskReasonProcessScanLimit, Signal: SignalShellProcess, Path: strings.TrimPrefix(batch[0], ":(literal)")}
+		currentPath, inHunk, processSeen, sinkSeen := "", false, false, false
+		for _, line := range bytes.Split(output, []byte{'\n'}) {
+			switch {
+			case bytes.HasPrefix(line, []byte("diff --git ")):
+				separator := bytes.LastIndex(line, []byte(" b/"))
+				if separator < 0 {
+					return []RiskReason{ambiguousReason}, nil
+				}
+				currentPath, inHunk, processSeen, sinkSeen = string(line[separator+len(" b/"):]), false, false, false
+				if _, known := batchPaths[currentPath]; !known {
+					return []RiskReason{ambiguousReason}, nil
+				}
+			case bytes.HasPrefix(line, []byte("@@")):
+				inHunk = true
+			case inHunk && len(line) > 0 && line[0] == '+':
+				added := line[1:]
+				if !processSeen && !isCommentOnlySourceLine(currentPath, string(added)) && processSpawnLine.Match(added) {
+					reasons = append(reasons, RiskReason{Code: RiskReasonProcessBoundary, Signal: SignalShellProcess, Path: currentPath})
+					processSeen = true
+				}
+				if !sinkSeen && dangerousSinkLine(currentPath, string(added)) {
+					reasons = append(reasons, RiskReason{Code: RiskReasonDangerousSink, Signal: SignalDangerousSink, Path: currentPath})
+					sinkSeen = true
+				}
+			}
+		}
+	}
 	return canonicalRiskReasons(reasons), nil
+}
+
+// isTestRiskPath reports whether the file itself is a test: its name follows a
+// test naming convention, or it sits under a directory that only holds tests or
+// fixtures. Production packages also use test/ and spec/ directories, so those
+// names alone are not evidence.
+func isTestRiskPath(logicalPath string) bool {
+	segments := strings.Split(asciiLower(logicalPath), "/")
+	for _, segment := range segments[:len(segments)-1] {
+		switch segment {
+		case "__tests__", "testdata":
+			return true
+		}
+	}
+	name := asciiLower(path.Base(logicalPath))
+	return strings.HasSuffix(name, "_test.go") || strings.Contains(name, ".test.") ||
+		strings.Contains(name, ".spec.") || strings.HasPrefix(name, "test_") && strings.HasSuffix(name, ".py") ||
+		strings.HasSuffix(name, "_test.py")
 }
 
 func removeFallbackRiskReasons(reasons []RiskReason) []RiskReason {
@@ -677,9 +812,10 @@ func deriveSemanticRiskSignals(stats []DiffStat) []RiskSignal {
 // name suggested.
 func deriveSnapshotRiskReasons(stats []DiffStat, activeContent map[string]struct{}) []RiskReason {
 	candidates := make([]RiskReason, 0, len(stats)+1)
+	largeAuthorityChange := isLargeAuthorityChange(stats)
 	for _, stat := range stats {
 		if isSemanticRiskEligible(stat) {
-			if isServiceTokenReviewPath(stat.Path) {
+			if isServiceTokenReviewPath(stat.Path) && !isTestRiskPath(stat.Path) {
 				candidates = append(candidates, RiskReason{Code: RiskReasonServiceToken, Signal: SignalAuth, Path: stat.Path})
 			}
 			if isShellReviewPath(stat.Path) {
@@ -696,6 +832,11 @@ func deriveSnapshotRiskReasons(stats []DiffStat, activeContent map[string]struct
 			for _, signal := range hotPathRiskSignals(stat.Path) {
 				candidates = append(candidates, RiskReason{Code: RiskReasonHotPath, Signal: signal, Path: stat.Path})
 			}
+		}
+		// A large authority change reuses the hot-path/auth reason consumers
+		// already accept, so negotiated START and consent need no new code.
+		if largeAuthorityChange && isCountedAuthorityStat(stat) {
+			candidates = append(candidates, RiskReason{Code: RiskReasonHotPath, Signal: SignalAuth, Path: stat.Path})
 		}
 	}
 	if len(candidates) == 0 {
@@ -1342,7 +1483,7 @@ func hasHighSignal(signals []RiskSignal) bool {
 func validRiskSignal(signal RiskSignal) bool {
 	switch signal {
 	case SignalAuth, SignalUpdate, SignalSecurity, SignalPayments,
-		SignalDataExposure, SignalDataLoss, SignalPermissions, SignalShellProcess:
+		SignalDataExposure, SignalDataLoss, SignalPermissions, SignalShellProcess, SignalDangerousSink:
 		return true
 	default:
 		return false
@@ -1358,22 +1499,22 @@ func touchesHotPath(stats []DiffStat) bool {
 			return true
 		}
 	}
-	return false
+	return isLargeAuthorityChange(stats)
 }
 
+// hotPathRiskSignals names the sensitive areas a path token points at. Test
+// files only exercise those areas, so a token there is not evidence.
 func hotPathRiskSignals(logicalPath string) []RiskSignal {
-	signals := make([]RiskSignal, 0, 4)
-	if isNativeReviewAuthorityPath(logicalPath) {
-		signals = append(signals, SignalAuth)
+	if isTestRiskPath(logicalPath) {
+		return nil
 	}
+	signals := make([]RiskSignal, 0, 4)
 	for _, token := range strings.FieldsFunc(strings.ToLower(logicalPath), func(r rune) bool {
 		return r == '/' || r == '\\' || r == '.' || r == '-' || r == '_'
 	}) {
 		switch token {
 		case "auth":
 			signals = append(signals, SignalAuth)
-		case "update":
-			signals = append(signals, SignalUpdate)
 		case "security":
 			signals = append(signals, SignalSecurity)
 		case "webhook":
@@ -1385,6 +1526,22 @@ func hotPathRiskSignals(logicalPath string) []RiskSignal {
 		}
 	}
 	return canonicalRiskSignals(signals)
+}
+
+// isLargeAuthorityChange counts only the authored lines changed inside the RDD
+// authority files, with the same exclusions CountChangedLines applies.
+func isLargeAuthorityChange(stats []DiffStat) bool {
+	lines := 0
+	for _, stat := range stats {
+		if isCountedAuthorityStat(stat) {
+			lines += stat.Additions + stat.Deletions
+		}
+	}
+	return lines >= LargeChangeLines
+}
+
+func isCountedAuthorityStat(stat DiffStat) bool {
+	return isNativeReviewAuthorityPath(stat.Path) && !stat.Binary && !stat.ModeOnly
 }
 
 func isNativeReviewAuthorityPath(logicalPath string) bool {

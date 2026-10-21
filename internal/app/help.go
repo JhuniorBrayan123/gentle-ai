@@ -16,15 +16,12 @@ COMMANDS
   install      Configure AI coding agents on this machine
   uninstall    Remove Gentle AI managed files from this machine
   sync         Sync agent configs and skills to current version
+               GGA preserves existing literal providers; initializes only from mapped agents.
+               Missing mappings or unsafe shell config leave config unchanged with guidance.
+  codegraph init --cwd <project-root>
+               Initialize a project's CodeGraph index; codegraph [init] --help shows local help
   skill-registry refresh
                Refresh .atl/skill-registry.md with cache-hit fast path
-  sdd-status [change]
-               Print native SDD phase status for orchestrators
-  sdd-continue [change]
-               Print native SDD dispatcher routing output
-  sdd-attempt grant --cwd <repo> --change <change>
-               Record explicitly authorized edit roots for one change instance
-               Validate exact verification-report bytes without persistence
   review start [--cwd <repo>] [--base-ref <ref>] [--focus <risk|resilience|readability|reliability>] [--locale <en|es>]
   review capture-result --lineage <id> --target <id> --lens <lens> --order <n> --input <review.json>
                Admit one reviewer result; the final capture closes and burns its review
@@ -71,7 +68,7 @@ COMPATIBILITY COMMANDS
                Anonymous, opt-out usage telemetry; preview shows the exact payload without sending it;
                trigger runs the opportunistic check for hosts that never call install/update/sync
   restore      Restore a config backup
-  doctor       Run ecosystem health diagnostics
+  doctor       Run ecosystem health diagnostics (bounded tool version probes)
   version      Print version
 
 FLAGS

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 )
 
 func TestClaudeShortTerminalShowsFocusedRDDRowsAndConfirm(t *testing.T) {
@@ -28,9 +28,32 @@ func TestClaudeShortTerminalShowsFocusedRDDRowsAndConfirm(t *testing.T) {
 	}
 }
 
-func TestClaudeModelPickerPlacesResearchAfterExplore(t *testing.T) {
-	if len(claudePhases) < 3 || claudePhases[0] != "sdd-explore" || claudePhases[1] != "sdd-research" || claudePhases[2] != "sdd-propose" {
-		t.Fatalf("claude phase order = %v", claudePhases)
+func TestClaudePickerPreservesLegacyAssignmentsWithoutShowingRows(t *testing.T) {
+	legacy := model.ClaudePhaseAssignment{Model: model.ClaudeModelFable, Effort: model.ClaudeEffortHigh}
+	picker := NewClaudeModelPickerStateFromPhaseAssignments(map[string]model.ClaudePhaseAssignment{"sdd-propose": legacy})
+	picker.InCustomMode = true
+	if strings.Contains(RenderClaudeModelPicker(picker, 0), "Propose") {
+		t.Fatal("legacy SDD role is visible")
+	}
+	_, saved := HandleClaudeModelPickerNav("enter", &picker, ClaudeModelPickerOptionCount(picker)-2)
+	if saved["sdd-propose"] != legacy {
+		t.Fatalf("legacy assignment changed: %+v", saved["sdd-propose"])
+	}
+}
+
+func TestClaudePickerOffersOnlyActiveRoles(t *testing.T) {
+	picker := NewClaudeModelPickerState()
+	picker.InCustomMode = true
+	rows := RenderClaudeModelPicker(picker, 0)
+	for _, role := range []string{"ODD Explorer", "ODD Worker", "ODD Verify", "RDD Risk", "RDD Validator", "General delegation"} {
+		if !strings.Contains(rows, role) {
+			t.Errorf("missing active role %q: %s", role, rows)
+		}
+	}
+	for _, role := range []string{"sdd-", "SDD phase", "Explore   ", "Apply   "} {
+		if strings.Contains(rows, role) {
+			t.Errorf("retired SDD role %q visible: %s", role, rows)
+		}
 	}
 }
 
@@ -203,6 +226,30 @@ func TestHandleCustomPhaseNav_ConfirmAndBackRows(t *testing.T) {
 	}
 }
 
+func TestSonnetXHighSelectionAndRendering(t *testing.T) {
+	state := NewClaudeModelPickerState()
+	state.InCustomMode = true
+	state.Mode = ClaudeModeEffortSelect
+	phase := claudePhases[0]
+	state.SelectedPhase = phase
+	state.CustomAssignments[phase] = model.ClaudePhaseAssignment{Model: model.ClaudeModelSonnet}
+
+	out := RenderClaudeModelPicker(state, 0)
+	if !strings.Contains(out, "xhigh") {
+		t.Fatalf("Sonnet effort picker does not offer xhigh:\n%s", out)
+	}
+	handled, assignments := HandleClaudeModelPickerNav("enter", &state, 4) // xhigh
+	if !handled || assignments != nil || state.Mode != ClaudeModePhaseList {
+		t.Fatalf("effort selection = handled %v assignments %v mode %v", handled, assignments, state.Mode)
+	}
+	if got := state.CustomAssignments[phase]; got.Model != model.ClaudeModelSonnet || got.Effort != model.ClaudeEffortXHigh {
+		t.Fatalf("assignment = %+v, want sonnet/xhigh", got)
+	}
+	if out := RenderClaudeModelPicker(state, 0); !strings.Contains(out, "[xhigh]") {
+		t.Fatalf("saved Sonnet xhigh effort not rendered:\n%s", out)
+	}
+}
+
 func TestHandleCustomEffortSelect_OnlyOffersSupportedEfforts(t *testing.T) {
 	state := NewClaudeModelPickerState()
 	state.InCustomMode = true
@@ -231,7 +278,7 @@ func TestHandleCustomEffortSelect_OnlyOffersSupportedEfforts(t *testing.T) {
 // explicit model/effort selection flow.
 func TestRenderClaudeModelPicker_CustomModeRendersFable(t *testing.T) {
 	state := NewClaudeModelPickerStateFromAssignments(map[string]model.ClaudeModelAlias{
-		"sdd-propose": model.ClaudeModelFable,
+		"odd-explorer": model.ClaudeModelFable,
 	})
 	state.InCustomMode = true
 

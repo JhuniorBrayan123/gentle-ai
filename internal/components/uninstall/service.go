@@ -1,7 +1,6 @@
 package uninstall
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,23 +12,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/claude"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/pi"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/communitytool"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/engram"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/gga"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/opencodedefault"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/sdd"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/telemetryruntime"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/theme"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	opencodeactivation "github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/state"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/statecoord"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/claude"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/pi"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/backup"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/agentguidance"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/communitytool"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/engram"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/filemerge"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/gga"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/opencodedefault"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/opencoderuntimeplugins"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/reviewassets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/skills"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/telemetryruntime"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/theme"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	opencodeactivation "github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/state"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/statecoord"
 )
 
 type Manager interface {
@@ -67,21 +69,9 @@ type Service struct {
 	registry     *agents.Registry
 	now          func() time.Time
 
-	// profileNamesToRemove scopes SDD profile cleanup for this uninstall run.
-	// When profileSelectionScoped=false, SDD cleanup removes all detected profiles
-	// (legacy behavior). When true, only profileNamesToRemove are removed.
-	profileNamesToRemove   []string
-	profileSelectionScoped bool
-
 	// engramUninstallScope controls whether Engram cleanup removes global
 	// integration files/config (global) or project-local .engram data only.
 	engramUninstallScope model.EngramUninstallScope
-}
-
-type workflowCapability interface {
-	SupportsWorkflows() bool
-	WorkflowsDir(workspaceDir string) string
-	EmbeddedWorkflowsDir() string
 }
 
 type opType int
@@ -90,6 +80,9 @@ const (
 	opRewriteFile opType = iota
 	opRemoveFile
 	opRemoveTree
+	// opRetireSDD runs after every file and tree removal, so the empty
+	// directories it leaves are still pruned by opRemoveIfEmpty.
+	opRetireSDD
 	opRemoveIfEmpty
 )
 
@@ -99,7 +92,6 @@ var (
 		model.ComponentEngram,
 		model.ComponentContext7,
 		model.ComponentPermission,
-		model.ComponentSDD,
 		model.ComponentSkills,
 		model.ComponentTheme,
 		model.ComponentClaudeTheme,
@@ -111,42 +103,10 @@ var (
 		model.ComponentEngram,
 		model.ComponentContext7,
 		model.ComponentPermission,
-		model.ComponentSDD,
 		model.ComponentSkills,
 		model.ComponentTheme,
 		model.ComponentClaudeTheme,
 		model.ComponentOpenCodeGentleLogo,
-	}
-	configuredAgents = []string{
-		"gentle-orchestrator",
-		"sdd-orchestrator", // legacy key — kept for backward-compat cleanup
-		"sdd-init",
-		"sdd-explore",
-		"sdd-research",
-		"sdd-propose",
-		"sdd-spec",
-		"sdd-design",
-		"sdd-tasks",
-		"sdd-apply",
-		"sdd-verify",
-		"sdd-archive",
-		"sdd-onboard",
-		"jd-judge-a",
-		"jd-judge-b",
-		"jd-fix-agent",
-	}
-	// sddSkillPhaseIDs contains SDD skill phase IDs only (used for skill dir cleanup).
-	// Derived from configuredAgents: excludes the orchestrator (not a skill) and any
-	// non-skill agents (e.g. jd-*). When new phases or agents are added to
-	// configuredAgents, this list stays in sync automatically.
-	sddSkillPhaseIDs func() []string = func() []string {
-		skills := make([]string, 0, len(configuredAgents))
-		for _, id := range configuredAgents {
-			if strings.HasPrefix(id, "sdd-") && id != "sdd-orchestrator" {
-				skills = append(skills, id)
-			}
-		}
-		return skills
 	}
 )
 
@@ -160,6 +120,12 @@ type operation struct {
 	// cleanup it was.
 	agents []model.AgentID
 	apply  func(path string) (changed bool, removed bool, err error)
+	// report, when set, adds to the result what an operation changed
+	// beyond its own path. It runs after apply, even when apply failed.
+	report func(result *Result)
+	// notes, when set, names what a successful apply kept for the user to
+	// decide on.
+	notes func() []string
 }
 
 // operationFailure records one operation that did not complete, so the run can
@@ -212,7 +178,7 @@ func PartialUninstall(homeDir, workspaceDir, appVersion string, agentIDs []strin
 	return svc.PartialUninstall(agentsTyped, componentsTyped)
 }
 
-func PartialUninstallWithProfileSelection(homeDir, workspaceDir, appVersion string, agentIDs []string, componentIDs []string, profileNames []string, engramScope model.EngramUninstallScope) (Result, error) {
+func PartialUninstallWithEngramScopeSelection(homeDir, workspaceDir, appVersion string, agentIDs []string, componentIDs []string, engramScope model.EngramUninstallScope) (Result, error) {
 	svc, err := NewService(homeDir, workspaceDir, appVersion)
 	if err != nil {
 		return Result{}, err
@@ -228,7 +194,7 @@ func PartialUninstallWithProfileSelection(homeDir, workspaceDir, appVersion stri
 		componentsTyped = append(componentsTyped, model.ComponentID(componentID))
 	}
 
-	return svc.PartialUninstallWithProfiles(agentsTyped, componentsTyped, profileNames, engramScope)
+	return svc.PartialUninstallWithEngramScope(agentsTyped, componentsTyped, engramScope)
 }
 
 func CompleteUninstall(homeDir, workspaceDir, appVersion string) (Result, error) {
@@ -240,19 +206,14 @@ func CompleteUninstall(homeDir, workspaceDir, appVersion string) (Result, error)
 }
 
 func (s *Service) PartialUninstall(agentIDs []model.AgentID, componentIDs []model.ComponentID) (Result, error) {
-	s.profileNamesToRemove = nil
-	s.profileSelectionScoped = false
 	s.engramUninstallScope = model.EngramUninstallScopeGlobal
 
 	return s.partialUninstall(agentIDs, componentIDs)
 }
 
-func (s *Service) PartialUninstallWithProfiles(agentIDs []model.AgentID, componentIDs []model.ComponentID, profileNames []string, engramScope model.EngramUninstallScope) (Result, error) {
-	s.SetProfileNamesToRemove(profileNames)
+func (s *Service) PartialUninstallWithEngramScope(agentIDs []model.AgentID, componentIDs []model.ComponentID, engramScope model.EngramUninstallScope) (Result, error) {
 	s.SetEngramUninstallScope(engramScope)
 	defer func() {
-		s.profileNamesToRemove = nil
-		s.profileSelectionScoped = false
 		s.engramUninstallScope = model.EngramUninstallScopeGlobal
 	}()
 
@@ -260,7 +221,7 @@ func (s *Service) PartialUninstallWithProfiles(agentIDs []model.AgentID, compone
 }
 
 // partialUninstall is the shared body of PartialUninstall and
-// PartialUninstallWithProfiles. It resolves the requested components,
+// PartialUninstallWithEngramScope. It resolves the requested components,
 // downgrades any that are still shared with an agent this run is not
 // removing (see reconcileSharedComponents), and executes the resulting plan.
 func (s *Service) partialUninstall(agentIDs []model.AgentID, componentIDs []model.ComponentID) (Result, error) {
@@ -412,11 +373,6 @@ func expandVisualPolishUninstallComponents(components []model.ComponentID) []mod
 	return expanded
 }
 
-func (s *Service) SetProfileNamesToRemove(profileNames []string) {
-	s.profileNamesToRemove = dedupeSortedStrings(profileNames)
-	s.profileSelectionScoped = true
-}
-
 func (s *Service) SetEngramUninstallScope(scope model.EngramUninstallScope) {
 	if scope == model.EngramUninstallScopeProject {
 		s.engramUninstallScope = model.EngramUninstallScopeProject
@@ -426,8 +382,6 @@ func (s *Service) SetEngramUninstallScope(scope model.EngramUninstallScope) {
 }
 
 func (s *Service) CompleteUninstall() (Result, error) {
-	s.profileNamesToRemove = nil
-	s.profileSelectionScoped = false
 	s.engramUninstallScope = model.EngramUninstallScopeGlobal
 
 	allAgents := s.registry.SupportedAgents()
@@ -514,8 +468,101 @@ func (s *Service) buildPlan(agentIDs []model.AgentID, componentIDs []model.Compo
 			backupTargets[piAdapter.SystemPromptFile(s.homeDir)] = struct{}{}
 		}
 	}
+	if removesAllAgentComponents(componentIDs) {
+		for _, agentID := range agentIDs {
+			adapter, _ := s.registry.Get(agentID)
+			var path string
+			switch agentID {
+			case model.AgentClaudeCode:
+				path = adapter.SettingsPath(s.homeDir)
+			case model.AgentCodex:
+				path = filepath.Join(adapter.GlobalConfigDir(s.homeDir), "hooks.json")
+			}
+			if path != "" {
+				backupTargets[path] = struct{}{}
+				op := rewriteSkillRegistryHook(path)
+				op.agents = []model.AgentID{agentID}
+				key := operationKey(op)
+				if existing, ok := operationsByKey[key]; ok {
+					op = mergeRewriteOps(existing, op)
+				}
+				operationsByKey[key] = op
+			}
+		}
+	}
+	if removesAllAgentComponents(componentIDs) && !slices.Contains(componentIDs, model.ComponentSDD) {
+		for _, agentID := range agentIDs {
+			adapter, _ := s.registry.Get(agentID)
+			op, targets, ok := s.retiredSDDOperation(adapter)
+			if !ok {
+				continue
+			}
+			for _, target := range targets {
+				backupTargets[target] = struct{}{}
+			}
+			// One retirement per runtime: runtimes sharing a config root
+			// still retire their own inventories.
+			operationsByKey["retire-sdd:"+string(agentID)] = op
+		}
+	}
+	if removesAllAgentComponents(componentIDs) {
+		for _, agentID := range agentIDs {
+			if agentID != model.AgentOpenCode && agentID != model.AgentKilocode {
+				continue
+			}
+			adapter, _ := s.registry.Get(agentID)
+			for _, path := range settingsTargets(s.homeDir, adapter) {
+				backupTargets[path] = struct{}{}
+				op := removeOpenCodeFamilyAgents(path, agentID)
+				op.agents = []model.AgentID{agentID}
+				key := operationKey(op)
+				if existing, ok := operationsByKey[key]; ok {
+					op = mergeRewriteOps(existing, op)
+				}
+				operationsByKey[key] = op
+			}
+			for _, op := range retainedOpenCodePluginOperations(adapter, s.homeDir) {
+				backupTargets[op.path] = struct{}{}
+				operationsByKey[operationKey(op)] = op
+			}
+		}
+	}
+	if slices.Contains(agentIDs, model.AgentClaudeCode) && removesAllAgentComponents(componentIDs) {
+		// Only a complete Claude removal retires the module pilot (see
+		// retireClaudeGlobalModules); snapshot every file it may change. An
+		// unreadable ledger path fails the plan before any write.
+		paths, err := agentguidance.ClaudeGlobalModulePaths(s.homeDir)
+		if err != nil {
+			return plan{}, err
+		}
+		for _, path := range paths {
+			backupTargets[path] = struct{}{}
+		}
+	}
 	if slices.Contains(agentIDs, model.AgentOpenCode) && removesAllAgentComponents(componentIDs) {
 		adapter, _ := s.registry.Get(model.AgentOpenCode)
+		// Only a complete OpenCode removal rolls back defaults owned by an
+		// earlier install. Snapshot the record alongside settings before writes.
+		for _, path := range settingsTargets(s.homeDir, adapter) {
+			defaultPlan, err := opencodedefault.PrepareUninstall(path)
+			if err != nil {
+				return plan{}, err
+			}
+			backupTargets[path] = struct{}{}
+			backupTargets[opencodedefault.OwnershipPath(path)] = struct{}{}
+			op := operation{typeID: opRewriteFile, path: path, agents: []model.AgentID{model.AgentOpenCode}, apply: func(path string) (bool, bool, error) {
+				raw, err := os.ReadFile(path)
+				if err != nil && !os.IsNotExist(err) {
+					return false, false, err
+				}
+				return defaultPlan.Apply(raw, err == nil)
+			}}
+			key := operationKey(op)
+			if existing, ok := operationsByKey[key]; ok {
+				op = mergeRewriteOps(op, existing)
+			}
+			operationsByKey[key] = op
+		}
 		configDir := adapter.GlobalConfigDir(s.homeDir)
 		if err := telemetryruntime.CheckManaged(configDir); err != nil {
 			return plan{}, err
@@ -527,6 +574,15 @@ func (s *Service) buildPlan(agentIDs []model.AgentID, componentIDs []model.Compo
 		for _, path := range opencodeactivation.LauncherPaths(s.homeDir, runtime.GOOS) {
 			backupTargets[path] = struct{}{}
 			operationsByKey[operationKey(removeOwnedOpenCodeLauncher(path))] = removeOwnedOpenCodeLauncher(path)
+		}
+		// Only profiles that carry the canonical managed block are snapshotted
+		// and rewritten; every other profile byte belongs to the user.
+		for _, path := range opencodeactivation.ManagedProfilePaths(s.homeDir) {
+			if runtime.GOOS == "windows" || !opencodeactivation.HasManagedProfileBlock(path) {
+				continue
+			}
+			backupTargets[path] = struct{}{}
+			operationsByKey[operationKey(removeOwnedOpenCodeProfileBlock(path))] = removeOwnedOpenCodeProfileBlock(path)
 		}
 	}
 
@@ -589,10 +645,10 @@ func (s *Service) executePlan(p plan, agentsToRemove []model.AgentID) (Result, e
 		// Pi's SupportsSystemPrompt() gate keeps componentOperations() from
 		// ever queuing a rewrite for its SystemPromptFile, so a stale
 		// gentle-ai block left there by an older install is never cleaned up
-		// by the generic persona/SDD rewrite ops above. Retire it directly.
+		// by the generic persona rewrite ops above. Retire it directly.
 		if piAdapter, ok := s.registry.Get(model.AgentPi); ok {
 			promptPath := piAdapter.SystemPromptFile(s.homeDir)
-			retireResult, retireErr := sdd.RetirePiSystemPromptBlocks(s.homeDir, piAdapter)
+			retireResult, retireErr := agentguidance.RetirePiSystemPromptBlocks(s.homeDir, piAdapter)
 			if retireErr != nil {
 				failures = append(failures, operationFailure{
 					path:   promptPath,
@@ -611,9 +667,15 @@ func (s *Service) executePlan(p plan, agentsToRemove []model.AgentID) (Result, e
 
 	for _, op := range p.operations {
 		changed, removed, err := op.apply(op.path)
+		if op.report != nil {
+			op.report(&result)
+		}
 		if err != nil {
 			failures = append(failures, operationFailure{path: op.path, agents: op.agents, err: err})
 			continue
+		}
+		if op.notes != nil {
+			result.ManualActions = append(result.ManualActions, op.notes()...)
 		}
 		if op.typeID == opRemoveIfEmpty && !removed {
 			if note, ok := manualActionForNonEmptyDirectory(op.path); ok {
@@ -634,6 +696,16 @@ func (s *Service) executePlan(p plan, agentsToRemove []model.AgentID) (Result, e
 			if removed {
 				result.RemovedDirectories = append(result.RemovedDirectories, op.path)
 			}
+		}
+	}
+
+	if slices.Contains(agentsToRemove, model.AgentClaudeCode) {
+		if err := s.retireClaudeGlobalModules(&result); err != nil {
+			failures = append(failures, operationFailure{
+				path:   claude.NewAdapter().GlobalConfigDir(s.homeDir),
+				agents: []model.AgentID{model.AgentClaudeCode},
+				err:    fmt.Errorf("retire Claude orchestrator modules: %w", err),
+			})
 		}
 	}
 
@@ -667,6 +739,51 @@ func (s *Service) executePlan(p plan, agentsToRemove []model.AgentID) (Result, e
 		return result, errors.Join(errs...)
 	}
 	return result, nil
+}
+
+// retireClaudeGlobalModules returns a complete Claude removal from the module
+// pilot to the monolithic orchestrator, and does nothing without a module
+// ledger. Each known path is reported as it is on disk afterwards: removed or
+// changed when retirement touched it, and kept for manual review otherwise.
+// Nothing else in the module directory is enumerated.
+func (s *Service) retireClaudeGlobalModules(result *Result) error {
+	paths, err := agentguidance.ClaudeGlobalModulePaths(s.homeDir)
+	if err != nil || paths == nil {
+		return err
+	}
+	retired, err := agentguidance.RetireClaudeGlobalModules(s.homeDir, reviewassets.ReviewExecutionContractFor)
+	return reportClaudeModuleRetirement(result, paths, retired, err)
+}
+
+// reportClaudeModuleRetirement records in result what retiring the module
+// pilot did to paths, the files ClaudeGlobalModulePaths planned. A failed
+// retirement that still reports Changed did not finish its rollback, so which
+// files it left changed is unknown: none is reported as removed or changed,
+// and the user is asked to inspect the core and the module directory.
+func reportClaudeModuleRetirement(result *Result, paths []string, retired agentguidance.Result, err error) error {
+	if err != nil {
+		if retired.Changed {
+			result.ManualActions = append(result.ManualActions, fmt.Sprintf(
+				"Inspect %s and %s before rerunning the uninstall: the failed Claude orchestrator module retirement did not finish its rollback, so they may be partially changed",
+				paths[0], filepath.Dir(paths[len(paths)-1])))
+		}
+		return err
+	}
+	for _, path := range paths {
+		_, statErr := os.Lstat(path)
+		switch {
+		case slices.Contains(retired.Files, path) && os.IsNotExist(statErr):
+			result.RemovedFiles = append(result.RemovedFiles, path)
+		case slices.Contains(retired.Files, path):
+			if !slices.Contains(result.ChangedFiles, path) {
+				result.ChangedFiles = append(result.ChangedFiles, path)
+			}
+		case statErr == nil:
+			result.ManualActions = append(result.ManualActions, fmt.Sprintf(
+				"Remove manually if no longer needed: %s (orchestrator module modified or not owned by Gentle AI, kept)", path))
+		}
+	}
+	return nil
 }
 
 // failedAgents reports which agents cannot claim a completed uninstall. A
@@ -772,11 +889,12 @@ func retainedPiResources(homeDir, workspaceDir string) []string {
 	return retained
 }
 
-// optionalPiPackageCleanupCommands mirrors the Pi adapter's canonical package
-// sources. Each command remains separate because Pi 0.85.1 supports
-// `pi remove <source>`, not a bulk remove form.
+// optionalPiPackageCleanupCommands mirrors the Pi adapter's uninstall package
+// sources: the managed packages plus the retired pi-mcp-adapter that older
+// releases installed. Each command remains separate because Pi 0.85.1
+// supports `pi remove <source>`, not a bulk remove form.
 func optionalPiPackageCleanupCommands() []string {
-	sources := pi.ManagedPackageSources()
+	sources := pi.UninstallPackageSources()
 	commands := make([]string, 0, len(sources))
 	for _, source := range sources {
 		commands = append(commands, "pi remove "+source)
@@ -807,8 +925,11 @@ func dedupeSortedStrings(items []string) []string {
 	return slices.Compact(cloned)
 }
 
+// settingsTargets returns the JSON settings files generic cleaners may rewrite.
+// Only the native path is classified: OpenCode's effective path is caller
+// selected and kept as-is.
 func settingsTargets(homeDir string, adapter agents.Adapter) []string {
-	path := adapter.SettingsPath(homeDir)
+	path := agents.JSONSettingsPath(homeDir, adapter)
 	if path == "" {
 		return nil
 	}
@@ -832,6 +953,12 @@ func (s *Service) componentOperations(adapter agents.Adapter, componentID model.
 
 	switch componentID {
 	case model.ComponentPersona:
+		if adapter.Agent() == model.AgentOpenCode || adapter.Agent() == model.AgentKilocode {
+			for _, path := range settingsTargets(homeDir, adapter) {
+				targets = append(targets, path)
+				ops = append(ops, removeOpenCodeGentleman(path, adapter.Agent()))
+			}
+		}
 		if adapter.SupportsSystemPrompt() {
 			path := adapter.SystemPromptFile(homeDir)
 			targets = append(targets, path)
@@ -850,9 +977,6 @@ func (s *Service) componentOperations(adapter agents.Adapter, componentID model.
 		for _, path := range settingsTargets(homeDir, adapter) {
 			targets = append(targets, path)
 			jsonPaths := []jsonPath{{"outputStyle"}}
-			if adapter.Agent() == model.AgentOpenCode {
-				jsonPaths = append(jsonPaths, jsonPath{"agent", "gentleman"})
-			}
 			ops = append(ops, rewriteJSONFile(path, jsonPaths...))
 		}
 	case model.ComponentContext7:
@@ -931,140 +1055,47 @@ func (s *Service) componentOperations(adapter agents.Adapter, componentID model.
 			targets = append(targets, dirPath)
 			ops = append(ops, removeTree(dirPath), removeDirIfEmpty(skillDir))
 		}
+		// _shared may hold user-authored notes, so only the embedded references
+		// the skills component writes are removed, never the whole directory.
+		shared, err := skills.SharedReferencePaths(skillDir)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, path := range shared {
+			targets = append(targets, path)
+			ops = append(ops, removeFile(path))
+		}
+		// Upgraded installs may still hold the obsolete generated marker; install
+		// only ever removes it as a regular file, so uninstall does the same.
+		marker := skills.LegacySharedMarkerPath(skillDir)
+		targets = append(targets, marker)
+		ops = append(ops, removeRegularFile(marker))
+		ops = append(ops, removeDirIfEmpty(filepath.Join(skillDir, "_shared")))
+		commands, err := skills.AllSkillCommandPaths(homeDir, adapter)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, path := range commands {
+			targets = append(targets, path)
+			ops = append(ops, removeFile(path), removeDirIfEmpty(filepath.Dir(path)))
+		}
 	case model.ComponentSDD:
-		if adapter.SupportsSystemPrompt() {
-			path := adapter.SystemPromptFile(homeDir)
-			targets = append(targets, path)
-			ops = append(ops, rewriteMarkdownFile(path, func(content string) (string, bool) {
-				return removeMarkdownSections(content, "sdd-orchestrator", "strict-tdd-mode")
-			}))
+		// The fork keeps the SDD layer, so uninstalling it removes the SDD
+		// assets gentle-ai manages and keeps every file it cannot prove it
+		// wrote. The retirement inventory and its ownership proof are the
+		// same ones install and sync use (#5157).
+		op, opTargets, ok := s.retiredSDDOperation(adapter)
+		if !ok {
+			break
 		}
-		if adapter.SupportsSlashCommands() {
-			commandsDir := adapter.CommandsDir(homeDir)
-			commandsAssetDir := assets.SDDCommandsAssetDir(adapter.Agent())
-			entries, err := fs.ReadDir(assets.FS, commandsAssetDir)
-			if err != nil {
-				return nil, nil, fmt.Errorf("read embedded %s: %w", commandsAssetDir, err)
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				path := filepath.Join(commandsDir, entry.Name())
-				targets = append(targets, path)
-				ops = append(ops, removeFile(path))
-				if legacy := sdd.LegacyClaudeCommandPath(adapter.Agent(), commandsDir, entry.Name()); legacy != "" {
-					targets = append(targets, legacy)
-					ops = append(ops, removeFile(legacy))
-				}
-			}
+		targets = append(targets, opTargets...)
+		ops = append(ops, op)
+		// Skills and SDD both own files under the commands directory. The
+		// skills cleanup runs while SDD commands may still exist, so give the
+		// directory one final, non-destructive prune after SDD retirement.
+		// removeDirIfEmpty preserves it whenever a user-owned command remains.
+		if commandsDir := adapter.CommandsDir(homeDir); commandsDir != "" {
 			ops = append(ops, removeDirIfEmpty(commandsDir))
-		}
-		if path := adapter.SettingsPath(homeDir); path != "" && adapter.Agent() == model.AgentClaudeCode {
-			targets = append(targets, path)
-			ops = append(ops, rewriteSkillRegistryHook(path))
-		}
-		if adapter.Agent() == model.AgentCodex {
-			path := filepath.Join(adapter.GlobalConfigDir(homeDir), "hooks.json")
-			targets = append(targets, path)
-			ops = append(ops, rewriteSkillRegistryHook(path))
-		}
-		if adapter.Agent() == model.AgentOpenCode {
-			for _, path := range settingsTargets(homeDir, adapter) {
-				defaultPlan, err := opencodedefault.PrepareUninstall(path)
-				if err != nil {
-					return nil, nil, err
-				}
-				targets = append(targets, path, opencodedefault.OwnershipPath(path))
-				paths := make([]jsonPath, 0, len(configuredAgents)+1)
-				for _, agentKey := range configuredAgents {
-					paths = append(paths, jsonPath{"agent", agentKey})
-				}
-				paths = append(paths, jsonPath{"agent", "default_agent"})
-
-				// Remove named SDD profile agents (suffixed keys). If a profile subset was
-				// selected in the uninstall flow, remove only those profiles; otherwise,
-				// preserve legacy behavior and remove all detected profiles.
-				if s.profileSelectionScoped {
-					for _, profileName := range s.profileNamesToRemove {
-						for _, agentKey := range sdd.ProfileAgentKeys(profileName) {
-							paths = append(paths, jsonPath{"agent", agentKey})
-						}
-					}
-				} else if profiles, err := sdd.DetectProfiles(path); err == nil {
-					for _, profile := range profiles {
-						for _, agentKey := range sdd.ProfileAgentKeys(profile.Name) {
-							paths = append(paths, jsonPath{"agent", agentKey})
-						}
-					}
-				}
-
-				ops = append(ops, rewriteOpenCodeSDDSettings(path, defaultPlan, paths...))
-			}
-
-			// The SDD plugin writer resolves the config directory through the
-			// adapter and owns the plugin list; uninstall must match it (#3219).
-			pluginDir := filepath.Join(adapter.GlobalConfigDir(homeDir), "plugins")
-			for _, name := range append([]string{"background-agents.ts"}, sdd.OpenCodePluginLifecycleNames(adapter.Agent())...) {
-				pluginPath := filepath.Join(pluginDir, name)
-				targets = append(targets, pluginPath)
-				ops = append(ops, removeFile(pluginPath))
-			}
-			ops = append(ops, removeDirIfEmpty(pluginDir))
-
-			modelVariantsCacheDir := filepath.Join(homeDir, ".gentle-ai", "cache")
-			for _, cachePath := range modelVariantsCachePaths(modelVariantsCacheDir) {
-				targets = append(targets, cachePath)
-				ops = append(ops, removeFile(cachePath))
-			}
-
-			depDir := filepath.Join(homeDir, ".config", "opencode", "node_modules", "unique-names-generator")
-			targets = append(targets, depDir)
-			ops = append(ops, removeTree(depDir), removeDirIfEmpty(filepath.Dir(depDir)))
-		}
-		if adapter.SupportsSkills() {
-			skillDir := adapter.SkillsDir(homeDir)
-			sharedDir := filepath.Join(skillDir, "_shared")
-			targets = append(targets, sharedDir)
-			ops = append(ops, removeTree(sharedDir))
-			for _, skillID := range managedSDDSkillIDs() {
-				dirPath := filepath.Join(skillDir, skillID)
-				targets = append(targets, dirPath)
-				ops = append(ops, removeTree(dirPath))
-			}
-			ops = append(ops, removeDirIfEmpty(skillDir))
-		}
-		if cap, ok := adapter.(workflowCapability); ok && cap.SupportsWorkflows() && s.workspaceDir != "" {
-			workflowsDir := cap.WorkflowsDir(s.workspaceDir)
-			entries, err := fs.ReadDir(assets.FS, cap.EmbeddedWorkflowsDir())
-			if err != nil {
-				return nil, nil, fmt.Errorf("read embedded workflows: %w", err)
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				path := filepath.Join(workflowsDir, entry.Name())
-				targets = append(targets, path)
-				ops = append(ops, removeFile(path))
-			}
-			ops = append(ops, removeDirIfEmpty(workflowsDir), removeDirIfEmpty(filepath.Dir(workflowsDir)))
-		}
-		if adapter.SupportsSubAgents() {
-			agentsDir := adapter.SubAgentsDir(homeDir)
-			entries, err := fs.ReadDir(assets.FS, adapter.EmbeddedSubAgentsDir())
-			if err != nil {
-				return nil, nil, fmt.Errorf("read embedded sub-agents: %w", err)
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				path := filepath.Join(agentsDir, entry.Name())
-				targets = append(targets, path)
-				ops = append(ops, removeFile(path))
-			}
-			ops = append(ops, removeDirIfEmpty(agentsDir))
 		}
 	case model.ComponentGGA:
 		for _, path := range globalBackupTargets(homeDir) {
@@ -1246,9 +1277,8 @@ func rewriteJSONFile(path string, jsonPaths ...jsonPath) operation {
 				}
 				return true, true, nil
 			}
-			// Preserve the file's existing mode: ~/.claude.json is injected
-			// with 0600 because it holds the OAuth session, and an uninstall
-			// rewrite must not widen it.
+			// Preserve the file's existing mode: an uninstall rewrite must
+			// not widen permissions on a file the user or agent restricted.
 			perm := os.FileMode(0o644)
 			if info, statErr := os.Lstat(path); statErr == nil {
 				perm = info.Mode().Perm()
@@ -1298,24 +1328,6 @@ func rewriteClaudeUserConfig(homeDir string, jsonPaths ...jsonPath) operation {
 	}
 }
 
-func rewriteOpenCodeSDDSettings(path string, plan *opencodedefault.UninstallPlan, jsonPaths ...jsonPath) operation {
-	return operation{typeID: opRewriteFile, path: path, apply: func(path string) (bool, bool, error) {
-		raw, err := readManagedFile(path)
-		exists := err == nil
-		if err != nil && !os.IsNotExist(err) {
-			return false, false, err
-		}
-		updated := raw
-		if exists {
-			updated, _, err = removeJSONPaths(raw, jsonPaths...)
-			if err != nil {
-				return false, false, err
-			}
-		}
-		return plan.Apply(updated, exists)
-	}}
-}
-
 func rewriteSkillRegistryHook(path string) operation {
 	return operation{
 		typeID: opRewriteFile,
@@ -1335,7 +1347,8 @@ func rewriteSkillRegistryHook(path string) operation {
 			if !changed {
 				return false, false, nil
 			}
-			if jsonIsEmptyObject(updated) {
+			// An emptied object that still holds JSONC comments is user text.
+			if jsonIsEmptyObject(updated) && json.Valid(updated) {
 				if err := removeFileIfExists(path); err != nil {
 					return false, false, err
 				}
@@ -1350,14 +1363,39 @@ func rewriteSkillRegistryHook(path string) operation {
 	}
 }
 
+// Only exact installed commands are removed; arbitrary user commands remain intact.
+func managedRetainedHookCommand(cmd string) bool {
+	return cmd == `gentle-ai skill-registry refresh --quiet --no-gitignore --cwd "${CLAUDE_PROJECT_DIR:-$PWD}" || true` ||
+		cmd == `gentle-ai skill-registry refresh --quiet --no-gitignore --cwd "$PWD" || true` ||
+		cmd == "gentle-ai review stop-hook --agent "+string(model.AgentClaudeCode) ||
+		cmd == "gentle-ai telemetry runtime claude --json" ||
+		cmd == "gentle-ai telemetry runtime codex --json"
+}
+
+// removeSkillRegistryHook removes the managed hook commands. Strict JSON is
+// re-encoded; JSONC keeps every byte outside the hooks value and refuses,
+// rather than normalizes, hooks spelled with escapes or holding comments.
 func removeSkillRegistryHook(raw []byte) ([]byte, bool, error) {
+	strict := json.Valid(raw)
 	root := map[string]any{}
-	if err := json.Unmarshal(raw, &root); err != nil {
-		return nil, false, err
+	if strict {
+		if err := json.Unmarshal(raw, &root); err != nil {
+			return nil, false, err
+		}
+	} else {
+		decoded, err := filemerge.UnmarshalJSONObject(raw)
+		if err != nil {
+			return nil, false, err
+		}
+		root = decoded
 	}
 	hooksMap, ok := root["hooks"].(map[string]any)
 	if !ok {
 		return raw, false, nil
+	}
+	events := make([]string, 0, len(hooksMap))
+	for event := range hooksMap {
+		events = append(events, event)
 	}
 	changed := false
 	for _, hookKey := range []string{"UserPromptSubmit", "SessionStart", "Stop", "SubagentStop", "PreToolUse", "PostToolUse", "SessionEnd"} {
@@ -1381,7 +1419,7 @@ func removeSkillRegistryHook(raw []byte) ([]byte, bool, error) {
 			for _, hook := range hooks {
 				hookMap, ok := hook.(map[string]any)
 				cmd, _ := hookMap["command"].(string)
-				if ok && (strings.Contains(cmd, "gentle-ai skill-registry refresh") || strings.Contains(cmd, "gentle-ai review stop-hook") || strings.Contains(cmd, "gentle-ai sdd-preflight-hook") || cmd == "gentle-ai telemetry runtime claude --json" || cmd == "gentle-ai telemetry runtime codex --json") {
+				if ok && managedRetainedHookCommand(cmd) {
 					changed = true
 					continue
 				}
@@ -1402,6 +1440,27 @@ func removeSkillRegistryHook(raw []byte) ([]byte, bool, error) {
 	}
 	if !changed {
 		return raw, false, nil
+	}
+	if !strict && len(hooksMap) == 0 {
+		updated, kept, err := filemerge.RemoveJSONCMembers(raw, []string{"hooks"}, events, true)
+		if err != nil {
+			return nil, false, err
+		}
+		if len(kept) > 0 {
+			return nil, false, fmt.Errorf("refuse to remove hooks %v spelled with escapes or holding comments; remove the Gentle AI hooks yourself", kept)
+		}
+		return updated, true, nil
+	}
+	if !strict {
+		overlay, err := json.Marshal(map[string]any{"hooks": map[string]any{"__replace__": hooksMap}})
+		if err != nil {
+			return nil, false, err
+		}
+		updated, err := filemerge.MergeOpenCodeJSONCObjects(raw, overlay)
+		if err != nil {
+			return nil, false, err
+		}
+		return updated, true, nil
 	}
 	if len(hooksMap) == 0 {
 		delete(root, "hooks")
@@ -1441,6 +1500,81 @@ func rewriteTOMLFile(path string, mutate func(content string) (string, bool)) op
 			return true, false, nil
 		},
 	}
+}
+
+// retainedOpenCodePluginOperations is an agent-removal boundary, independent of
+// legacy SDD and skills. Plugin bytes no Gentle AI release shipped are never
+// removed, and neither is a plugins path that is not a real directory: Install
+// refuses a symlinked plugins directory as user-owned, so uninstall neither
+// removes the link nor deletes through it.
+func retainedOpenCodePluginOperations(adapter agents.Adapter, homeDir string) []operation {
+	ops := make([]operation, 0)
+	for _, path := range opencoderuntimeplugins.PluginPaths(homeDir, adapter) {
+		ops = append(ops, removeReleasedOpenCodePlugin(path))
+	}
+	dirOp := removeDirIfEmpty(filepath.Join(adapter.GlobalConfigDir(homeDir), "plugins"))
+	removeEmpty := dirOp.apply
+	dirOp.apply = func(path string) (bool, bool, error) {
+		if real, err := isRealDirectory(path); !real || err != nil {
+			return false, false, err
+		}
+		return removeEmpty(path)
+	}
+	ops = append(ops, dirOp)
+	// The model-variants cache is shared by the OpenCode family; only an
+	// OpenCode removal clears it, as before Kilocode plugins were removed.
+	if adapter.Agent() == model.AgentOpenCode {
+		for _, path := range modelVariantsCachePaths(filepath.Join(homeDir, ".gentle-ai", "cache")) {
+			ops = append(ops, removeFile(path))
+		}
+	}
+	// Attribute every operation to the agent being removed, so a failure keeps
+	// that agent's uninstall incomplete and names it in the rerun hint.
+	for i := range ops {
+		ops[i].agents = []model.AgentID{adapter.Agent()}
+	}
+	return ops
+}
+
+// isRealDirectory reports whether path is a directory and not a symlink to one.
+func isRealDirectory(path string) (bool, error) {
+	info, err := os.Lstat(path)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return info.IsDir(), nil
+}
+
+func removeReleasedOpenCodePlugin(path string) operation {
+	return operation{typeID: opRemoveFile, path: path, agents: []model.AgentID{model.AgentOpenCode}, apply: func(path string) (bool, bool, error) {
+		if real, err := isRealDirectory(filepath.Dir(path)); !real || err != nil {
+			return false, false, err
+		}
+		info, err := os.Lstat(path)
+		if os.IsNotExist(err) {
+			return false, false, nil
+		}
+		if err != nil {
+			return false, false, err
+		}
+		if !info.Mode().IsRegular() {
+			return false, false, nil
+		}
+		installed, err := os.ReadFile(path)
+		if err != nil {
+			return false, false, err
+		}
+		if !opencoderuntimeplugins.ReleasedPlugin(filepath.Base(path), installed) {
+			return false, false, nil
+		}
+		if err := os.Remove(path); err != nil {
+			return false, false, err
+		}
+		return true, true, nil
+	}}
 }
 
 func modelVariantsCachePaths(cacheDir string) []string {
@@ -1554,6 +1688,31 @@ func removeFile(path string) operation {
 					return false, false, nil
 				}
 				return false, false, statErr
+			}
+			if err := removeFileIfExists(path); err != nil {
+				return false, false, err
+			}
+			return true, true, nil
+		},
+	}
+}
+
+// removeRegularFile removes path only when it is a regular file, leaving
+// symlinks, directories, and other non-regular entries untouched.
+func removeRegularFile(path string) operation {
+	return operation{
+		typeID: opRemoveFile,
+		path:   path,
+		apply: func(path string) (bool, bool, error) {
+			info, err := os.Lstat(path)
+			if os.IsNotExist(err) {
+				return false, false, nil
+			}
+			if err != nil {
+				return false, false, err
+			}
+			if !info.Mode().IsRegular() {
+				return false, false, nil
 			}
 			if err := removeFileIfExists(path); err != nil {
 				return false, false, err
@@ -1698,6 +1857,15 @@ func mergeRewriteOps(a, b operation) operation {
 			changed2, removed2, err2 := b.apply(path)
 			return changed1 || changed2, removed2, err2
 		},
+		notes: func() []string {
+			var notes []string
+			for _, op := range []operation{a, b} {
+				if op.notes != nil {
+					notes = append(notes, op.notes()...)
+				}
+			}
+			return notes
+		},
 	}
 }
 
@@ -1705,12 +1873,13 @@ func compareOperations(a, b operation) int {
 	if a.typeID != b.typeID {
 		return int(a.typeID) - int(b.typeID)
 	}
+	if a.typeID == opRemoveIfEmpty {
+		// Deepest path first: a child directory such as skills/_shared must be
+		// evaluated before its parent, or the parent is still non-empty when
+		// checked and survives an uninstall that emptied it.
+		return strings.Compare(b.path, a.path)
+	}
 	return strings.Compare(a.path, b.path)
-}
-
-func managedSDDSkillIDs() []string {
-	ids := append([]string(nil), sddSkillPhaseIDs()...)
-	return append(ids, "judgment-day")
 }
 
 func removesAllAgentComponents(componentIDs []model.ComponentID) bool {
@@ -1761,20 +1930,23 @@ func removeOwnedOpenCodeLauncher(path string) operation {
 		path:   path,
 		agents: []model.AgentID{model.AgentOpenCode},
 		apply: func(path string) (bool, bool, error) {
-			data, err := os.ReadFile(path)
-			if os.IsNotExist(err) {
-				return false, false, nil
-			}
-			if err != nil {
-				return false, false, err
-			}
-			if !bytes.Contains(data, []byte(opencodeactivation.OwnershipMarker)) {
-				return false, false, nil
-			}
-			if err := os.Remove(path); err != nil {
+			result, err := opencodeactivation.RemoveManagedLauncher(path)
+			if err != nil || !result.Removed() {
 				return false, false, err
 			}
 			return true, true, nil
+		},
+	}
+}
+
+func removeOwnedOpenCodeProfileBlock(path string) operation {
+	return operation{
+		typeID: opRewriteFile,
+		path:   path,
+		agents: []model.AgentID{model.AgentOpenCode},
+		apply: func(path string) (bool, bool, error) {
+			changed, err := opencodeactivation.RemoveManagedProfileBlock(path)
+			return changed, false, err
 		},
 	}
 }
@@ -1785,6 +1957,9 @@ func stateAgentsToRemove(agentIDs []model.AgentID, componentIDs []model.Componen
 		selected[componentID] = struct{}{}
 	}
 	for _, required := range fullAgentRemovalComponents {
+		if required == model.ComponentSDD {
+			continue
+		}
 		if _, ok := selected[required]; !ok {
 			return nil
 		}

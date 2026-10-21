@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/qastage"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/qastage"
 )
 
 // qaLedgerRoot resolves the QAStateStore root for a repository: <cwd>/.gentle-ai.

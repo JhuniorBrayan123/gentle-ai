@@ -11,9 +11,9 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
 )
 
 // requiredLedgerClauses is the OpenCode binding of the shared clause set: the
@@ -525,7 +525,7 @@ func TestKilocodeReviewSettingsMatchCurrentMainBaseline(t *testing.T) {
 	// "Organic Driven Development Is The Default Workflow (MANDATORY)" shared
 	// section before any SDD-specific instruction. Kilo renders that section
 	// through the OpenCode orchestrator asset, so the baseline is rederived.
-	const want = "10c086f0e8205ed96c55713f03ac1ae98e17f95d91d902ea0ce7cc94398382bf"
+	const want = "6f55ced3e6aab3ada6ed5421362f7c1069722386be0b02648262961f17cea497"
 	if got != want {
 		t.Fatalf("Kilocode settings SHA-256 = %s, want current-main baseline %s", got, want)
 	}
@@ -824,8 +824,8 @@ func TestOpenCodeRenderedReviewProtocolCost(t *testing.T) {
 		// whose exit is releasing the authority, not a smaller candidate, and the
 		// shipped contract has to name it. Both are deliberate, not drift, and the
 		// ceilings carry each row's existing absolute margin over the net change.
-		{name: "standard", agents: []string{"review-reliability"}, beforeChars: 42_301, wantChars: 19_111, maxCharacters: 19_114},
-		{name: "full-4R", agents: []string{"review-risk", "review-resilience", "review-readability", "review-reliability"}, beforeChars: 106_998, wantChars: 35_518, maxCharacters: 37_051},
+		{name: "standard", agents: []string{"review-reliability"}, beforeChars: 42_301, wantChars: 21_548, maxCharacters: 21_551},
+		{name: "full-4R", agents: []string{"review-risk", "review-resilience", "review-readability", "review-reliability"}, beforeChars: 106_998, wantChars: 37_955, maxCharacters: 39_488},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

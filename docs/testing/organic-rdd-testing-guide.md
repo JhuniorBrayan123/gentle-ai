@@ -4,7 +4,7 @@
 > **Current closure and delivery semantics.** A zero-lens START, or the final admitted lens, refuter, or validation capture, closes and burns a review. Delivery always follows ordinary repository policy; review closure is informational.
 
 > [!WARNING]
-> **Historical and superseded guide.** This document preserves the candidate-specific validation procedure for `v2.2.0-rc.1` and PR [#1801](https://github.com/Gentleman-Programming/gentle-ai/pull/1801). It is not current installation or validation guidance for stable [`v2.6.0`](https://github.com/Gentleman-Programming/gentle-ai/releases/tag/v2.6.0) or unreleased `main`. Use the [Quickstart version policy](../quickstart.md#version-policy) for current installation channels and validation entry points.
+> **Historical and superseded guide.** This document preserves the candidate-specific validation procedure for `v2.2.0-rc.1` and PR [#1801](https://github.com/Gentleman-Programming/gentle-ai/pull/1801). It is not current installation or validation guidance for [the latest stable release](https://github.com/Gentleman-Programming/gentle-ai/releases/latest) or unreleased `main`. Use the [Quickstart version policy](../quickstart.md#version-policy) for current installation channels and validation entry points.
 >
 > Community testing guide for the candidate built from PR [#1801](https://github.com/Gentleman-Programming/gentle-ai/pull/1801). Every **Expected** here was validated against real output before publication. The guide uses a throwaway HOME precisely so it does not touch your real config — do not skip the setup.
 
@@ -270,28 +270,11 @@ If `hdiutil` rejects the filesystem name, `hdiutil create -help` lists the ones 
 3. [ ] → **Expected**: the reviewer result publishes, and the final admitted capture closes and burns the review. A raw `ENOTSUP`, `EINVAL` or `operation not supported` reaching you is the defect.
 4. [ ] Detach with `hdiutil detach /Volumes/RDDTEST` when done.
 
-### Flow 22: First-use store contention (#1850) — **fixed on the branch, still broken in the published asset**
+### Flow 22: First-use store contention (#1850) — retired historical oracle
 
-@edwinsaavedran reported that concurrent first use of a new runtime store leaked a raw `ENOENT` to the losing writers instead of a typed conflict. It was fail-closed and no ledger was corrupted, but a controller cannot classify or retry an untyped errno.
+@edwinsaavedran reported that concurrent first use of the former SDD runtime store leaked a raw `ENOENT` to losing writers instead of a typed conflict. It was fail-closed and no ledger was corrupted, but a controller could not classify or retry an untyped errno. The published Refresh 5 asset (`2551c0a5`) failed 181/200 attempts; the branch after `0bcff694` passed 200/200. The original failure produced no Go data-race report: it was a filesystem race.
 
-**The expected result depends on which candidate you run, and this is the clearest example in the guide of why that matters.** Two independent native macOS runs:
-
-| candidate | result |
-|---|---|
-| published Refresh 5 asset (`2551c0a5`) | **FAIL** — 181/200 with the known `ENOENT` |
-| branch after `0bcff694` | **PASS** — 200/200 |
-
-This needs a source checkout rather than the released binary. From the branch under test:
-
-```bash
-TMPDIR=/private/tmp GIT_CONFIG_NOSYSTEM=1 \
-  go test -p=1 ./internal/sddstatus \
-  -run '^TestRuntimeLedgerCASAllowsOnlyOneConcurrentOrdinal$' -count=20
-```
-
-1. [ ] → **Expected on current branch source**: 20 of 20 pass. A failure here is a regression and worth reporting immediately.
-2. [ ] If you are testing the **published asset** instead, expect failures, and report how many of 20 failed and whether the message is still `review store lock could not be acquired: no such file or directory`.
-3. [ ] Either way, run it with `-race -count=3` as well. The original failure produced no Go data-race report, which is the signature of a filesystem race rather than a memory one.
+The `internal/sddstatus` package and its test oracle are retired on the ODD-only branch. **Do not run Flow 22 against current branch source or treat it as a current regression check.** The other review-store and RDD flows in this guide remain separate; this historical result does not replace their validation.
 
 ### Flow 23: Managed profiles (#1781)
 
@@ -406,6 +389,16 @@ gentle-ai review start --cwd .
    is the worst outcome and the one worth reporting loudest.
 5. [ ] **Report the mount type and options either way, including a PASS.** This
    path has never run on a network filesystem.
+6. [ ] **Windows only**: put a repository on an SMB share reached by a UNC path
+   (`\\server\share\repo`) or a mapped network drive. With reviews on,
+   `gentle-ai review mode status --cwd <repo>` → **Expected**: it resolves,
+   because the clone holds no override to read. `gentle-ai review mode disable
+   --scope clone --cwd <repo>` → **Expected**: a typed refusal naming the
+   remote filesystem, `gentle-ai review mode disable --scope global`, and a
+   local NTFS or ReFS volume, never "check the path and rerun". Then run
+   `gentle-ai review mode disable --scope global` and `status` again →
+   **Expected**: `off (decided by global)`, exit 0, and the Claude Code stop
+   hook stays silent (#4670).
 
 ### Flow 28: A read-only filesystem — **needs a read-only mount**
 
@@ -658,7 +651,7 @@ echo "exit=$?"
 
 ## Historical reporting instructions
 
-This section is retained to explain the original candidate procedure. Do not open a current issue or comment on PR [#1801](https://github.com/Gentleman-Programming/gentle-ai/pull/1801) for results from `v2.2.0-rc.1`; that candidate process is complete. For a current concern, first reproduce it against stable [`v2.6.0`](https://github.com/Gentleman-Programming/gentle-ai/releases/tag/v2.6.0), then use the repository's current contribution and issue workflow.
+This section is retained to explain the original candidate procedure. Do not open a current issue or comment on PR [#1801](https://github.com/Gentleman-Programming/gentle-ai/pull/1801) for results from `v2.2.0-rc.1`; that candidate process is complete. For a current concern, first reproduce it against [the latest stable release](https://github.com/Gentleman-Programming/gentle-ai/releases/latest) (see the [Quickstart version policy](../quickstart.md#version-policy)), then use the repository's current contribution and issue workflow.
 
 ## What is NOT a bug
 

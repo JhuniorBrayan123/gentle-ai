@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/claude"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/opencode"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/vscode"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/skillregistry"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/system"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/claude"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/vscode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/skillregistry"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/system"
 )
 
 func claudeAdapter() agents.Adapter   { return claude.NewAdapter() }
@@ -62,8 +62,8 @@ func TestInjectWritesSkillFilesForOpenCode(t *testing.T) {
 		t.Fatalf("Inject() first changed = false")
 	}
 
-	if len(result.Files) != 2 {
-		t.Fatalf("Inject() files len = %d, want SKILL.md plus local reference", len(result.Files))
+	if len(skillFiles(result.Files)) != 2 {
+		t.Fatalf("Inject() files len = %d, want SKILL.md plus local reference", len(skillFiles(result.Files)))
 	}
 
 	path := filepath.Join(home, ".config", "opencode", "skills", "skill-creator", "SKILL.md")
@@ -94,8 +94,6 @@ func TestInjectWritesSkillFilesForOpenCode(t *testing.T) {
 func TestInjectWritesSkillFilesForClaude(t *testing.T) {
 	home := t.TempDir()
 
-	// Only non-SDD skills are written by the skills component; SDD skills are
-	// handled exclusively by the SDD component to prevent double-write conflicts.
 	result, err := Inject(home, claudeAdapter(), []model.SkillID{model.SkillCreator, model.SkillGoTesting})
 	if err != nil {
 		t.Fatalf("Inject() error = %v", err)
@@ -148,7 +146,7 @@ func TestInjectCopiesNonSDDSkillReferences(t *testing.T) {
 func TestInjectSkipsSddSkills(t *testing.T) {
 	home := t.TempDir()
 
-	// SDD skills should be silently skipped — they are installed by the SDD component.
+	// Retired SDD IDs must not install even when explicitly requested.
 	result, err := Inject(home, claudeAdapter(), []model.SkillID{
 		model.SkillSDDInit,
 		model.SkillSDDApply,
@@ -159,15 +157,15 @@ func TestInjectSkipsSddSkills(t *testing.T) {
 	}
 
 	// Only the non-SDD skill (skill-creator) should be written, including its local references.
-	if len(result.Files) != 2 {
-		t.Fatalf("Inject() files len = %d, want 2 (skill-creator plus local reference)", len(result.Files))
+	if len(skillFiles(result.Files)) != 2 {
+		t.Fatalf("Inject() files len = %d, want 2 (skill-creator plus local reference)", len(skillFiles(result.Files)))
 	}
 
-	// SDD skill files must not be created by the skills component.
+	// No retired skill files may be created.
 	for _, id := range []model.SkillID{model.SkillSDDInit, model.SkillSDDApply} {
 		path := filepath.Join(home, ".claude", "skills", string(id), "SKILL.md")
 		if _, statErr := os.Stat(path); statErr == nil {
-			t.Fatalf("skills component must not write SDD skill %q — it belongs to the SDD component", id)
+			t.Fatalf("skills component must not write retired skill %q", id)
 		}
 	}
 }
@@ -183,8 +181,8 @@ func TestInjectSkipsUnknownSkillGracefully(t *testing.T) {
 		t.Fatalf("Inject() error = %v", err)
 	}
 
-	if len(result.Files) != 2 {
-		t.Fatalf("Inject() files len = %d, want 2", len(result.Files))
+	if len(skillFiles(result.Files)) != 2 {
+		t.Fatalf("Inject() files len = %d, want 2", len(skillFiles(result.Files)))
 	}
 
 	if len(result.Skipped) != 1 {
@@ -259,8 +257,8 @@ func TestInjectVSCodeWritesSkillFiles(t *testing.T) {
 	if !result.Changed {
 		t.Fatalf("Inject(vscode) changed = false")
 	}
-	if len(result.Files) != 2 {
-		t.Fatalf("Inject(vscode) files len = %d, want 2", len(result.Files))
+	if len(skillFiles(result.Files)) != 2 {
+		t.Fatalf("Inject(vscode) files len = %d, want 2", len(skillFiles(result.Files)))
 	}
 
 	path := filepath.Join(home, ".copilot", "skills", "skill-creator", "SKILL.md")
@@ -324,9 +322,23 @@ func TestInjectRequiredBundledSkillsForEverySkillsCapableDefaultAdapter(t *testi
 				t.Fatalf("adapter %q supports skills but returned empty SkillsDir", agentID)
 			}
 
+			entries := skillregistry.List(t.TempDir(), home)
 			for _, id := range required {
 				path := filepath.Join(skillsDir, string(id), "SKILL.md")
 				assertNonEmptyFile(t, path)
+				if id == model.SkillSkillRegistry {
+					continue // Registry plumbing intentionally excludes itself.
+				}
+				found := false
+				for _, entry := range entries {
+					if entry.Name == string(id) && entry.Path == path {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("skill registry did not discover %q at %q", id, path)
+				}
 			}
 		})
 	}
@@ -414,6 +426,63 @@ func assertNonEmptyFile(t *testing.T, path string) {
 	}
 }
 
+func TestInjectWithCapability_WritesNonSDDSkillsRegardlessOfCapability(t *testing.T) {
+	home := t.TempDir()
+
+	// Non-SDD skills should always be written, regardless of capability.
+	result, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillCreator}, "capable")
+	if err != nil {
+		t.Fatalf("InjectWithCapability() error = %v", err)
+	}
+	if len(skillFiles(result.Files)) != 2 {
+		t.Fatalf("InjectWithCapability() files len = %d, want 2", len(skillFiles(result.Files)))
+	}
+	if len(result.Skipped) != 0 {
+		t.Fatalf("InjectWithCapability() skipped len = %d, want 0", len(result.Skipped))
+	}
+}
+
+func TestInjectWithCapabilityRetainsSkillFrontmatter(t *testing.T) {
+	home := t.TempDir()
+	_, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillJudgmentDay}, "capable")
+	if err != nil {
+		t.Fatalf("InjectWithCapability() error = %v", err)
+	}
+	path := filepath.Join(home, ".config", "opencode", "skills", "judgment-day", "SKILL.md")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if !strings.HasPrefix(string(content), "---\n") {
+		t.Fatalf("retained skill must start with YAML frontmatter delimiter, got prefix %q", string(content[:min(len(content), 16)]))
+	}
+}
+
+func containsFile(files []string, want string) bool {
+	for _, file := range files {
+		if file == want {
+			return true
+		}
+	}
+	return false
+}
+
+func requiredBundledSkillIDs() []model.SkillID {
+	return []model.SkillID{
+		model.SkillCreator,
+		model.SkillSkillRegistry,
+		model.SkillCognitiveDoc,
+		model.SkillCommentWriter,
+		model.SkillJudgmentDay,
+		model.SkillWorkUnitCommits,
+		model.SkillGoTesting,
+		model.SkillImprover,
+		model.SkillRDDDefectWorkflow,
+		model.SkillSystemicIssueTriage,
+		model.SkillGentleAIBench,
+	}
+}
+
 func TestInjectWithCapability_SkipsSDDSkillsWhenCapabilityEmpty(t *testing.T) {
 	home := t.TempDir()
 
@@ -423,25 +492,21 @@ func TestInjectWithCapability_SkipsSDDSkillsWhenCapabilityEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InjectWithCapability() error = %v", err)
 	}
-	// SDD skills are skipped when capability is empty.
-	if len(result.Files) != 0 {
-		t.Fatalf("InjectWithCapability(capability=%q) files len = %d, want 0 (SDD skills skipped)", "", len(result.Files))
+	// The SDD skill directory must not be written when the capability is empty.
+	// Shared support files are still written, so the assertion targets the
+	// skill directory rather than the total file count.
+	skillDir := opencodeAdapter().SkillsDir(home)
+	sddSkillDir := filepath.Join(skillDir, string(model.SkillSDDApply))
+	if _, err := os.Stat(filepath.Join(sddSkillDir, "SKILL.md")); !os.IsNotExist(err) {
+		t.Fatalf("InjectWithCapability(capability=%q) installed the SDD skill, stat err = %v", "", err)
 	}
-}
-
-func TestInjectWithCapability_WritesNonSDDSkillsRegardlessOfCapability(t *testing.T) {
-	home := t.TempDir()
-
-	// Non-SDD skills should always be written, regardless of capability.
-	result, err := InjectWithCapability(home, opencodeAdapter(), []model.SkillID{model.SkillCreator}, "capable")
-	if err != nil {
-		t.Fatalf("InjectWithCapability() error = %v", err)
-	}
-	if len(result.Files) != 2 {
-		t.Fatalf("InjectWithCapability() files len = %d, want 2", len(result.Files))
-	}
-	if len(result.Skipped) != 0 {
-		t.Fatalf("InjectWithCapability() skipped len = %d, want 0", len(result.Skipped))
+	for _, file := range result.Files {
+		// This fork keeps its SDD layer, so the sdd-* slash command is a
+		// current asset. Only the SDD skill directory itself must be absent.
+		if !strings.HasPrefix(file, sddSkillDir+string(filepath.Separator)) {
+			continue
+		}
+		t.Fatalf("InjectWithCapability(capability=%q) wrote %q, want no SDD skill file", "", file)
 	}
 }
 
@@ -463,36 +528,6 @@ func TestInjectWithCapability_WritesExtractedSDDSkillWithFrontmatterAtStart(t *t
 	}
 }
 
-func containsFile(files []string, want string) bool {
-	for _, file := range files {
-		if file == want {
-			return true
-		}
-	}
-	return false
-}
-
-func requiredBundledSkillIDs() []model.SkillID {
-	return []model.SkillID{
-		model.SkillCreator,
-		model.SkillSkillRegistry,
-		model.SkillCognitiveDoc,
-		model.SkillCommentWriter,
-		model.SkillJudgmentDay,
-		model.SkillSDDInit,
-		model.SkillImprover,
-		model.SkillRDDDefectWorkflow,
-		model.SkillSystemicIssueTriage,
-		model.SkillGentleAIBench,
-	}
-}
-
-// TestInjectQASkillsAreRealInstallableAndDiscoverable is the 3B.7 mandatory
-// verification: it does not assume creating skills/qa-*/SKILL.md is enough —
-// it actually installs the 9 QA-Orchestrator v3 skills into an isolated
-// home for both OpenCode and Claude Code, and confirms they land on disk
-// with real content AND that the skill registry (what an agent session
-// actually reads to discover skills) finds them.
 func TestInjectQASkillsAreRealInstallableAndDiscoverable(t *testing.T) {
 	qaSkills := []model.SkillID{
 		model.SkillQASupervisor,

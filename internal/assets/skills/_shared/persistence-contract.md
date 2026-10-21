@@ -1,36 +1,37 @@
-# Persistence Contract (shared across all SDD skills)
+# Persistence Contract for Organic Work
 
-## Mode Resolution
+## Small and substantial work
 
-The orchestrator passes `artifact_store.mode` with one of: `engram | openspec | hybrid | none`.
+Small, understood work needs no durable task artifact. For substantial authorized implementation, create `odd/tasks/{feature-name}.md` before the first source write and mirror the full current document under project-scoped Engram topic `odd/{feature-name}/tasks`. The document records objective, scope, constraints, actionable task IDs, acceptance checks, progress and next step. Do not create a planning artifact for read-only work. The local document and memory mirror are complementary recovery copies, not competing approval authorities.
 
-The orchestrator ASKs the user which mode they want when `/sdd-new`, `/sdd-ff`, or `/sdd-continue` is invoked for the first time in a session. The choice is cached for the session.
+Read back both writes. If Engram is unavailable, preserve the local document and explicitly mark the mirror pending without blocking independent safe work. If a local write is unsafe, preserve existing state and report the limitation. On resume, retrieve the full observation (search results are truncated), read the document and reconcile them before modifying either. Preserve conflicting versions until the human resolves a genuine conflict. Preserve historical user data; do not erase or replace it to make recovery appear clean.
 
-Default (if user doesn't specify): if Engram is available → `engram`. Otherwise → `none`.
+## Delegated work
 
-## Mode Roles
+The parent selects relevant context and gives the worker its authorized edit surfaces, task document locator, the applicable test-first policy and runner from `## Implementation Routing`, and exact verification commands. The worker reads the task document before editing, stays inside those surfaces, and reports actual checks. Significant verified project discoveries can be saved with `mem_save` under the resolved project. The parent reconciles the task document and full mirror after each observed transition. A task checkbox is not review authority.
 
-- **`engram`**: Working memory between sessions. Upserts overwrite — no iteration history. Local only, not shareable.
-- **`openspec`**: Source of truth. Files in repo, git history, team-shareable, full audit trail.
-- **`hybrid`**: Both — files for team + engram for recovery. Higher token cost.
-- **`none`**: Ephemeral. Lost when conversation ends.
+Skill paths are supplied in `## Skills to load before work`; workers read those exact `SKILL.md` files before task-specific work. See `skill-resolver.md` for matching and reporting.
 
-### Mode Comparison
+## Safe writes and response order
 
-| Capability | `engram` | `openspec` | `hybrid` | `none` |
-|------------|----------|------------|----------|--------|
-| Cross-session recovery | ✅ | ❌ (needs git) | ✅ | ❌ |
-| Compaction survival | ✅ | ❌ | ✅ | ❌ |
-| Shareable with team | ❌ (local DB) | ✅ (committed files) | ✅ (files) | ❌ |
-| Full iteration history | ❌ (upsert overwrites) | ✅ (git history) | ✅ (files + git) | ❌ |
-| Audit trail (archive) | Partial (report only) | ✅ (full folder) | ✅ (both) | ❌ |
-| Project files created | Never | Yes | Yes | Never |
+Engram upserts replace existing topic content. Read, merge and write the complete task document rather than replacing earlier completed work with one batch. Set `capture_prompt: false` for an automated task mirror when the tool supports it; normal human-directed saves use the memory provider's default behavior. Never claim a write succeeded without readback. After persisting, finish with a complete text handoff; a memory tool result is not a reply. A worker does not close the parent's session.
 
-### `engram` mode limitation
+Optional research findings stay in the conversation unless the user or authorized task contract requests persistence; disclose failed writes honestly. Native RDD review remains separate from task persistence, and delivery follows ordinary repository policy.
 
-Engram uses `topic_key`-based upserts. Re-running a phase for the same change **overwrites** the previous version — no revision history is kept. The archive phase saves a summary report, not the full artifact folder. For iteration history or team collaboration, use `openspec` or `hybrid`.
+## SDD Artifact Store Persistence
 
-## Behavior Per Mode
+This section is owned by the fork's SDD layer and applies to the SDD workflow only. It adds to the organic-work contract above; it never replaces it.
+
+The orchestrator declares `artifact_store.mode` with one of: `engram | openspec | hybrid | none`.
+
+### Mode roles
+
+- **`engram`**: working memory between sessions. Upserts overwrite, so no iteration history is kept.
+- **`openspec`**: source of truth. Files in the repository, git history, team-shareable, full audit trail.
+- **`hybrid`**: files for the team plus Engram for recovery. Higher token cost.
+- **`none`**: ephemeral. Lost when the conversation ends.
+
+### Behavior per mode
 
 | Mode | Read from | Write to | Project files |
 |------|-----------|----------|---------------|
@@ -39,63 +40,36 @@ Engram uses `topic_key`-based upserts. Re-running a phase for the same change **
 | `hybrid` | Resolved artifact locators | Both | Yes |
 | `none` | Orchestrator prompt context | Nowhere | Never |
 
-### Hybrid Mode
+### Hybrid mode
 
 Use the declared `artifactStore` and resolved `artifactPaths` from the orchestrator, as defined in `sdd-phase-common.md`. Read each resolved locator, not an Engram-first or filesystem fallback. Never silently substitute another store's copy.
 
 Attempt both declared writes, following the Engram and OpenSpec conventions, and read back each successful write. Hybrid writes are not atomic: preserve successful writes, report any failed or unavailable mirror as partial, and name the outstanding locator. Do not claim synchronization or roll back valid progress. Preserve both versions of a genuine content conflict; ask only when it affects the next decision.
 
-### Optional research notes
+### Recovery
 
-The output-only collector returns findings to the orchestrator. Persist useful research notes only through the selected store or an explicit request; `none` can return them inline. No research revision, readiness matrix or cross-store equality check admits proposal work. Report failed writes honestly and retain available progress; do not invent a successful mirror or overwrite conflicting historical research/preproposal data. Resolve a genuine content conflict only when it affects the next decision.
-
-## Recovery (Orchestrator)
-
-Recover from native status and the actual artifacts at its resolved locators, including full `mem_get_observation` content for topic keys. Existing `state.yaml` and `sdd/{change-name}/state` snapshots are optional recovery hints, not required per-phase writes or a second state authority. Missing or stale snapshots do not replace actual task progress or archive closure. Preserve existing snapshots, including `dependsOn` metadata, and historical artifacts.
+Recover from native status and the actual artifacts at their resolved locators, including full `mem_get_observation` content for topic keys. Existing `state.yaml` and `sdd/{change-name}/state` snapshots are optional recovery hints, not required per-phase writes or a second state authority. Missing or stale snapshots do not replace actual task progress or archive closure. Preserve existing snapshots, including `dependsOn` metadata, and historical artifacts.
 
 READ-MERGE-WRITE cumulative tasks and apply-progress: retrieve the full current artifact, preserve prior completed and unrelated work, merge this batch, then persist and read back the full result.
 
-## Common Rules
+### Common rules
 
-- `none` → do NOT create or modify any project files; return results inline only
-- `engram` → do NOT write any project files; persist to Engram and return observation IDs
-- `openspec` → write files ONLY to paths defined in `openspec-convention.md`
-- `hybrid` → persist to BOTH Engram AND filesystem; follow both conventions
-- NEVER force `openspec/` creation unless orchestrator explicitly passed `openspec` or `hybrid`
+- `none` → do not create or modify any project files; return results inline only.
+- `engram` → do not write any project files; persist to Engram and return observation IDs.
+- `openspec` → write files only to paths defined in `openspec-convention.md`.
+- `hybrid` → persist to both Engram and the filesystem; follow both conventions.
 - If the declared store or a required locator is unresolved, report it; do not select another store.
 
-### Optional verification reports
+### Sub-agent context rules
 
-Persist requested diagnostics in the selected store. No report validator or attestation is required. Missing or failed verification never gates archive. Preserve historical report content and findings; archive summarizes their provenance rather than rewriting them as current passing evidence.
+Sub-agents launch with a fresh context and no access to the orchestrator's instructions or memory protocol. A phase with declared dependencies reads its artifacts directly from the backend; a phase without dependencies is read by nobody. The output-only SDD research collector returns evidence for the orchestrator to validate and persist, and never persists on its own.
 
-## Sub-Agent Context Rules
+When a sub-agent persists artifacts, the persistence call happens before the final text response: the absolute last output of a sub-agent is text, never a tool call. Sub-agents do not close the parent's session.
 
-Sub-agents launch with a fresh context and NO access to the orchestrator's instructions or memory protocol.
-
-Who reads, who writes:
-- Non-SDD (general task): orchestrator searches engram, passes summary in prompt; sub-agent saves discoveries via `mem_save`
-- SDD (artifact-producing phase with dependencies): sub-agent reads artifacts directly from backend; sub-agent saves its artifact
-- SDD (artifact-producing phase without dependencies, e.g. explore): nobody reads; sub-agent saves its artifact
-- SDD research collector: child reads no local artifacts or Engram state and saves nothing; it returns evidence for the orchestrator to validate and persist through the selected store route
-
-Why this split:
-- Orchestrator reads for non-SDD: it knows what context is relevant; sub-agents doing their own searches waste tokens on irrelevant results
-- Sub-agents read for SDD: SDD artifacts are large; inlining them in the orchestrator prompt would consume the entire context window
-- Artifact-producing SDD sub-agents write: they have the complete detail on what happened; nuance is lost by the time results flow back to the orchestrator
-- The output-only SDD research collector returns evidence without persistence so the orchestrator can handle any authorized persistence without a research-readiness gate
-
-## Orchestrator Prompt Instructions for Sub-Agents
-
-Non-SDD:
-```
-PERSISTENCE (MANDATORY):
-If you make important discoveries, decisions, or fix bugs, you MUST save them to engram before returning:
-  mem_save(title: "{short description}", type: "{decision|bugfix|discovery|pattern}",
-           project: "{project}", content: "{What, Why, Where, Learned}")
-Do NOT return without saving what you learned. This is how the team builds persistent knowledge across sessions.
-```
+### Orchestrator prompt instructions for sub-agents
 
 SDD (artifact-producing phases):
+
 ```
 Artifact store: {declared artifactStore}
 Artifact locators: {resolved artifactPaths and output locators}
@@ -110,22 +84,10 @@ Preserve prior progress with READ-MERGE-WRITE rather than replacing a batch hist
 
 For SDD artifacts, `capture_prompt: false` is explicit and mandatory when the Engram tool schema supports it. Engram v1.15.3 defaults `capture_prompt` to true for normal human/proactive saves, but automated pipeline artifacts must not capture the user's prompt. Do not infer this from `type` because SDD artifacts and real human architecture decisions both use `architecture`. If an older schema rejects or does not expose `capture_prompt`, omit it rather than failing.
 
-## Sub-Agent Response Ordering
+### Skill registry
 
-When a sub-agent persists artifacts (via `mem_save` or file writes), the persistence call MUST happen BEFORE the final text response. The sub-agent's absolute last output must be text, never a tool call.
+The orchestrator pre-resolves skill paths from the skill registry and injects them as `## Skills to load before work` in the launch prompt. Sub-agents read those exact `SKILL.md` files before task-specific work. To generate or update the registry, run the `skill-registry` skill, or `sdd-init`.
 
-**Why**: The Task tool returns the sub-agent's final output to the parent. If the sub-agent ends with a tool call, the parent receives only the tool result (e.g., `"Observation saved"`) — the sub-agent's text analysis is lost. Always: do your work → save → respond with text envelope.
-
-Sub-agents must NOT call `mem_session_summary` — that's reserved for top-level agents only.
-
-## Skill Registry
-
-The orchestrator pre-resolves skill paths from the skill registry and injects them as `## Skills to load before work` in your launch prompt. Sub-agents read those exact `SKILL.md` files before task-specific work.
-
-To generate/update: run the `skill-registry` skill, or run `sdd-init`.
-
-Sub-agent skill loading: check for a `## Skills to load before work` block in your prompt — if present, read those exact files. If not present, check for `SKILL: Load` instructions as a fallback. If neither exists, proceed without — this is not an error.
-
-## Detail Level
+### Detail level
 
 The orchestrator may pass `detail_level`: `concise | standard | deep`. This controls output verbosity but does NOT affect what gets persisted — always persist the full artifact.

@@ -6,18 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/backup"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/sdd"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/state"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/system"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/backup"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/state"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/system"
 )
 
-// claudeCommandSkillCollisions lists every file under ~/.claude/commands whose
-// basename is also a directory under ~/.claude/skills. Claude Code resolves a
-// same-named skill ahead of a command, and every SDD phase skill is
-// delegate-only, so such a command never runs when the user types it
-// (#2644, #2322).
+// claudeCommandSkillCollisions lists command names shadowed by skill directories.
+// Claude Code resolves same-named skills ahead of commands.
 func claudeCommandSkillCollisions(t *testing.T, home string) []string {
 	t.Helper()
 	entries, err := os.ReadDir(filepath.Join(home, ".claude", "commands"))
@@ -34,25 +30,24 @@ func claudeCommandSkillCollisions(t *testing.T, home string) []string {
 	return collisions
 }
 
-func TestRunInstallClaudeCommandsNeverShareASkillName(t *testing.T) {
+func TestRunInstallRejectsRetiredSDDCommands(t *testing.T) {
 	home := installTestHome(t)
 
-	if _, err := RunInstall([]string{"--agents", "claude-code", "--components", "sdd"}, system.DetectionResult{}); err != nil {
-		t.Fatalf("RunInstall() error = %v", err)
+	if _, err := RunInstall([]string{"--agents", "claude-code", "--components", "sdd"}, system.DetectionResult{}); err == nil {
+		t.Fatal("install accepted a retired SDD component")
 	}
-
-	if collisions := claudeCommandSkillCollisions(t, home); len(collisions) > 0 {
-		t.Fatalf("~/.claude/commands files shadowed by same-named ~/.claude/skills directories: %v", collisions)
-	}
-	for _, command := range sdd.OpenCodeCommands() {
-		path := filepath.Join(home, ".claude", "commands", "gentle-"+command.Name+".md")
-		if _, err := os.Stat(path); err != nil {
-			t.Errorf("expected namespaced Claude command %q: %v", path, err)
-		}
+	if _, err := os.Stat(filepath.Join(home, ".claude", "commands", "gentle-sdd-init.md")); !os.IsNotExist(err) {
+		t.Fatalf("retired SDD command installed: %v", err)
 	}
 }
 
-func TestRunSyncRetiresUnprefixedClaudeCommands(t *testing.T) {
+// TestRunSyncInstallsSDDCommandsWhenSDDIsSelected pins the fork's conditional
+// SDD contract on the Claude Code command namespace. A selection that carries
+// SDD installs the SDD commands and retires the legacy unprefixed name a
+// pre-#2644 install managed, so the runtime never keeps both. A user's own
+// command survives, and no command file is shadowed by a same-named skill
+// directory.
+func TestRunSyncInstallsSDDCommandsWhenSDDIsSelected(t *testing.T) {
 	home := installTestHome(t)
 	restoreBackupHome := backup.UserHomeDirFn
 	backup.UserHomeDirFn = func() (string, error) { return home, nil }
@@ -66,7 +61,7 @@ func TestRunSyncRetiresUnprefixedClaudeCommands(t *testing.T) {
 		t.Fatalf("state.Write() error = %v", err)
 	}
 	legacy := filepath.Join(home, ".claude", "commands", "sdd-init.md")
-	mustWriteFile(t, legacy, []byte("# pre-#2644 managed command\n"))
+	mustWriteFile(t, legacy, []byte("# user-edited former SDD command\n"))
 	custom := filepath.Join(home, ".claude", "commands", "my-command.md")
 	mustWriteFile(t, custom, []byte("keep"))
 
@@ -75,14 +70,17 @@ func TestRunSyncRetiresUnprefixedClaudeCommands(t *testing.T) {
 		t.Fatalf("RunSync() error = %v", err)
 	}
 
-	if _, statErr := os.Stat(legacy); !os.IsNotExist(statErr) {
-		t.Fatalf("sync left the retired Claude command %q installed: %v", legacy, statErr)
+	// The selected SDD layer installs its own command and retires the legacy
+	// unprefixed name it replaced.
+	installed := filepath.Join(home, ".claude", "commands", "gentle-sdd-init.md")
+	if _, err := os.Stat(installed); err != nil {
+		t.Errorf("sync did not install the SDD command: %v", err)
+	}
+	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
+		t.Errorf("sync kept the legacy unprefixed SDD command: %v", err)
 	}
 	if !containsPath(result.ChangedFiles, legacy) {
-		t.Errorf("ChangedFiles missing retired command %q\nchanged = %#v", legacy, result.ChangedFiles)
-	}
-	if _, err := os.Stat(filepath.Join(home, ".claude", "commands", "gentle-sdd-init.md")); err != nil {
-		t.Errorf("sync did not write the namespaced command: %v", err)
+		t.Errorf("ChangedFiles omits the retired legacy command %q", legacy)
 	}
 	if _, err := os.Stat(custom); err != nil {
 		t.Errorf("sync removed a user-owned command: %v", err)

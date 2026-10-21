@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/catalog"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/catalog"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 )
 
 // #3817: the SDD orchestrator contract is maintained as twelve hand-written
@@ -56,7 +56,7 @@ func TestRegisteredAgentsRenderStatusContinuationContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	ids := registry.SupportedAgents()
-	if len(ids) != 16 {
+	if len(ids) != 17 {
 		t.Fatalf("registered cohort changed: %v", ids)
 	}
 	templates := map[string]bool{}

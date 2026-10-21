@@ -15,19 +15,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/claude"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/hermes"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/kilocode"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/kimi"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/openclaw"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents/opencode"
-	windsurfagent "github.com/gentleman-programming/gentle-ai/v3/internal/agents/windsurf"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/agentguidance"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	opencodemodel "github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/claude"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/hermes"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/kilocode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/kimi"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/openclaw"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents/opencode"
+	windsurfagent "github.com/gentleman-programming/gentle-ai/v4/internal/agents/windsurf"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/agentguidance"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/filemerge"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	opencodemodel "github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
 	"gopkg.in/yaml.v3"
 	// agents/cursor, agents/gemini, agents/vscode used via agents.NewAdapter()
 )
@@ -174,6 +174,12 @@ func TestInjectMaterializesStatusContinuationContract(t *testing.T) {
 			promptPath := adapter.SystemPromptFile(home)
 			if agent == model.AgentKimi {
 				promptPath = filepath.Join(adapter.GlobalConfigDir(home), "sdd-orchestrator.md")
+			}
+			if promptPath == "" {
+				// Upstream v4 makes Conductor a catalog-only runtime: it owns no
+				// system prompt file, so there is no installed prompt whose
+				// status/continuation contract could be asserted.
+				return
 			}
 			if AgentReceivesManagedOpenCodePlugins(agent) {
 				var settings struct {
@@ -386,7 +392,7 @@ func TestRemoteAuthorizationInstalledExecutors(t *testing.T) {
 		id    model.AgentID
 		count int
 	}{
-		{"claude-code", 19}, {"cursor", 16}, {model.AgentKiroIDE, 19}, {"kimi", 16},
+		{"claude-code", 19}, {"cursor", 19}, {model.AgentKiroIDE, 19}, {"kimi", 16},
 	} {
 		t.Run(string(tc.id), func(t *testing.T) {
 			adapter, err := agents.NewAdapter(tc.id)
@@ -1841,8 +1847,8 @@ func TestInjectOpenCodePreservesRoutingGuardAcrossMigratedPrompt(t *testing.T) {
 		t.Fatalf("WriteFile(opencode.json) error = %v", err)
 	}
 
-	if _, err := agentguidance.InjectRouting(home, model.AgentOpenCode); err != nil {
-		t.Fatalf("InjectRouting() error = %v", err)
+	if _, err := agentguidance.InjectRoutingWithOptions(home, model.AgentOpenCode, agentguidance.RoutingOptions{ReviewContract: ReviewExecutionContractFor}); err != nil {
+		t.Fatalf("InjectRoutingWithOptions() error = %v", err)
 	}
 	if _, err := Inject(home, opencodeAdapter(), model.SDDModeMulti, InjectOptions{PreserveOpenCodeOrchestratorPrompt: true}); err != nil {
 		t.Fatalf("Inject() error = %v", err)
@@ -4167,9 +4173,12 @@ func TestInjectOpenCodeWritesExistingJSONCConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile(opencode.jsonc) error = %v", err)
 	}
-	root := map[string]any{}
-	if err := json.Unmarshal(content, &root); err != nil {
-		t.Fatalf("Unmarshal(updated opencode.jsonc) error = %v\n%s", err, content)
+	// The effective settings document is JSONC, so it is decoded with the
+	// JSONC-tolerant reader. A strict JSON decode would reject the user's own
+	// leading comment, which the writer is required to preserve.
+	root, err := filemerge.UnmarshalJSONObject(content)
+	if err != nil {
+		t.Fatalf("UnmarshalJSONObject(updated opencode.jsonc) error = %v\n%s", err, content)
 	}
 	agents, ok := root["agent"].(map[string]any)
 	if !ok {
@@ -6008,9 +6017,9 @@ func TestInjectCodexWritesSDDOrchestratorAndSkills(t *testing.T) {
 		t.Fatal("agents.md missing SDD orchestrator content")
 	}
 	for _, row := range []string{
-		"| `odd-explorer` | `gpt-6-luna` | `high` |",
-		"| `odd-worker` | `gpt-6-luna` | `high` |",
-		"| `odd-verify` | `gpt-6-sol` | `medium` |",
+		"| `odd-explorer` | `gpt-6.1-luna` | `high` |",
+		"| `odd-worker` | `gpt-6.1-luna` | `high` |",
+		"| `odd-verify` | `gpt-6.1-sol` | `medium` |",
 		"fork_turns: \"none\"",
 	} {
 		if !strings.Contains(text, row) {
@@ -9396,7 +9405,7 @@ func TestInjectCodexNilCarrilModels(t *testing.T) {
 	if !strings.Contains(text, "Model") {
 		t.Error("AGENTS.md missing Model column — nil carrilModels should fall back to defaults")
 	}
-	for _, want := range []string{"gpt-6-sol", "gpt-6-luna"} {
+	for _, want := range []string{"gpt-6.1-sol", "gpt-6.1-luna"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("AGENTS.md missing %s — nil carrilModels should show GPT-6 defaults", want)
 		}

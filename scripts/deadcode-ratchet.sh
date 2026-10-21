@@ -28,6 +28,43 @@ set -euo pipefail
 # makes this reproducible off the author's machine.
 export LC_ALL=C
 
+# normalize_deadcode_output turns the tool output into the "<file>\t<symbol>"
+# lines the baseline holds. The tool prints the file path with the host
+# separator, so a Windows run produced "internal\cli\run.go" against a
+# baseline entry "internal/cli/run.go": every baselined entry then looked
+# removed and every one of them looked new, and the guard reported the whole
+# repository instead of the functions that really are. The separator is
+# normalized here so the comparison is like-for-like on every platform.
+# scripts/test-deadcode-ratchet.sh proves this.
+normalize_deadcode_output() {
+  sed -E 's/^(.+):[0-9]+:[0-9]+: unreachable func: (.+)$/\1\t\2/' \
+    | sed 's#\\#/#g' \
+    | sort -u
+}
+
+deadcode_target_goos() { printf 'linux\n'; }
+deadcode_target_goarch() { printf 'amd64\n'; }
+
+run_deadcode_for_canonical_target() {
+  local host_goos goexe tool_dir tool_path
+  host_goos="$(go env GOHOSTOS)"
+  if [[ "${host_goos}" == "$(deadcode_target_goos)" ]]; then
+    go run "${tool}" "${target}"
+    return
+  fi
+
+  # The committed baseline is the Linux/amd64 graph used by CI. Building the
+  # analyzer for the host and setting GOOS only while it loads the target keeps
+  # Windows/macOS checks comparable without trying to execute a Linux binary.
+  tool_dir="$(mktemp -d)"
+  goexe="$(go env GOEXE)"
+  tool_path="${tool_dir}/deadcode${goexe}"
+  trap 'rm -rf "${tool_dir}"' RETURN
+  GOBIN="${tool_dir}" go install "${tool}"
+  GOOS="$(deadcode_target_goos)" GOARCH="$(deadcode_target_goarch)" \
+    "${tool_path}" "${target}"
+}
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 baseline="${repo_root}/.deadcode-baseline.txt"
 target="${DEADCODE_TARGET:-./cmd/gentle-ai}"
@@ -38,9 +75,8 @@ cd "${repo_root}"
 # Normalize to "<file>\t<symbol>". Line and column are deliberately dropped:
 # pinning them would turn every unrelated edit above a dead function into a
 # spurious failure, and a guard that cries wolf gets disabled.
-current="$(go run "${tool}" "${target}" 2>/dev/null \
-  | sed -E 's/^(.+):[0-9]+:[0-9]+: unreachable func: (.+)$/\1\t\2/' \
-  | sort -u)"
+current="$(run_deadcode_for_canonical_target 2>/dev/null \
+  | normalize_deadcode_output)"
 
 if [[ "${1:-}" == "--update" ]]; then
   printf '%s\n' "${current}" > "${baseline}"

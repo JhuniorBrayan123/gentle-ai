@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/qastage"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/qastage"
 )
 
 const maxQAValidateBytes = 1024 * 1024 // 1 MiB

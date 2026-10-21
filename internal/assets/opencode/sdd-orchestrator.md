@@ -118,7 +118,7 @@ The canonical native bounded-review contract is injected from the shared provide
 <!-- gentle-ai:opencode-desktop-delegation-progress -->
 #### Delegation Visibility (OpenCode Desktop)
 
-For every native `delegate` or `task` call, emit exactly one concise, assistant-visible status line immediately before the call:
+For every native subagent launch, emit exactly one concise, assistant-visible status line immediately before the call:
 
 `⏳ Delegating {phase} to {agent}...`
 

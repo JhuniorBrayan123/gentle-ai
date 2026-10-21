@@ -11,11 +11,23 @@ func TestHelpContainsAllCommands(t *testing.T) {
 	printHelp(&buf, "v1.0.0-test")
 	output := buf.String()
 
-	commands := []string{"install", "uninstall", "sync", "sdd-status", "sdd-continue", "sdd-attempt", "review start", "review capture-result", "review capture-correction-plan", "review capture-refuter", "review capture-validation", "review validate", "review status", "review repair", "review-start", "review-resume", "review-bundle-export", "review-bundle-import", "review-validate", "update", "upgrade", "restore", "version"}
+	commands := []string{"install", "uninstall", "sync", "review start", "review capture-result", "review capture-correction-plan", "review capture-refuter", "review capture-validation", "review validate", "review status", "review repair", "review-start", "review-resume", "review-bundle-export", "review-bundle-import", "review-validate", "update", "upgrade", "restore", "version"}
 	for _, cmd := range commands {
 		if !strings.Contains(output, cmd) {
 			t.Errorf("help output missing command %q", cmd)
 		}
+	}
+}
+
+func TestHelpDoesNotAdvertiseNativeSDDCommands(t *testing.T) {
+	var buf bytes.Buffer
+	printHelp(&buf, "v1.0.0-test")
+	for _, command := range []string{"sdd-status", "sdd-continue", "sdd-attempt"} {
+		t.Run(command, func(t *testing.T) {
+			if strings.Contains(buf.String(), command) {
+				t.Errorf("help still advertises %q", command)
+			}
+		})
 	}
 }
 
@@ -44,6 +56,16 @@ func TestHelpPresentsFlatReviewCommandsAsCompatibilityPaths(t *testing.T) {
 	output := buf.String()
 	if !strings.Contains(output, "COMPATIBILITY COMMANDS\n  review-start") || !strings.Contains(output, "Read-only legacy v1 surface; rejects new v1 authority") {
 		t.Fatalf("help does not separate facade from compatibility commands:\n%s", output)
+	}
+}
+
+func TestHelpDescribesGGAProviderPreservation(t *testing.T) {
+	var buf bytes.Buffer
+	printHelp(&buf, "test")
+	for _, phrase := range []string{"preserves existing literal providers", "initializes only from mapped agents", "leave config unchanged with guidance"} {
+		if !strings.Contains(buf.String(), phrase) {
+			t.Errorf("help missing GGA guidance %q", phrase)
+		}
 	}
 }
 

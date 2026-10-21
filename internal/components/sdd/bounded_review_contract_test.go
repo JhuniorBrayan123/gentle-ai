@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/catalog"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/reviewerprovider"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/reviewtransaction"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/catalog"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/reviewerprovider"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/reviewtransaction"
 )
 
 // boundedReviewRequiredClausesFor is agent-parameterized because two of these
@@ -203,7 +203,7 @@ func TestBoundedReviewStopInventoryIsCompleteWithoutRepeatingStatus(t *testing.T
 	for _, want := range []string{
 		"`D` means `gentle-ai review mode disable --scope clone --cwd <B>`",
 		"`S` means re-query the exact captured target-root STATUS command with lineage and target.",
-		"then `S`; do not reuse the pre-correction target",
+		"Do not recapture the accepted forecast or reuse the pre-correction target",
 		"then `S`.",
 	} {
 		if !strings.Contains(inventory, want) {

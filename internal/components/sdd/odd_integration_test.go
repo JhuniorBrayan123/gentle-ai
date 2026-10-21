@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/agentguidance"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/agentguidance"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 )
 
 // Installation-contract coverage, not a live executor or Engram session.
@@ -20,7 +20,7 @@ func TestInstalledODDAndSimplifiedSDDCoexist(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				routing, err := agentguidance.InjectRouting(home, agent)
+				routing, err := agentguidance.InjectRoutingWithOptions(home, agent, agentguidance.RoutingOptions{ReviewContract: ReviewExecutionContractFor})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -44,8 +44,8 @@ func TestInstalledODDAndSimplifiedSDDCoexist(t *testing.T) {
 				for _, want := range []string{
 					"Keep one feature document, not a separate plan file or topic",
 					"odd/tasks/<feature-name>.md", "odd/<feature-name>/tasks",
-					"Tests or frameworks being present does not enable TDD",
-					"Forward mode, source, and runner on every implementation delegation",
+					"Tests or frameworks being present alone do not establish applicability",
+					"Forward the applicable runner, this test discipline, and the evidence or exception to workers",
 					"not a review cycle per TODO checkbox",
 					"Missing, stale, malformed, or failed reports do not gate archive",
 					"SDD never offers, launches, or consumes RDD",
@@ -61,7 +61,7 @@ func TestInstalledODDAndSimplifiedSDDCoexist(t *testing.T) {
 						t.Errorf("retired competing contract survives: %q", retired)
 					}
 				}
-				repeated, err := agentguidance.InjectRouting(home, agent)
+				repeated, err := agentguidance.InjectRoutingWithOptions(home, agent, agentguidance.RoutingOptions{ReviewContract: ReviewExecutionContractFor})
 				if err != nil {
 					t.Fatal(err)
 				}

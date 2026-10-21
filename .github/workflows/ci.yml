@@ -33,6 +33,18 @@ jobs:
       - name: Typecheck V2 assets against released 2.0.4
         run: bash scripts/test-opencode-v2-contracts.sh
 
+  installer-module-path:
+    name: Installer Module Path Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact event candidate
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Run installer module path derivation tests
+        run: bash scripts/test-install-module-path.sh
+
   go-format:
     name: Go Format
     runs-on: ubuntu-latest
@@ -102,7 +114,9 @@ jobs:
             completed_once("j114-last-reviewer-capture-closes-and-burns") and
             completed_once("j116-codex-committed-correction-runs-returned-status-continuation") and
             completed_once("j123-rejected-provider-validator-starts-fresh-high-risk-review") and
-            completed_once("j4435-selected-untracked-correction-continuation-is-selectorless")
+            completed_once("j4435-selected-untracked-correction-continuation-is-selectorless") and
+            completed_once("j4772-committed-correction-dirty-commit") and
+            completed_once("j4773-committed-correction-dirty-amend")
           ' "$RUNNER_TEMP/bench-portable.json"
           "$RUNNER_TEMP/gentle-ai-bench" run --binary "$RUNNER_TEMP/gentle-ai" --only j105-compiled-provider-capture-retries-same-binding --out "$RUNNER_TEMP/bench-provider-capture.json"
           jq -e '
@@ -146,6 +160,12 @@ jobs:
       # a NEW one appears. It exists because InstallCommandsForDep survived with
       # no callers while the install docs described the dependency remediation
       # it would have performed.
+      # The ratchet compares the tool output against the baseline with
+      # comm(1), so both sides must spell a path the same way. Proved first,
+      # because a mismatch reports the whole repository as new dead code.
+      - name: Check the deadcode ratchet comparison
+        run: bash scripts/test-deadcode-ratchet.sh
+
       - name: Check for new unreachable functions
         run: ./scripts/deadcode-ratchet.sh
 
@@ -260,7 +280,7 @@ jobs:
           GENTLE_AI_TEST_BINARY: ${{ runner.temp }}\gentle-ai.exe
           GENTLE_AI_REQUIRE_DISTINCT_WINDOWS_TOKEN_OWNER: "1"
         run: |
-          $packages = @('./internal/cli', './internal/reviewtransaction', './internal/sddstatus', './internal/components/engram')
+          $packages = @('./internal/cli', './internal/reviewtransaction', './internal/components/engram')
           $expected = @(
             'TestRARSharedOwnerAcceptsOnlyCurrentWindowsPrincipals',
             'TestRARPrivateOwnerRemainsTokenUserOnly',

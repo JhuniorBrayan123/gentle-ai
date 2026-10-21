@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/sddstatus"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/sddstatus"
 )
 
 // RunSDDStatus is the CLI entry point for `gentle-ai sdd-status [change]`.

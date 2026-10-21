@@ -73,7 +73,8 @@ Hoy eso es un dolor de cabeza manual. Esta feature lo resuelve.
 - Generación de N orchestrators + N×9 sub-agentes en `opencode.json`
 - Actualización de perfiles existentes durante Sync / Update+Sync
 - Prompts compartidos: un archivo por fase, reutilizado por todos los perfiles
-- CLI flag para crear perfiles (`--profile`)
+- Mantenimiento de perfiles persistidos mediante `sync`; la creación y edición
+  pertenecen exclusivamente a la TUI
 
 ### Out of Scope (permanently)
 - **Perfiles para Claude Code** — NO APLICA. Claude Code usa un mecanismo completamente diferente (CLAUDE.md + Task tool). La feature de profiles es exclusiva de OpenCode porque depende del sistema de agents/sub-agents de `opencode.json` y la selección por Tab. Esto NO es "futuro" — es una decisión de arquitectura.
@@ -264,25 +265,21 @@ Los sub-agente prompts SÍ se comparten porque son idénticos entre perfiles (so
 
 **R-PROF-43**: El perfil default (`gentle-orchestrator`) SIEMPRE existe cuando SDD está configurado. Los perfiles adicionales son opcionales.
 
-### 5.6 CLI Support
+### 5.6 Sync Support (v4)
 
-**R-PROF-50**: El comando `sync` DEBE aceptar un flag `--profile <name>:<orchestrator-model>` que crea/actualiza un perfil durante el sync:
-```bash
-gentle-ai sync --profile cheap:anthropic/claude-haiku-3.5-20241022
-```
+**R-PROF-50**: La creación y edición de perfiles DEBE realizarse desde la TUI
+**OpenCode SDD Profiles**. La superficie CLI histórica `--profile` está
+retirada y `sync` DEBE rechazarla para no mantener dos autoridades de
+configuración.
 
-**R-PROF-51**: Se DEBEN poder especificar múltiples `--profile` flags:
-```bash
-gentle-ai sync \
-  --profile cheap:anthropic/claude-haiku-3.5-20241022 \
-  --profile premium:anthropic/claude-opus-4-20250514
-```
+**R-PROF-51**: Un `sync` sin flags de perfil DEBE detectar y mantener todos
+los perfiles persistidos en `opencode.json`, incluidos varios perfiles
+nombrados.
 
-**R-PROF-52**: El formato del flag es `name:provider/model`. Para asignar modelos individuales a sub-agentes vía CLI, se usa la sintaxis extendida:
-```bash
-gentle-ai sync --profile cheap:anthropic/claude-haiku-3.5-20241022 \
-  --profile-phase cheap:sdd-apply:anthropic/claude-sonnet-4-20250514
-```
+**R-PROF-52**: Las asignaciones de modelos por fase DEBEN configurarse desde
+la TUI y persistirse en los agentes `sdd-{phase}-{name}`. La superficie CLI
+histórica `--profile-phase` está retirada; `sync` conserva las asignaciones
+persistidas sin exigir que vuelvan a declararse.
 
 ---
 
@@ -386,7 +383,7 @@ Los sub-agent prompts SÍ se comparten como archivos `{file:...}` porque son id�
 | **SDD inject** | `internal/components/sdd/profiles.go` | NEW — profile CRUD: generate, detect, delete agents from JSON |
 | **SDD inject** | `internal/components/sdd/prompts.go` | NEW — shared prompt file management |
 | **SDD inject** | `internal/components/sdd/read_assignments.go` | Add profile detection from opencode.json |
-| **Sync** | `internal/cli/sync.go` | Update sync to handle profiles, add `--profile` flag |
+| **Sync** | `internal/cli/sync.go` | Detect and maintain persisted profiles; reject retired profile flags |
 | **Assets** | `internal/assets/opencode/sdd-overlay-multi.json` | Refactor to use `{file:...}` references |
 | **OpenCode models** | `internal/opencode/models.go` | No changes (reuse existing) |
 
@@ -678,7 +675,7 @@ El orchestrator prompt del default profile referencia sub-agentes como `sdd-appl
 
 ### Phase 5: Sync Integration
 - Update sync to detect and maintain all profiles
-- Add `--profile` CLI flag
+- Keep profile creation/editing in the TUI; reject retired profile CLI flags
 - Update backup targets to include prompt files
 - Update post-sync verification for profiles
 

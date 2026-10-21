@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	agent "github.com/gentleman-programming/gentle-ai/v3/internal/agents/opencode"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
+	agent "github.com/gentleman-programming/gentle-ai/v4/internal/agents/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
 )
 
 // Existing config tests model V1, never an ambient executable.

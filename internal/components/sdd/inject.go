@@ -10,14 +10,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gentleman-programming/gentle-ai/v3/internal/agents"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/assets"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/agentguidance"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/filemerge"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/opencodedefault"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/components/skills"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/model"
-	"github.com/gentleman-programming/gentle-ai/v3/internal/opencode"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/agents"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/assets"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/agentguidance"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/filemerge"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/opencodedefault"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/components/skills"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
+	"github.com/gentleman-programming/gentle-ai/v4/internal/opencode"
 )
 
 const legacyMandatoryWording = "TOTALMENTE " + "obligatorio"
@@ -236,6 +236,31 @@ var compatibilitySDDSkillIDs = []model.SkillID{
 	"sdd-init", "sdd-explore", "sdd-research", "sdd-propose", "sdd-spec",
 	"sdd-design", "sdd-tasks", "sdd-apply", "sdd-verify", "sdd-archive",
 	"sdd-onboard", "judgment-day",
+}
+
+// ManagedSkillPaths returns every file the SDD component writes under
+// skillDir: the shared references it installs and the SDD skill documents.
+// The paths are the ones the injector writes, so install and sync can
+// snapshot and verify them.
+//
+// The skills component deliberately installs only the shared references it
+// owns, so a selection without SDD never writes the SDD convention files and
+// the SDD retirement can remove the ones an earlier SDD install left behind.
+// The SDD component installs them whenever the selection carries SDD.
+func ManagedSkillPaths(skillDir string) ([]string, error) {
+	sharedFiles, err := assets.SharedSkillFileNames()
+	if err != nil {
+		return nil, fmt.Errorf("resolve SDD shared files: %w", err)
+	}
+	paths := make([]string, 0, len(sharedFiles)+len(compatibilitySDDSkillIDs))
+	for _, name := range sharedFiles {
+		paths = append(paths, filepath.Join(skillDir, "_shared", name))
+	}
+	skillPaths, err := skills.DirectoryPaths(skillDir, compatibilitySDDSkillIDs, "capable")
+	if err != nil {
+		return nil, fmt.Errorf("enumerate SDD skills: %w", err)
+	}
+	return append(paths, skillPaths...), nil
 }
 
 // SkillDirectoryPaths returns every file that InjectSkillDirectoryForAgent may write or
@@ -2775,7 +2800,7 @@ func migrateLegacyOpenCodeSDDOrchestrator(baseJSON []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filemerge.MergeJSONObjectsPreserveJSONC(baseJSON, overlay)
+	return filemerge.MergeOpenCodeJSONCObjects(baseJSON, overlay)
 }
 
 func looksLikeOpenCodeSDDConductor(agentRaw any) bool {
@@ -2869,7 +2894,7 @@ func migrateLegacyOpenCodeAgentsKey(baseJSON []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	updated, err := filemerge.MergeJSONObjectsPreserveJSONC(baseJSON, overlay)
+	updated, err := filemerge.MergeOpenCodeJSONCObjects(baseJSON, overlay)
 	if err != nil {
 		return nil, err
 	}
@@ -2928,7 +2953,7 @@ func migrateLegacyOpenCodeCommandPrompt(baseJSON []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filemerge.MergeJSONObjectsPreserveJSONC(baseJSON, overlay)
+	return filemerge.MergeOpenCodeJSONCObjects(baseJSON, overlay)
 }
 
 // sddOrchestratorMarkers are used to detect if SDD content was already injected
