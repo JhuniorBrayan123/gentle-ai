@@ -238,21 +238,15 @@ var compatibilitySDDSkillIDs = []model.SkillID{
 	"sdd-onboard", "judgment-day",
 }
 
-// SDDSharedConventionFiles returns the shared convention files the SDD
-// component owns and installs.
-//
-// The skills component deliberately leaves them alone, so an install that does
-// not select SDD never writes them and the SDD retirement can remove the ones
-// an earlier SDD install left behind. The SDD component installs them whenever
-// the selection carries SDD.
-func SDDSharedConventionFiles() []string {
-	return []string{"openspec-convention.md", "sdd-phase-common.md", "sdd-status-contract.md"}
-}
-
 // ManagedSkillPaths returns every file the SDD component writes under
 // skillDir: the shared references it installs and the SDD skill documents.
 // The paths are the ones the injector writes, so install and sync can
 // snapshot and verify them.
+//
+// The skills component deliberately installs only the shared references it
+// owns, so a selection without SDD never writes the SDD convention files and
+// the SDD retirement can remove the ones an earlier SDD install left behind.
+// The SDD component installs them whenever the selection carries SDD.
 func ManagedSkillPaths(skillDir string) ([]string, error) {
 	sharedFiles, err := assets.SharedSkillFileNames()
 	if err != nil {
