@@ -42,6 +42,7 @@ var additionalSkillLabels = map[model.SkillID]string{
 	model.SkillQADocReference:   "QA Doc Reference",
 	model.SkillQADocAccess:      "QA Doc Access",
 	model.SkillQAEvidence:       "QA Evidence",
+	model.SkillQADocDespliegue:  "QA Doc Despliegue",
 	model.SkillSmartopsUI:       "Smartops UI",
 }
 

@@ -9,7 +9,7 @@ import (
 
 func TestSkillPickerCanonicalRowsAndActions(t *testing.T) {
 	skills := AllSkillsOrdered()
-	labels := []string{"Judgment Day", "Go Testing", "Gentle AI Bench", "Skill Creator", "Skill Improver", "Branch & PR", "Issue Creation", "Skill Registry", "Chained PR", "Cognitive Doc Design", "Comment Writer", "Work Unit Commits", "RDD Defect Workflow", "Systemic Issue Triage", "QA Supervisor", "QA Explore", "QA Spec", "QA Apply", "QA Verify", "QA Docs", "QA Locator Hunting", "QA Doc Reference", "QA Doc Access", "QA Evidence", "Smartops UI"}
+	labels := []string{"Judgment Day", "Go Testing", "Gentle AI Bench", "Skill Creator", "Skill Improver", "Branch & PR", "Issue Creation", "Skill Registry", "Chained PR", "Cognitive Doc Design", "Comment Writer", "Work Unit Commits", "RDD Defect Workflow", "Systemic Issue Triage", "QA Supervisor", "QA Explore", "QA Spec", "QA Apply", "QA Verify", "QA Docs", "QA Locator Hunting", "QA Doc Reference", "QA Doc Access", "QA Evidence", "QA Doc Despliegue", "Smartops UI"}
 	if len(skills) != len(labels) {
 		t.Fatalf("canonical skills = %d, want %d", len(skills), len(labels))
 	}
@@ -34,7 +34,7 @@ func TestSkillPickerCanonicalRowsAndActions(t *testing.T) {
 			t.Errorf("cursor %d does not focus action %q", len(skills)+i, action)
 		}
 	}
-	if view := RenderSkillPicker(skills, len(skills)+1, 7); !strings.Contains(view, styles.Cursor+"Back") || strings.Contains(view, "SDD Init") || !strings.Contains(view, "Rows 27-27 of 27") {
+	if view := RenderSkillPicker(skills, len(skills)+1, 7); !strings.Contains(view, styles.Cursor+"Back") || strings.Contains(view, "SDD Init") || !strings.Contains(view, "Rows 28-28 of 28") {
 		t.Fatal("small viewport did not follow Back with a scroll hint")
 	}
 }

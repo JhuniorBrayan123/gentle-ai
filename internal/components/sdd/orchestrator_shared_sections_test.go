@@ -56,7 +56,7 @@ func TestRegisteredAgentsRenderStatusContinuationContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	ids := registry.SupportedAgents()
-	if len(ids) != 17 {
+	if len(ids) != 18 {
 		t.Fatalf("registered cohort changed: %v", ids)
 	}
 	templates := map[string]bool{}

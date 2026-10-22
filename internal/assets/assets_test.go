@@ -61,6 +61,7 @@ func TestEmbeddedInventoryKeepsForkSDDAndQAAssets(t *testing.T) {
 	for _, path := range []string{
 		"skills/qa-supervisor/SKILL.md",
 		"skills/qa-evidence/SKILL.md",
+		"skills/qa-doc-despliegue/SKILL.md",
 		"skills/smartops-ui/SKILL.md",
 		"skills/sdd-init/SKILL.md",
 		"skills/sdd-verify/SKILL.md",
@@ -1539,10 +1540,10 @@ func TestEmbeddedAssetCount(t *testing.T) {
 	}
 
 	// The embedded bundle keeps upstream v4's retained skills plus the fork's
-	// QA/SDD layer: 11 sdd-* phase skills, 10 QA-Orchestrator v3 skills, the
+	// QA/SDD layer: 11 sdd-* phase skills, 10 QA-Orchestrator v3 skills, qa-doc-despliegue, the
 	// standalone smartops-ui skill, and the _shared convention directory.
-	if skillDirs != 38 {
-		t.Fatalf("expected 38 retained skill directories, got %d", skillDirs)
+	if skillDirs != 39 {
+		t.Fatalf("expected 39 retained skill directories, got %d", skillDirs)
 	}
 
 	// Verify each skill directory has a SKILL.md.
@@ -1915,6 +1916,7 @@ func TestQAAndSmartopsSkillAssetsAreEmbedded(t *testing.T) {
 		"qa-doc-reference",
 		"qa-doc-access",
 		"qa-evidence",
+		"qa-doc-despliegue",
 		"smartops-ui",
 	} {
 		if _, err := Read("skills/" + id + "/SKILL.md"); err != nil {

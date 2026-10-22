@@ -1,0 +1,121 @@
+{
+  "codigo": "EJEMPLO-0002",
+  "version": "1.0",
+  "fecha": "22/10/2026",
+  "creado_por": "Dev Ejemplo",
+  "nombre": "Agregar el filtro \"Estado\" & orden en el listado de Reportes de la APP QA",
+  "validado_por": "QA Lead Ejemplo",
+  "redmine_url": "https://redmine.example.com/issues/12345",
+  "objetivo": [
+    "Permitir que el usuario QA filtre el listado de Reportes por Estado."
+  ],
+  "solucion": [
+    "Se agrega un selector \"Estado\" en la barra de filtros del listado.",
+    "Cada fila muestra el Estado debajo del nombre del Reporte."
+  ],
+  "descripcion_usuario": [
+    "Para el usuario QA: encuentra mas rapido los Reportes en un Estado dado."
+  ],
+  "peticion": {
+    "aviso_comercial": {
+      "descripcion": "APP QA (uso interno). No cambia ningun flujo existente.",
+      "respuesta": "NO"
+    },
+    "modulo_afectado": {
+      "descripcion": "Reportes: listado global.",
+      "respuesta": "Submodulos: Reportes"
+    },
+    "funcionalidad_afectada": {
+      "descripcion": "Filtros del listado de Reportes.",
+      "respuesta": "Listado de Reportes"
+    },
+    "componente_afectado": {
+      "descripcion": "Barra de filtros del listado.",
+      "respuesta": "REP-01 - Reportes\nListado global"
+    }
+  },
+  "rf": [
+    "RF-01: el selector Estado lista solo los Estados del alcance del usuario."
+  ],
+  "rnf": [
+    "RNF-01: el listado filtrado responde en menos de 2 segundos.",
+    "RNF-02: el selector es accesible por teclado."
+  ],
+  "requiere_qa": true,
+  "documentacion": [
+    {
+      "descripcion": "Mockup del filtro",
+      "link": "https://example.com/mockup"
+    },
+    {
+      "descripcion": "Matriz de pruebas",
+      "link": "[Adjunto en Redmine]"
+    }
+  ],
+  "despliegue": [
+    {
+      "grupo": "BASE DE DATOS",
+      "pasos": [
+        {
+          "componente": ["Scripts", "DBQaApp"],
+          "descripcion": [],
+          "link": "[Link al adjunto del script en Redmine]",
+          "responsable": "DBA",
+          "tiempo": "5 min"
+        }
+      ]
+    },
+    {
+      "grupo": "CONFIGSERVER",
+      "pasos": [
+        {
+          "componente": ["JENKINS", "mf-qa-app"],
+          "descripcion": [
+            "Ingresar a la plataforma de Jenkins",
+            "Seleccione el pipeline QAAPP/QAAPP-{ENV}/FRONTS",
+            "Presione \"Construir ahora\".",
+            "Esperar unos minutos para ver reflejado el cambio."
+          ],
+          "link": "",
+          "responsable": "",
+          "tiempo": ""
+        }
+      ]
+    }
+  ],
+  "reversion": [
+    {
+      "grupo": "ENTREGA CONTINUA",
+      "pasos": [
+        {
+          "componente": ["Script", "DBQaApp"],
+          "descripcion": ["En Database elija una rama estable"],
+          "link": "https://example.com/rollback",
+          "responsable": "DBA",
+          "tiempo": "5 min"
+        }
+      ]
+    },
+    {
+      "grupo": "SIN PASOS",
+      "pasos": []
+    }
+  ],
+  "tiempo_total": "25 min",
+  "implementacion": [
+    {
+      "inicio_fin": "23/10/2026 20:00 - 21:00",
+      "corte": "No aplica",
+      "observaciones": "Sin corte de servicio"
+    }
+  ],
+  "notificaciones": [
+    { "cargo": "QA Lead", "nombre": "Nombre Uno" },
+    { "cargo": "Desarrollador", "nombre": "Nombre Dos" }
+  ],
+  "responsables": [
+    { "rol": "QA Tester", "nombre": "Nombre Tres", "fecha": "23/10/2026" },
+    { "rol": "AgileOps", "nombre": "Nombre Cuatro", "fecha": "23/10/2026" }
+  ],
+  "observaciones": "Linea uno\nLinea dos"
+}

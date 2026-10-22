@@ -1,0 +1,1016 @@
+<p class="callout warning"><strong>Documento de ejemplo.</strong> Todo el contenido es ficticio y solo ilustra cómo completar el formato. No corresponde a un requerimiento real ni debe usarse como referencia funcional.</p>
+<p><img class="align-center" src="https://repositorio-bookstack.s3.amazonaws.com/uploads/images/gallery/2023-06/scaled-1680-/ej7njugrmMsBHWnf-image.png" alt="image.png"></p>
+
+<p class="MsoTitle align-center" style="mso-line-height-alt: 1.0pt;"><span lang="ES-CO" style="font-size: 20.0pt; font-family: 'Book Antiqua',serif; mso-bidi-font-family: Tahoma; mso-ansi-language: ES-CO;">Formato de Especificación y Despliegue Micro</span></p>
+
+<p class="MsoNormal align-right" style="text-align: right;" align="right"><strong style="mso-bidi-font-weight: normal;"><span lang="ES-CO" style="font-size: 20.0pt; line-height: 115%; font-family: 'Book Antiqua',serif; mso-bidi-font-family: Tahoma; color: black; mso-themecolor: text1; mso-ansi-language: ES-CO;">Versión 1.0</span></strong></p>
+
+<table class="MsoNormalTable" style="margin-left: auto; margin-right: auto; border-collapse: collapse; width: 80.6173%; height: 309.516px; border: medium none currentcolor;" border="1" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 69.0625px;">
+
+<td style="width: 50.0766%; border-top: 1pt solid black; border-right: 1pt solid black; border-bottom: 1pt solid black; border-image: initial; border-left: none; padding: 0in 5.4pt; height: 69.0625px;" valign="top" width="172">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Código:</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-top: 1pt solid black; border-left: none; border-bottom: 1pt solid black; border-right: none; padding: 0in 5.4pt; height: 69.0625px;" valign="top" width="447">
+
+<p class="MsoNormal"><span style="font-family: 'Times New Roman', serif;"><span style="font-size: 21.3333px;">EJEMPLO-0001</span></span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 26px;">
+
+<td style="width: 50.0766%; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0in 5.4pt; height: 26px;" valign="top" width="172">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Versión:</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1pt solid black; padding: 0in 5.4pt; height: 26px;" valign="top" width="447">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">1.0</span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 26px;">
+
+<td style="width: 50.0766%; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0in 5.4pt; height: 26px;" valign="top" width="172">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Fecha de la versión:</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1pt solid black; padding: 0in 5.4pt; height: 26px;" valign="top" width="447">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><span lang="ES" style="font-size: 16pt; font-family: 'Times New Roman', serif;">DD/MM/AAAA</span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 26px;">
+
+<td style="width: 50.0766%; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0in 5.4pt; height: 26px;" valign="top" width="172">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Creado por:</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-top: none; border-right: none; border-left: none; border-image: initial; border-bottom: 1pt solid black; padding: 0in 5.4pt; height: 26px;" valign="top" width="447">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;">[Nombre del desarrollador]</p>
+
+</td>
+
+</tr>
+
+<tr style="height: 46px;">
+
+<td style="width: 50.0766%; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0in 5.4pt; height: 46px;" valign="top" width="172">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Nombre Requerimiento:</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-width: medium medium 1pt; border-style: none none solid; border-color: currentcolor currentcolor black; border-image: initial; padding: 0in 5.4pt; height: 46px;" valign="top" width="447">
+
+<p>Agregar el filtro "Producto" en el listado global de Historias de la APP QA<br><br></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 45.3125px;">
+
+<td style="width: 50.0766%; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0in 5.4pt; height: 45.3125px;" valign="top" width="172">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Validado por:</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-width: medium medium 1pt; border-style: none none solid; border-color: currentcolor currentcolor black; border-image: initial; padding: 0in 5.4pt; height: 45.3125px;" valign="top" width="447">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><span style="font-family: Times New Roman, serif;"><span style="font-size: 21.3333px;">[Nombre del validador]</span></span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 71.1406px;">
+
+<td style="width: 50.0766%; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0in 5.4pt; height: 71.1406px;">
+
+<p class="MsoNormal" style="margin-bottom: .0001pt; line-height: normal;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 16.0pt; mso-bidi-font-size: 12.0pt; font-family: 'Times New Roman',serif; mso-fareast-font-family: 'Times New Roman';">Link de Redmine (MVP-request)</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 50.0766%; border-width: medium medium 1pt; border-style: none none solid; border-color: currentcolor currentcolor black; border-image: initial; padding-top: 0in; padding-right: 5.4pt; padding-bottom: 0in; height: 71.1406px;">
+
+<p><a href="#">https://redmine.sreasons.com/issues/XXXXX</a></p>
+
+<p> </p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<hr size="22px">
+
+<p><br></p>
+
+<h3>Agregar el filtro "Producto" en el listado global de Historias de la APP QA</h3>
+
+<p class="MsoNormal align-center"><span lang="ES-TRAD" style="mso-ansi-language: ES-TRAD;"> </span></p>
+
+<h4><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;"><strong>1.</strong><span style="font: 7.0pt 'Times New Roman';"><strong>   </strong>  </span></span></span><!--[endif]--><strong><span lang="ES">Objetivo del requerimiento</span></strong></h4>
+
+<ul>
+
+<li class="null">Permitir que el usuario QA filtre el listado global de Historias por Producto (Project padre de Redmine), para revisar solo las Historias de los Productos dentro de su alcance sin recorrer el listado completo.</li>
+
+</ul>
+
+<h4><span style="mso-bookmark: _Toc416261160;"><span style="mso-bookmark: _Toc367543856;"><span style="mso-bookmark: _Toc263078250;"><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">2.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">     </span></span></span><!--[endif]--><span lang="ES">Descripción general de la solución</span></strong></span></span></span></h4>
+
+<ul>
+
+<li>
+
+<p>Se agrega un selector "Producto" en la barra de filtros del listado de Historias. Muestra solo los Productos del alcance del usuario (Squad o General) y se combina con los filtros existentes de estado, versión y búsqueda.</p>
+
+<p>Cada fila del listado muestra el Producto debajo del nombre de la Historia.</p>
+
+</li>
+
+</ul>
+
+<h5><strong><span style="mso-bookmark: _Toc416261162;"><span style="mso-bookmark: _Toc367543858;"><span style="mso-bookmark: _Toc263078252;"><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">3.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Descripción a nivel de usuario y comercial</span></span></span></span></strong></h5>
+
+<ul>
+
+<li class="null">
+
+<p>Para el usuario QA: encuentra más rápido las Historias de un Producto específico (por ejemplo, ERP SMARTCLIC) antes de una campaña de pruebas.</p>
+
+<p>Para el negocio: se reduce el tiempo de preparación de las pruebas y se evita revisar Historias fuera del alcance del Squad.</p>
+
+</li>
+
+</ul>
+
+<table style="border-collapse: collapse; width: 113.086%; height: 418.175px;" border="1"><colgroup><col style="width: 26.4524%;"><col style="width: 40.7911%;"><col style="width: 32.7565%;"></colgroup>
+
+<tbody>
+
+<tr style="height: 29.875px;">
+
+<td class="align-center" style="height: 29.875px;"><strong>PETICION</strong></td>
+
+<td class="align-center" style="height: 29.875px;"><strong>DESCRIPCION</strong></td>
+
+<td class="align-center" style="height: 29.875px;"><strong>RESPUESTA</strong></td>
+
+</tr>
+
+<tr style="height: 82.4px;">
+
+<td style="height: 82.4px;"><strong>Aviso Comercial</strong></td>
+
+<td style="height: 82.4px;">APP QA (uso interno). Se agrega un filtro nuevo; no cambia ningún flujo existente.<br></td>
+
+<td class="align-center" style="height: 82.4px;">
+
+<p><strong><span style="mso-bookmark: _Toc416261162;"><span style="mso-bookmark: _Toc367543858;"><span style="mso-bookmark: _Toc263078252;"><span lang="ES"><span lang="ES" style="font-family: Wingdings; mso-fareast-font-family: Wingdings; mso-bidi-font-family: Wingdings;"><span style="mso-list: Ignore;"><span style="font: 7.0pt 'Times New Roman';">  </span></span></span><!--[endif]-->SI ( )<span style="mso-tab-count: 2;"> </span>/<span style="mso-tab-count: 2;">  </span>NO (X)</span></span></span></span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 91.3625px;">
+
+<td style="height: 91.3625px;"><strong>Modulo Afectado</strong></td>
+
+<td>Historias: listado global.</td>
+
+<td style="height: 91.3625px;">
+
+<p><strong>Submódulos: Historias<br><br><br></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 90.3625px;">
+
+<td style="height: 90.3625px;"><strong>Funcionalidad Afectada</strong></td>
+
+<td>Filtros del listado de Historias y visualización del Producto en cada fila.</td>
+
+<td style="height: 90.3625px;">Listado de Historias</td>
+
+</tr>
+
+<tr style="height: 124.175px;">
+
+<td style="height: 124.175px;"><strong>Componente o Interfaz afectada</strong></td>
+
+<td>Barra de filtros y celda "Historia" del listado.</td>
+
+<td style="height: 124.175px;">
+
+<p>HIS-01 — Historias · Listado global</p>
+
+<p> </p>
+
+<br></td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<h4><span style="mso-bookmark: _Toc416261160;"><span style="mso-bookmark: _Toc367543856;"><span style="mso-bookmark: _Toc263078250;"><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">4.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">     </span></span></span><!--[endif]--><span lang="ES">Catálogo de requerimientos</span></strong></span></span></span></h4>
+
+<h5><strong><span style="mso-bookmark: _Toc416261162;"><span style="mso-bookmark: _Toc367543858;"><span style="mso-bookmark: _Toc263078252;"><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;"><br>4.1.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Catálogo de requerimientos funcionales</span></span></span></span></strong></h5>
+
+<ul>
+
+<li class="null"><span lang="ES" style="background-color: rgb(251, 238, 184);">RF-01: el selector "Producto" lista solo los Productos del alcance del usuario. RF-02: al elegir un Producto se conservan los demás filtros. RF-03: la opción por defecto es "Todos mis Productos".</span></li>
+
+</ul>
+
+<h5><span style="mso-bookmark: _Toc416261163;"><span style="mso-bookmark: _Toc367543859;"><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">4.2.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Catálogo de requerimientos no funcionales</span></strong></span></span></h5>
+
+<ul>
+
+<li class="null"><span lang="ES" style="background-color: rgb(251, 238, 184);">RNF-01: el listado filtrado responde en menos de 2 segundos con hasta 500 Historias.</span></li>
+
+</ul>
+
+<h4><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">5.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">     </span></span></span><!--[endif]--><span lang="ES">Requiere pruebas de Calidad</span></strong></h4>
+
+<p><span lang="ES" style="font-family: Wingdings; mso-fareast-font-family: Wingdings; mso-bidi-font-family: Wingdings;"><span style="mso-list: Ignore;"><span style="font: 7.0pt 'Times New Roman';">                                                                                                                                             </span></span></span><!--[endif]--><span lang="ES">SI (X)<span style="mso-tab-count: 2;">                    </span>/<span style="mso-tab-count: 2;">                              </span>NO (<span style="mso-spacerun: yes;">  </span>).</span></p>
+
+<p><span lang="ES">      <strong>  5.1  DOCUMENTACION RELACIONADA (Anexar ejemplo: ppt, excel, mockups, gráficos, fotos, etc.)</strong></span></p>
+
+<table class="MsoNormalTable" style="border: none; margin-left: auto; margin-right: auto; width: 505.15pt; border-collapse: collapse; height: 896.782px;" border="1" width="437" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 23.3906px;">
+
+<td class="align-center" style="width: 283.328px; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.3906px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Descripción</span></strong></p>
+
+</td>
+
+<td class="align-center" style="width: 389.203px; border-top: 1pt solid black; border-right: 1pt solid black; border-bottom: 1pt solid black; border-image: initial; border-left: none; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.3906px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Link</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.3906px;">
+
+<td class="align-center" style="width: 283.328px; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.3906px;">
+
+<p class="MsoNormal"><br></p>
+
+</td>
+
+<td class="align-center" style="width: 389.203px; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" valign="top">
+
+<p class="MsoNormal" style="text-align: justify;"><br></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.375px;">
+
+<td class="align-center" style="width: 283.328px; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.375px;"> </td>
+
+<td class="align-center" style="width: 389.203px; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.375px;" valign="top"> </td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<p>    <strong>    5.2 CREDENCIALES</strong></p>
+
+<table class="MsoNormalTable" style="border: none; margin-left: auto; margin-right: auto; width: 505.15pt; border-collapse: collapse; height: 896.782px;" border="1" width="437" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 23.375px;">
+
+<td class="align-center" style="width: 233px; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.375px;"><strong><span style="color: rgb(0, 0, 0);">Usuario</span></strong></td>
+
+</tr>
+
+<tr style="height: 23.375px;">
+
+<td class="align-center" style="width: 233px; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.375px;">
+
+<p><strong>Usuario para el entorno de CRT</strong></p>
+
+<p><strong>Usuario:</strong>[usuario QA de prueba con alcance de Squad]</p>
+
+<p><strong>Contraseña</strong>: [se entrega por el canal seguro del equipo]</p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.375px;">
+
+<td class="align-center" style="width: 233px; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.375px;"> </td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<h4><span style="mso-bookmark: _Toc367543864;"><span style="mso-bookmark: _Toc263078258;"><span style="mso-bookmark: _Toc135393664;"><!-- [if !supportLists]--><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">6.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">     </span></span></span><!--[endif]--><span lang="ES">Despliegue</span></strong></span></span></span><strong><span style="mso-bookmark: _Toc135393664;"><span lang="ES">.</span></span></strong></h4>
+
+<h5><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">6.1.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Secuencia de despliegue</span></strong></h5>
+
+<table class="MsoNormalTable" style="border-collapse: collapse; width: 789px; height: 397.625px; border-width: medium; border-spacing: 0px; border-color: initial;" border="1" width="674" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 45.75px;">
+
+<td style="width: 44.3125px; border: solid; background: rgb(79, 129, 189); padding: 0px; height: 45.75px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">#</span></strong></p>
+
+</td>
+
+<td style="width: 153.297px; border-width: medium; border-style: solid solid solid none; border-color: initial; border-image: initial; background: rgb(79, 129, 189); padding: 0px; height: 45.75px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Componente TI</span></strong></p>
+
+</td>
+
+<td style="width: 350.438px; border-width: medium; border-style: solid solid solid none; border-color: initial; border-image: initial; background: rgb(79, 129, 189); padding: 0px; height: 45.75px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Descripción detallada</span></strong></p>
+
+</td>
+
+<td style="width: 88.6406px; border-width: medium; border-style: solid solid solid none; border-color: initial; border-image: initial; background: rgb(79, 129, 189); padding: 0px; height: 45.75px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Responsable</span></strong></p>
+
+</td>
+
+<td style="width: 149.844px; border-width: medium; border-style: solid solid solid none; border-color: initial; border-image: initial; background: rgb(79, 129, 189); padding: 0px; height: 45.75px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Tiempo</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 25.3906px;">
+
+<td style="width: 786.532px; border-width: medium; border-style: none solid solid; border-color: initial; border-image: initial; background: rgb(141, 179, 226); padding: 0px; height: 25.3906px;" colspan="5">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">BASE DE DATOS</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 81.3906px;">
+
+<td style="width: 44.3125px; border-width: medium; border-style: none solid solid; border-color: initial; border-image: initial; padding: 0px; height: 81.3906px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">1</span></p>
+
+</td>
+
+<td style="width: 153.297px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 81.3906px;">
+
+<p class="MsoNormal">Scripts</p>
+
+<p class="MsoNormal">DBQaApp</p>
+
+<p class="MsoNormal"> </p>
+
+<p class="MsoNormal"> </p>
+
+</td>
+
+<td style="width: 350.438px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 81.3906px;" valign="top">
+
+<p><a href="#">[Link al adjunto del script en Redmine]</a></p>
+
+<p> </p>
+
+<p> </p>
+
+<p> </p>
+
+</td>
+
+<td style="width: 88.6406px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 81.3906px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%;">DBA</span></p>
+
+</td>
+
+<td style="width: 149.844px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 81.3906px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%;">5 min</span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 36.5px;">
+
+<td style="width: 786.532px; border-width: medium; border-style: none solid solid; border-color: initial; border-image: initial; background: rgb(141, 179, 226); padding: 0px; height: 36.5px;" colspan="5">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">CONFIGSERVER</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 25.3906px;">
+
+<td style="width: 44.3125px; border-width: medium; border-style: none solid solid; border-color: initial; border-image: initial; padding: 0px; height: 25.3906px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 153.297px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 25.3906px;">
+
+<p class="MsoNormal"><br></p>
+
+</td>
+
+<td style="width: 350.438px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 25.3906px;"> </td>
+
+<td style="width: 88.6406px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 25.3906px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 149.844px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 25.3906px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 183.203px;">
+
+<td style="width: 44.3125px; border-width: medium; border-style: none solid solid; border-color: initial; border-image: initial; padding: 0px; height: 183.203px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 153.297px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 183.203px;">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES">JENKINS</span></span></p>
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES">mf-qa-app</span></span></p>
+
+<p class="MsoNormal"> </p>
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES"><br></span></span></p>
+
+</td>
+
+<td style="width: 350.438px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 183.203px;">
+
+<ol>
+
+<li>Ingresar a la plataforma de Jenkins: <a href="#">[URL de Jenkins]</a></li>
+
+<li>Seleccione el pipeline QAAPP/QAAPP-{ENV}/FRONTS</li>
+
+<li>Seleccione el ambiente qaapp-web-{ENV} y elija la rama feature-EJEMPLO-0001.</li>
+
+<li>Presione "Construir ahora".</li>
+
+<li>Esperar unos minutos para ver reflejado el cambio de la versión.</li>
+
+</ol>
+
+</td>
+
+<td style="width: 88.6406px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 183.203px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 149.844px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 183.203px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<p class="MsoNormal"><span lang="ES"> </span></p>
+
+<h5><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">6.2.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Secuencia de </span><span lang="ES">reversión</span></strong></h5>
+
+<table class="MsoNormalTable" style="margin-left: auto; margin-right: auto; width: 810px; border-collapse: collapse; height: 1587.41px; border: medium none currentcolor;" border="1" width="674" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 45.75px;">
+
+<td style="width: 39.5px; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 45.75px;" width="23">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">#</span></strong></p>
+
+</td>
+
+<td style="width: 126.125px; border-width: 1pt 1pt 1pt medium; border-style: solid solid solid none; border-color: black black black currentcolor; border-image: initial; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 45.75px;" width="102">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Componente TI</span></strong></p>
+
+</td>
+
+<td style="width: 445.763px; border-width: 1pt 1pt 1pt medium; border-style: solid solid solid none; border-color: black black black currentcolor; border-image: initial; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 45.75px;" width="395">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Descripción detallada</span></strong></p>
+
+</td>
+
+<td style="width: 115.625px; border-width: 1pt 1pt 1pt medium; border-style: solid solid solid none; border-color: black black black currentcolor; border-image: initial; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 45.75px;" width="92">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Responsable</span></strong></p>
+
+</td>
+
+<td style="width: 82.1875px; border-width: 1pt 1pt 1pt medium; border-style: solid solid solid none; border-color: black black black currentcolor; border-image: initial; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 45.75px;" width="62">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Tiempo</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.375px;">
+
+<td style="width: 809.2px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; background: rgb(141, 179, 226); padding: 0cm 5.4pt; height: 23.375px;" colspan="5" width="674"> </td>
+
+</tr>
+
+<tr style="height: 78.3125px;">
+
+<td style="width: 39.5px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; padding: 0cm 5.4pt; height: 78.3125px;" width="23"> </td>
+
+<td style="width: 126.125px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 78.3125px;" width="102">
+
+<p class="MsoNormal">Scripts</p>
+
+<p class="MsoNormal">DBQaApp</p>
+
+</td>
+
+<td style="width: 445.763px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding-top: 0cm; padding-right: 5.4pt; padding-bottom: 0cm; height: 78.3125px;" valign="top" width="395">
+
+<p><a href="#">[Link al adjunto del script de reversión en Redmine]</a></p>
+
+<p> </p>
+
+</td>
+
+<td style="width: 115.625px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 78.3125px;" width="92"> </td>
+
+<td style="width: 82.1875px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 78.3125px;" width="62"> </td>
+
+</tr>
+
+<tr style="height: 23.7188px;">
+
+<td style="width: 809.2px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; background: rgb(141, 179, 226); padding: 0cm 5.4pt; height: 23.7188px;" colspan="5" width="674">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">CONFIGSERVER</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.7188px;">
+
+<td style="width: 809.2px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; background: rgb(141, 179, 226); padding: 0cm 5.4pt; height: 23.7188px;" colspan="5" width="674">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><strong><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">ENTREGA CONTINUA</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 46.7812px;">
+
+<td style="width: 39.5px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; padding: 0cm 5.4pt; height: 46.7812px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 126.125px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 46.7812px;">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES">Script</span></span></p>
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES">DBQaApp</span></span></p>
+
+</td>
+
+<td style="width: 445.763px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 46.7812px;">
+
+<p>    En Database elija una rama estable</p>
+
+<p> </p>
+
+</td>
+
+<td style="width: 115.625px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 46.7812px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 82.1875px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 46.7812px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 166.406px;">
+
+<td style="width: 39.5px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; padding: 0cm 5.4pt; height: 166.406px;">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 126.125px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 166.406px;">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES">JENKINS</span></span></p>
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES">mf-qa-app</span></span></p>
+
+<p class="MsoNormal"> </p>
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><span lang="ES"><br></span></span></p>
+
+</td>
+
+<td style="width: 445.763px; border-width: medium; border-style: none solid solid none; border-color: initial; padding: 0px; height: 166.406px;">
+
+<ol>
+
+<li>Ingresar a la plataforma de Jenkins: <a href="#">[URL de Jenkins]</a></li>
+
+<li>Seleccione el pipeline QAAPP/QAAPP-{ENV}/FRONTS</li>
+
+<li>Seleccione el ambiente qaapp-web-{ENV} y elija una rama estable.</li>
+
+<li>Presione "Construir ahora".</li>
+
+<li>Esperar unos minutos para ver reflejado el cambio de la versión.</li>
+
+</ol>
+
+</td>
+
+<td style="width: 115.625px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 166.406px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+<td style="width: 82.1875px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 166.406px;">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"><br></span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 24.3906px;">
+
+<td style="width: 727.013px; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; padding: 0cm 5.4pt; height: 24.3906px;" colspan="4" width="612">
+
+<p class="MsoNormal"><strong><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">Tiempo Total</span></strong></p>
+
+</td>
+
+<td style="width: 82.1875px; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 24.3906px;" width="62">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">25 min</span></p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<p class="MsoNormal"><span lang="ES"> </span></p>
+
+<h4><span style="mso-bookmark: _Toc416261168;"><span style="mso-bookmark: _Toc367543865;"><span style="mso-bookmark: _Toc263078259;"><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">7.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">     </span></span></span><!--[endif]--><span lang="ES">Pase a producción</span></strong></span></span></span></h4>
+
+<h5><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">7.1.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Fecha y hora de implementación acordada</span></strong></h5>
+
+<div align="center">
+
+<table class="MsoNormalTable" style="width: 485.4pt; border-collapse: collapse; border: none; height: 159.734px;" border="1" width="647" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 112.953px;">
+
+<td style="width: 100.95pt; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 112.953px;" width="135">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Fecha y hora de inicio y fin de implementación</span></strong></p>
+
+</td>
+
+<td style="width: 92.15pt; border-top: 1pt solid black; border-right: 1pt solid black; border-bottom: 1pt solid black; border-image: initial; border-left: none; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 112.953px;" width="123">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Fecha y hora de inicio y fin de corte de servicios (si aplica)</span></strong></p>
+
+</td>
+
+<td style="width: 292.3pt; border-top: 1pt solid black; border-right: 1pt solid black; border-bottom: 1pt solid black; border-image: initial; border-left: none; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 112.953px;" width="390">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Observaciones adicionales</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.3906px;">
+
+<td style="width: 100.95pt; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.3906px;" width="135">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+<td style="width: 92.15pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" valign="top" width="123">
+
+<p class="MsoNormal" style="margin-left: 36.0pt;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+<td style="width: 292.3pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" width="390">
+
+<p class="MsoNormal align-center" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.3906px;">
+
+<td style="width: 100.95pt; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.3906px;" width="135">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+<td style="width: 92.15pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" valign="top" width="123">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+<td style="width: 292.3pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" width="390">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<p class="MsoNormal"><span lang="ES"> </span></p>
+
+<h5 class="align-left"><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">7.2.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Notificaciones a usuarios</span></strong></h5>
+
+<div align="center">
+
+<table class="MsoNormalTable" style="width: 393.25pt; border-collapse: collapse; height: 71.1564px; border: medium none currentcolor;" border="1" width="524" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 23.7188px;">
+
+<td style="width: 100.95pt; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.7188px;" width="135">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Cargo</span></strong></p>
+
+</td>
+
+<td style="width: 292.3pt; border-width: 1pt 1pt 1pt medium; border-style: solid solid solid none; border-color: black black black currentcolor; border-image: initial; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.7188px;" width="390">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Nombre</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.7188px;">
+
+<td style="width: 100.95pt; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; padding: 0cm 5.4pt; height: 23.7188px;" width="135">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">QA Lead</span></p>
+
+</td>
+
+<td style="width: 292.3pt; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 23.7188px;" width="390">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span style="background-color: rgb(236, 202, 250);">[Nombre]</span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.7188px;">
+
+<td style="width: 100.95pt; border-width: medium 1pt 1pt; border-style: none solid solid; border-color: currentcolor black black; border-image: initial; padding: 0cm 5.4pt; height: 23.7188px;" width="135">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">Desarrollador</span></p>
+
+</td>
+
+<td style="width: 292.3pt; border-width: medium 1pt 1pt medium; border-style: none solid solid none; border-color: currentcolor black black currentcolor; padding: 0cm 5.4pt; height: 23.7188px;" width="390">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span style="background-color: rgb(251, 238, 184);">[Nombre]</span></p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<p class="MsoNormal"><span lang="ES"> </span></p>
+
+<h5><strong><span lang="ES" style="mso-fareast-font-family: Cambria; mso-fareast-theme-font: major-latin; mso-bidi-font-family: Cambria; mso-bidi-theme-font: major-latin;"><span style="mso-list: Ignore;">7.3.<span style="font-style: normal; font-variant: normal; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-stretch: normal; font-size: 7pt; line-height: normal; font-family: 'Times New Roman';">           </span></span></span><!--[endif]--><span lang="ES">Responsables durante el pase a producción</span></strong></h5>
+
+<div align="center">
+
+<table class="MsoNormalTable" style="width: 327.75pt; border-collapse: collapse; border: none; height: 70.1718px;" border="1" width="437" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 23.3906px;">
+
+<td style="width: 93.05pt; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.3906px;" width="124">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Rol</span></strong></p>
+
+</td>
+
+<td style="width: 148.85pt; border-top: 1pt solid black; border-right: 1pt solid black; border-bottom: 1pt solid black; border-image: initial; border-left: none; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.3906px;" width="198">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Nombre</span></strong></p>
+
+</td>
+
+<td style="width: 85.85pt; border-top: 1pt solid black; border-right: 1pt solid black; border-bottom: 1pt solid black; border-image: initial; border-left: none; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.3906px;" width="114">
+
+<p class="MsoNormal" style="margin-bottom: 0cm; text-align: center;" align="center"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Fecha</span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.3906px;">
+
+<td style="width: 93.05pt; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.3906px;" width="124">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">QA Tester</span></p>
+
+</td>
+
+<td style="width: 148.85pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" valign="top" width="198">
+
+<p class="MsoNormal" style="text-align: justify;"><span style="background-color: rgb(251, 238, 184);">[Nombre]</span></p>
+
+</td>
+
+<td style="width: 85.85pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" width="114">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%; background-color: rgb(255, 255, 255);">DD/MM/AAAA</span></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 23.3906px;">
+
+<td style="width: 93.05pt; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 23.3906px;" width="124">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;">AgileOps</span></p>
+
+</td>
+
+<td style="width: 148.85pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" valign="top" width="198">
+
+<p class="MsoNormal">[Nombre]</p>
+
+</td>
+
+<td style="width: 85.85pt; border-top: none; border-left: none; border-bottom: 1pt solid black; border-right: 1pt solid black; padding: 0cm 5.4pt; height: 23.3906px;" width="114">
+
+<p class="MsoNormal" style="text-align: center;" align="center"><span lang="ES" style="font-size: 10pt; line-height: 115%; background-color: rgb(255, 255, 255);">DD/MM/AAAA</span></p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<p class="MsoNormal" style="margin-bottom: 0cm;"><span lang="ES"> </span></p>
+
+<div align="center">
+
+<table class="MsoNormalTable" style="width: 380.15pt; border-collapse: collapse; border: none; height: 70.25px;" border="1" width="507" cellspacing="0" cellpadding="0">
+
+<tbody>
+
+<tr style="height: 23.3906px;">
+
+<td style="width: 380.15pt; border: 1pt solid black; background: rgb(79, 129, 189); padding: 0cm 5.4pt; height: 23.3906px;" width="507">
+
+<p class="MsoNormal" style="margin-bottom: 0cm;"><strong style="mso-bidi-font-weight: normal;"><span lang="ES" style="font-size: 10.0pt; line-height: 115%; color: black; mso-color-alt: windowtext;">Observaciones </span></strong></p>
+
+</td>
+
+</tr>
+
+<tr style="height: 46.8594px;">
+
+<td style="width: 380.15pt; border-right: 1pt solid black; border-bottom: 1pt solid black; border-left: 1pt solid black; border-image: initial; border-top: none; padding: 0cm 5.4pt; height: 46.8594px;" width="507">
+
+<p class="MsoNormal"><span lang="ES" style="font-size: 10.0pt; line-height: 115%;"> </span></p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<p class="MsoNormal" style="margin-bottom: 0cm;"><span lang="ES"> </span></p>

@@ -46,6 +46,7 @@ var selectableFoundationSkills = []model.SkillID{
 	model.SkillQADocReference,
 	model.SkillQADocAccess,
 	model.SkillQAEvidence,
+	model.SkillQADocDespliegue,
 	model.SkillSmartopsUI,
 }
 

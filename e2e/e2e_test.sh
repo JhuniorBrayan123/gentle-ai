@@ -565,7 +565,7 @@ test_cc_skills_minimal() {
 }
 
 test_cc_skills_full() {
-    log_test "Claude Code: skills injection (full-gentleman = 18 foundation skills)"
+    log_test "Claude Code: skills injection (full-gentleman = 19 foundation skills)"
     cleanup_test_env
 
     if $BINARY install --agent claude-code --component skills --preset full-gentleman 2>&1; then
@@ -574,9 +574,9 @@ test_cc_skills_full() {
 
         # #4669: the six contributor workflow skills are selectable, never default.
         # The fork keeps its QA layer: 7 upstream foundation skills + the 10
-        # QA-Orchestrator v3 skills + the standalone smartops-ui skill = 18
-        # foundation skills, plus judgment-day = 19 files.
-        assert_file_count "$skills_dir" "SKILL.md" 19 "Full preset (skills alone): 19 skill files"
+        # QA-Orchestrator v3 skills + qa-doc-despliegue + the standalone smartops-ui skill = 19
+        # foundation skills, plus judgment-day = 20 files.
+        assert_file_count "$skills_dir" "SKILL.md" 20 "Full preset (skills alone): 20 skill files"
 
         # Verify foundation skills exist
         assert_file_exists "$skills_dir/go-testing/SKILL.md" "go-testing SKILL.md"
@@ -596,6 +596,7 @@ test_cc_skills_full() {
         assert_file_exists "$skills_dir/qa-doc-reference/SKILL.md" "qa-doc-reference SKILL.md"
         assert_file_exists "$skills_dir/qa-doc-access/SKILL.md" "qa-doc-access SKILL.md"
         assert_file_exists "$skills_dir/qa-evidence/SKILL.md" "qa-evidence SKILL.md"
+        assert_file_exists "$skills_dir/qa-doc-despliegue/SKILL.md" "qa-doc-despliegue SKILL.md"
 
         # Verify the standalone smartops-ui skill exists
         assert_file_exists "$skills_dir/smartops-ui/SKILL.md" "smartops-ui SKILL.md"
@@ -612,7 +613,7 @@ test_cc_skills_full() {
 }
 
 test_cc_skills_ecosystem() {
-    log_test "Claude Code: skills injection (ecosystem-only = 18 foundation skills)"
+    log_test "Claude Code: skills injection (ecosystem-only = 19 foundation skills)"
     cleanup_test_env
 
     if $BINARY install --agent claude-code --component skills --preset ecosystem-only 2>&1; then
@@ -620,7 +621,7 @@ test_cc_skills_ecosystem() {
         assert_dir_exists "$skills_dir" "Claude skills directory"
 
         # #4669: contributor workflow skills are not part of this preset.
-        assert_file_count "$skills_dir" "SKILL.md" 19 "Ecosystem preset (skills alone): 19 skill files"
+        assert_file_count "$skills_dir" "SKILL.md" 20 "Ecosystem preset (skills alone): 20 skill files"
         # Foundation skills present
         assert_file_exists "$skills_dir/go-testing/SKILL.md" "Foundation skills present"
         assert_file_exists "$skills_dir/skill-creator/SKILL.md" "skill-creator present"
@@ -798,14 +799,14 @@ test_oc_skills_minimal() {
 }
 
 test_oc_skills_full() {
-    log_test "OpenCode: skills injection (full-gentleman = 18 foundation skills)"
+    log_test "OpenCode: skills injection (full-gentleman = 19 foundation skills)"
     cleanup_test_env
 
     # #4669: the six contributor workflow skills are selectable, never default.
     if $BINARY install --agent opencode --component skills --preset full-gentleman 2>&1; then
         local skill_dir="$HOME/.config/opencode/skills"
         assert_dir_exists "$skill_dir" "OpenCode skill directory"
-        assert_file_count "$skill_dir" "SKILL.md" 19 "Full preset (skills alone): 19 skill files"
+        assert_file_count "$skill_dir" "SKILL.md" 20 "Full preset (skills alone): 20 skill files"
         assert_file_exists "$skill_dir/go-testing/SKILL.md" "go-testing skill"
         assert_file_exists "$skill_dir/skill-creator/SKILL.md" "skill-creator skill"
         assert_file_not_exists "$skill_dir/branch-pr/SKILL.md" "branch-pr NOT installed by default"
@@ -821,6 +822,7 @@ test_oc_skills_full() {
         assert_file_exists "$skill_dir/qa-doc-reference/SKILL.md" "qa-doc-reference skill"
         assert_file_exists "$skill_dir/qa-doc-access/SKILL.md" "qa-doc-access skill"
         assert_file_exists "$skill_dir/qa-evidence/SKILL.md" "qa-evidence skill"
+        assert_file_exists "$skill_dir/qa-doc-despliegue/SKILL.md" "qa-doc-despliegue skill"
         # Verify the standalone smartops-ui skill exists
         assert_file_exists "$skill_dir/smartops-ui/SKILL.md" "smartops-ui skill"
         assert_file_size_min "$skill_dir/go-testing/SKILL.md" 200 "go-testing skill has real content"
@@ -1582,7 +1584,7 @@ test_integrity_full_preset_all_skills_nonempty() {
 
     if $BINARY install --agent opencode --component skills --preset full-gentleman 2>&1; then
         local skill_dir="$HOME/.config/opencode/skills"
-        assert_file_count "$skill_dir" "SKILL.md" 19 "Full preset installs 19 foundation skills"
+        assert_file_count "$skill_dir" "SKILL.md" 20 "Full preset installs 20 foundation skills"
         local all_ok=true
         local empty_count=0
 
@@ -1598,10 +1600,10 @@ test_integrity_full_preset_all_skills_nonempty() {
 
         local total
         total=$(find "$skill_dir" -name "SKILL.md" -type f | wc -l | tr -d ' ')
-        if $all_ok && [ "$total" -eq 19 ]; then
-            log_pass "All 19 foundation skill files have >= 100 bytes of real content"
+        if $all_ok && [ "$total" -eq 20 ]; then
+            log_pass "All 20 foundation skill files have >= 100 bytes of real content"
         else
-            log_fail "Expected 19 non-empty foundation skills (found $total; $empty_count empty or corrupt)"
+            log_fail "Expected 20 non-empty foundation skills (found $total; $empty_count empty or corrupt)"
         fi
     else
         log_fail "Full preset install for integrity check failed"
