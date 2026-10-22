@@ -824,8 +824,10 @@ func TestOpenCodeRenderedReviewProtocolCost(t *testing.T) {
 		// whose exit is releasing the authority, not a smaller candidate, and the
 		// shipped contract has to name it. Both are deliberate, not drift, and the
 		// ceilings carry each row's existing absolute margin over the net change.
-		{name: "standard", agents: []string{"review-reliability"}, beforeChars: 42_301, wantChars: 21_548, maxCharacters: 21_551},
-		{name: "full-4R", agents: []string{"review-risk", "review-resilience", "review-readability", "review-reliability"}, beforeChars: 106_998, wantChars: 37_955, maxCharacters: 39_488},
+		// Upstream through 42edf9a90 adds 156 shared protocol characters once per
+		// rendered OpenCode contract. Preserve each case's existing absolute margin.
+		{name: "standard", agents: []string{"review-reliability"}, beforeChars: 42_301, wantChars: 21_704, maxCharacters: 21_707},
+		{name: "full-4R", agents: []string{"review-risk", "review-resilience", "review-readability", "review-reliability"}, beforeChars: 106_998, wantChars: 38_111, maxCharacters: 39_644},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
