@@ -38,6 +38,7 @@ var qaStandaloneCommands = map[model.SkillID]string{
 	model.SkillQADocReference:   "qa-doc-reference.md",
 	model.SkillQADocAccess:      "qa-doc-access.md",
 	model.SkillQAEvidence:       "qa-evidence.md",
+	model.SkillQADocDespliegue:  "qa-doc-despliegue.md",
 }
 
 // qaCommandOrder is qaStandaloneCommands's iteration order, kept separate
@@ -49,6 +50,7 @@ var qaCommandOrder = []model.SkillID{
 	model.SkillQADocReference,
 	model.SkillQADocAccess,
 	model.SkillQAEvidence,
+	model.SkillQADocDespliegue,
 }
 
 // InjectQACommands writes OpenCode slash-command files for the standalone QA

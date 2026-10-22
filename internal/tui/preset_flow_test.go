@@ -332,6 +332,7 @@ Foundation Skills
   [x] QA Doc Reference
   [x] QA Doc Access
   [x] QA Evidence
+  [x] QA Doc Despliegue
   [x] Smartops UI
 
   Continue

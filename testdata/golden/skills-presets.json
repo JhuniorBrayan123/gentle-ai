@@ -20,6 +20,7 @@
       "qa-doc-reference",
       "qa-doc-access",
       "qa-evidence",
+      "qa-doc-despliegue",
       "smartops-ui"
     ]
   },
@@ -44,6 +45,7 @@
       "qa-doc-reference",
       "qa-doc-access",
       "qa-evidence",
+      "qa-doc-despliegue",
       "smartops-ui"
     ]
   },

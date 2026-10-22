@@ -9,8 +9,8 @@ import (
 	"github.com/gentleman-programming/gentle-ai/v4/internal/model"
 )
 
-// allQASkillIDs mirrors the full 10-skill QA-Orchestrator v3 suite: 5
-// ledger-bound stages that depend on QAStateMachine/{change}, plus 5
+// allQASkillIDs mirrors the full 11-skill QA-Orchestrator v3 suite: 5
+// ledger-bound stages that depend on QAStateMachine/{change}, plus 6
 // standalone tools (qa-supervisor is the flow entrypoint but is not itself
 // ledger-bound — it only routes via `gentle-ai qa-status`).
 func allQASkillIDs() []model.SkillID {
@@ -25,11 +25,12 @@ func allQASkillIDs() []model.SkillID {
 		model.SkillQADocReference,
 		model.SkillQADocAccess,
 		model.SkillQAEvidence,
+		model.SkillQADocDespliegue,
 	}
 }
 
 // TestInjectQACommandsWritesStandaloneToolCommandsForOpenCode is the RED/GREEN
-// core assertion: with all 10 QA skills selected, exactly 5 OpenCode slash
+// core assertion: with all 11 QA skills selected, exactly 6 OpenCode slash
 // command files are written — one per standalone QA tool — with content
 // matching the embedded asset bytes exactly.
 func TestInjectQACommandsWritesStandaloneToolCommandsForOpenCode(t *testing.T) {
@@ -50,6 +51,7 @@ func TestInjectQACommandsWritesStandaloneToolCommandsForOpenCode(t *testing.T) {
 		model.SkillQADocReference:   "qa-doc-reference.md",
 		model.SkillQADocAccess:      "qa-doc-access.md",
 		model.SkillQAEvidence:       "qa-evidence.md",
+		model.SkillQADocDespliegue:  "qa-doc-despliegue.md",
 	}
 
 	if len(result.Files) != len(wantFiles) {
@@ -133,7 +135,7 @@ func TestInjectQACommandsSkipsClaudeCode(t *testing.T) {
 	}
 
 	commandsDir := claudeAdapter().CommandsDir(home)
-	for _, fileName := range []string{"qa-supervisor.md", "qa-locator-hunting.md", "qa-doc-reference.md", "qa-doc-access.md", "qa-evidence.md"} {
+	for _, fileName := range []string{"qa-supervisor.md", "qa-locator-hunting.md", "qa-doc-reference.md", "qa-doc-access.md", "qa-evidence.md", "qa-doc-despliegue.md"} {
 		path := filepath.Join(commandsDir, fileName)
 		if _, statErr := os.Stat(path); statErr == nil {
 			t.Fatalf("Claude Code must never receive a QA command file, found %q", path)
@@ -168,7 +170,7 @@ func TestInjectQACommandsSelectionGating(t *testing.T) {
 			t.Fatalf("InjectQACommands() files = %v, missing selected %q", result.Files, path)
 		}
 	}
-	for _, fileName := range []string{"qa-doc-reference.md", "qa-doc-access.md", "qa-evidence.md"} {
+	for _, fileName := range []string{"qa-doc-reference.md", "qa-doc-access.md", "qa-evidence.md", "qa-doc-despliegue.md"} {
 		path := filepath.Join(commandsDir, fileName)
 		if _, statErr := os.Stat(path); statErr == nil {
 			t.Fatalf("unselected QA tool command %q was written", path)

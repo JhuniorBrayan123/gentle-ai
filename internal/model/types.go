@@ -154,6 +154,7 @@ const (
 	SkillQADocReference      SkillID = "qa-doc-reference"
 	SkillQADocAccess         SkillID = "qa-doc-access"
 	SkillQAEvidence          SkillID = "qa-evidence"
+	SkillQADocDespliegue     SkillID = "qa-doc-despliegue"
 	SkillSmartopsUI          SkillID = "smartops-ui"
 )
 
